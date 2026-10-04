@@ -266,6 +266,13 @@ const rows: Row[] = [
   { method: 'POST', url: () => '/me/time-off-requests', body: () => ({}), allow: ['EM'] },
   { method: 'DELETE', url: () => '/me/time-off-requests/999999', allow: ['EM'] },
   { method: 'GET', url: () => '/notifications', allow: ['SA', 'AD', 'MG', 'EM'] },
+  {
+    method: 'GET',
+    url: () => `/schedule/export?hotelIds=${org.hotelA1}&from=2026-10-12`,
+    allow: ['SA', 'AD', 'MG'],
+  },
+  { method: 'GET', url: () => `/timesheets?employeeId=${empId}&month=2026-09`, allow: ['SA', 'AD', 'MG'] },
+  { method: 'GET', url: () => '/me/timesheet?month=2026-09', allow: ['EM'] },
 ];
 
 const tokenFor = (r: Role): string | null =>

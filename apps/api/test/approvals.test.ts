@@ -604,3 +604,22 @@ describe('reports, audit log, notifications', () => {
     expect((await call(ctx, 'GET', '/me/time-account', emp.maria!)).body.balanceHours).toBeTypeOf('number');
   });
 });
+
+describe('request preview', () => {
+  it('counts days on the server and shows the remaining allowance', async () => {
+    const r = await call(
+      ctx,
+      'GET',
+      '/me/time-off-requests/preview?from=2026-11-16&to=2026-11-20',
+      emp.maria!,
+    );
+    expect(r.body).toMatchObject({ days: 5, remaining: 30, remainingAfter: 25, sufficient: true });
+    const big = await call(
+      ctx,
+      'GET',
+      '/me/time-off-requests/preview?from=2027-02-01&to=2027-06-30',
+      emp.maria!,
+    );
+    expect(big.body.sufficient).toBe(false);
+  });
+});

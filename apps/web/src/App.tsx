@@ -9,6 +9,14 @@ import { Planning } from './pages/planning/Planning';
 import { Kiosk } from './pages/Kiosk';
 import { Live } from './pages/Live';
 import { Requests } from './pages/Requests';
+import {
+  PortalAccount,
+  PortalAttendance,
+  PortalHome,
+  PortalSchedule,
+  PortalShell,
+  PortalVacation,
+} from './pages/Portal';
 import { AdminAudit, AdminRules, AdminTablets } from './pages/AdminMore';
 import { Staff } from './pages/Staff';
 import { StaffNew } from './pages/StaffNew';
@@ -76,7 +84,13 @@ export function App() {
             </Route>
           </Route>
           <Route element={<Guard roles={['employee']} />}>
-            <Route path="/me/*" element={<Placeholder title="Handy-Portal" />} />
+            <Route path="/me" element={<PortalShell />}>
+              <Route index element={<PortalHome />} />
+              <Route path="schedule" element={<PortalSchedule />} />
+              <Route path="attendance" element={<PortalAttendance />} />
+              <Route path="vacation" element={<PortalVacation />} />
+              <Route path="account" element={<PortalAccount />} />
+            </Route>
           </Route>
         </Routes>
       </ToastProvider>

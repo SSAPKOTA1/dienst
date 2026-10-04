@@ -56,3 +56,7 @@ One line per decision: what and why.
 - **Audit log** visibility: super admin sees everything, an admin only rows of their companies (rows without a company, e.g. logins, are super-admin only). CSV export is capped at 10 000 rows.
 - **Regeln tab** shows static text of the built-in rules; opening it calls `POST /setup/rules-viewed` for the onboarding checklist.
 - **E2E**: the test API runs with `RATE_LIMIT_AUTH=1000` (many logins from one IP) and the helper waits for a fresh TOTP window because the server rejects replayed codes.
+- **Timesheets** (planner `GET /timesheets`, employee `GET /me/timesheet`) list approved records only and state how many unapproved ones are left out; absences come from approved `time_off`. PDF is German (pdfkit, built-in Helvetica), Excel via exceljs.
+- **Schedule export** is built from the grid result (same scope, same filters), so it shows exactly the grid; the PDF stays the browser print view (SPEC 5.4).
+- **Extra endpoint** `GET /me/time-off-requests/preview` returns day count and remaining allowance so the portal never counts days itself.
+- **Portal times** in correction requests are entered in Europe/Berlin (the browser converts to UTC); hotels in other time zones are not a v1 case.

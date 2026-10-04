@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useGet, useSend } from '../lib/api';
+import { download, useGet, useSend } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { fdate, fnum, fsigned, WEEKDAYS } from '../lib/format';
 import { ErrorNote, Kicker, Label, PageHead, useToast } from '../components/ui';
@@ -251,6 +251,7 @@ function StaffDetail({ id }: { id: number }) {
           </div>
         </>
       )}
+      {!reduced && <TimesheetDownload id={id} name={e.displayName} />}
       {admin && (
         <>
           <hr className="hr" style={{ margin: 0 }} />
@@ -357,6 +358,46 @@ function StaffDetail({ id }: { id: number }) {
           </div>
         </>
       )}
+    </>
+  );
+}
+
+function TimesheetDownload({ id, name }: { id: number; name: string }) {
+  const { t } = useTranslation();
+  const toast = useToast();
+  const now = new Date();
+  const [month, setMonth] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+  const get = (format: 'pdf' | 'xlsx') =>
+    void download(
+      '/timesheets',
+      { employeeId: id, month, format },
+      `stundenzettel_${name.replace(/[^A-Za-z0-9]+/g, '_')}_${month}.${format}`,
+    ).catch(() => toast(t('Export fehlgeschlagen')));
+  return (
+    <>
+      <hr className="hr" style={{ margin: 0 }} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+        <Label>{t('Stundenzettel')}</Label>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <input
+            type="month"
+            className="input"
+            aria-label={t('Monat')}
+            style={{ width: 'auto' }}
+            value={month}
+            onChange={(ev) => setMonth(ev.target.value)}
+          />
+          <button className="btn btn-secondary" data-testid="timesheet-pdf" onClick={() => get('pdf')}>
+            PDF
+          </button>
+          <button className="btn btn-secondary" onClick={() => get('xlsx')}>
+            Excel
+          </button>
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>
+          {t('Es werden nur freigegebene Zeiten ausgewiesen.')}
+        </div>
+      </div>
     </>
   );
 }

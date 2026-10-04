@@ -419,6 +419,25 @@ export async function selfRoutes(app: FastifyInstance) {
     },
   );
 
+  // day count and remaining allowance for the request dialog (the browser never counts days itself)
+  r.get(
+    '/me/time-off-requests/preview',
+    { preValidation: EM, schema: { querystring: range } },
+    async (req) => {
+      const emp = await myEmployee(db, getPrincipal(req));
+      if (req.query.to < req.query.from) throw new AppError('VALIDATION', 'to must not be before from');
+      const days = await vacationDays(db, emp.employee_id, req.query.from, req.query.to);
+      const year = Number(req.query.from.slice(0, 4));
+      const remaining = (await vacationSummary(db, emp.employee_id, year)).remaining;
+      return {
+        days: days.length,
+        remaining,
+        remainingAfter: remaining - days.length,
+        sufficient: remaining >= days.length,
+      };
+    },
+  );
+
   r.get('/me/time-off-requests', { preValidation: EM }, async (req) => {
     const emp = await myEmployee(db, getPrincipal(req));
     const rows = await db

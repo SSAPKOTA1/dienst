@@ -16,7 +16,7 @@ import {
   type DragOverEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
-import { api, ApiError, useGet } from '../../lib/api';
+import { api, ApiError, download, useGet } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fnum } from '../../lib/format';
 import { Segmented, useToast } from '../../components/ui';
@@ -513,6 +513,20 @@ export function Planning() {
               onClick={() => window.print()}
             >
               {t('Dienstplan als PDF')}
+            </button>
+            <button
+              className="btn btn-secondary"
+              style={{ marginLeft: 'var(--space-2)' }}
+              data-testid="export-xlsx"
+              onClick={() =>
+                void download(
+                  '/schedule/export',
+                  { hotelIds, departmentIds, view, range: 'week', from: weekStart, format: 'xlsx' },
+                  `dienstplan_${weekStart}.xlsx`,
+                ).catch(() => toast(t('Export fehlgeschlagen')))
+              }
+            >
+              {t('Als Excel exportieren')}
             </button>
             <select
               className="input"
