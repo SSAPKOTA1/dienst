@@ -2,8 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import de from './de.json';
 import en from './en.json';
-import extraDe from './extra.de.json';
-import extraEn from './extra.en.json';
+import { extraEn } from './extra-en';
 
 const stored = (() => {
   try {
@@ -15,7 +14,7 @@ const stored = (() => {
 
 void i18n.use(initReactI18next).init({
   resources: {
-    de: { translation: { ...de, ...extraDe } },
+    de: { translation: { ...de } },
     en: { translation: { ...en, ...extraEn } },
   },
   lng: stored === 'en' ? 'en' : 'de',

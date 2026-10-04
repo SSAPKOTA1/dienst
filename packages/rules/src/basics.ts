@@ -85,3 +85,13 @@ export function timeAccountBalance(p: {
   target -= (p.dailyTarget ?? 0) * (p.unpaidDays ?? 0);
   return Math.round(((p.opening ?? 0) + p.approvedPaidHours + p.creditHours - target) * 100) / 100;
 }
+
+/** PIN policy (SPEC 4.12): all-equal digits and straight ascending/descending runs are rejected. */
+export function isWeakPin(pin: string): boolean {
+  if (!/^\d+$/.test(pin)) return true;
+  const d = pin.split('').map(Number);
+  if (d.every((x) => x === d[0])) return true;
+  const asc = d.every((x, i) => i === 0 || x === d[i - 1] + 1);
+  const desc = d.every((x, i) => i === 0 || x === d[i - 1] - 1);
+  return asc || desc;
+}

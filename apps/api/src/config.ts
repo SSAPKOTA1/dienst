@@ -17,6 +17,9 @@ const schema = z.object({
     .default('false')
     .transform((v) => v === 'true'),
   LOG_LEVEL: z.string().default('info'),
+  MAIL_MODE: z.enum(['smtp', 'json']).default('smtp'),
+  RATE_LIMIT_AUTH: z.coerce.number().default(10),
+  RATE_LIMIT_KIOSK: z.coerce.number().default(60),
 });
 
 export type Config = z.infer<typeof schema>;

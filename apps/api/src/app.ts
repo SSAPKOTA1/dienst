@@ -7,13 +7,18 @@ import cors from '@fastify/cors';
 import { ZodError } from 'zod';
 import { loadConfig, type Config } from './config';
 import { createDb, type Db } from './db';
+import rateLimit from '@fastify/rate-limit';
 import { AppError } from './lib/errors';
+import { Mailer } from './lib/mail';
+import { authRoutes } from './routes/auth';
+import { meRoutes } from './routes/me';
 
 declare module 'fastify' {
   interface FastifyInstance {
     db: Db;
     cfg: Config;
     clock: () => Date;
+    mailer: Mailer;
   }
 }
 
@@ -56,7 +61,18 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
     if (!opts.db) await db.destroy();
   });
 
+  app.decorateRequest('principal', null);
+  app.decorateRequest('preUserId', null);
+  app.decorate(
+    'mailer',
+    new Mailer(
+      { mode: cfg.MAIL_MODE, host: cfg.SMTP_HOST, port: cfg.SMTP_PORT, from: cfg.MAIL_FROM },
+      app.log,
+    ),
+  );
+
   await app.register(helmet);
+  await app.register(rateLimit, { global: false });
   await app.register(cookie);
   await app.register(cors, { origin: cfg.WEB_ORIGIN, credentials: true });
 
@@ -118,6 +134,8 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   const r = app.withTypeProvider<ZodTypeProvider>();
   await app.register(
     async (api) => {
+      await api.register(authRoutes);
+      await api.register(meRoutes);
       api.get('/health', async () => {
         await sql`select 1`.execute(db);
         return { status: 'ok', time: app.clock().toISOString() };
