@@ -334,24 +334,26 @@ async function carveOffDay(trx: Trx, now: Date, o: any, from: string, to: string
       .execute();
 }
 
-export async function deleteAbsence(ctx: Ctx, id: number) {
-  const { trx, principal: p } = ctx;
-  const t = await trx.selectFrom('time_off').selectAll().where('id', '=', id).executeTakeFirst();
-  if (!t || t.status === 'cancelled') throw notFound('Absence');
-  const emp = await assertPlannerEmployee(trx, p, t.employee_id);
-  const env = await PlanEnv.create(trx, ctx.now, {
+/** Reverses an absence: restores the vacation allowance and the entries it cancelled, then cancels the row. */
+export async function reverseAbsence(
+  trx: Trx,
+  now: Date,
+  t: {
+    id: number;
+    employee_id: number;
+    start_date: string;
+    end_date: string;
+    counts_against_allowance: boolean;
+    status: string;
+  },
+  emp: { employee_id: number; primary_hotel_id: number },
+) {
+  const env = await PlanEnv.create(trx, now, {
     employeeIds: [emp.employee_id],
     from: t.start_date,
     to: t.end_date,
   });
   const pe = env.employees.get(emp.employee_id)!;
-  const today = localDate(ctx.now, env.hotel(emp.primary_hotel_id).tz);
-  await checkPast(trx, p, today, t.start_date, t.type, emp.company_id, 'removal');
-  for (const d of eachDay(t.start_date, t.end_date))
-    for (const h of pe.hotelIds)
-      if (env.isClosed(h, d))
-        throw new AppError('PERIOD_CLOSED', 'The payroll period is closed', { date: d });
-
   if (t.counts_against_allowance && t.status === 'approved') {
     const contract = env.contractAt(pe, t.start_date) ?? pe.contracts[0];
     const holidays = new Set(
@@ -367,13 +369,12 @@ export async function deleteAbsence(ctx: Ctx, id: number) {
       const a = await ensureAllowance(trx, emp.employee_id, year);
       await trx
         .updateTable('employee_vacation_allowance')
-        .set({ used_days: Math.max(0, a.used_days - days), updated_at: ctx.now })
+        .set({ used_days: Math.max(0, a.used_days - days), updated_at: now })
         .where('id', '=', a.id)
         .execute();
     }
   }
-  // restore the entries the absence had cancelled, unless something else occupies the time now
-  const cancelled = await trx.selectFrom('schedule').selectAll().where('time_off_id', '=', id).execute();
+  const cancelled = await trx.selectFrom('schedule').selectAll().where('time_off_id', '=', t.id).execute();
   const restored: number[] = [];
   const notRestored: number[] = [];
   for (const c of cancelled) {
@@ -398,7 +399,7 @@ export async function deleteAbsence(ctx: Ctx, id: number) {
         cancel_reason: null,
         time_off_id: null,
         version: c.version + 1,
-        updated_at: ctx.now,
+        updated_at: now,
       })
       .where('id', '=', c.id)
       .execute();
@@ -406,9 +407,30 @@ export async function deleteAbsence(ctx: Ctx, id: number) {
   }
   await trx
     .updateTable('time_off')
-    .set({ status: 'cancelled', updated_at: ctx.now })
-    .where('id', '=', id)
+    .set({ status: 'cancelled', updated_at: now })
+    .where('id', '=', t.id)
     .execute();
+  return { restored, notRestored };
+}
+
+export async function deleteAbsence(ctx: Ctx, id: number) {
+  const { trx, principal: p } = ctx;
+  const t = await trx.selectFrom('time_off').selectAll().where('id', '=', id).executeTakeFirst();
+  if (!t || t.status === 'cancelled') throw notFound('Absence');
+  const emp = await assertPlannerEmployee(trx, p, t.employee_id);
+  const env = await PlanEnv.create(trx, ctx.now, {
+    employeeIds: [emp.employee_id],
+    from: t.start_date,
+    to: t.end_date,
+  });
+  const pe = env.employees.get(emp.employee_id)!;
+  const today = localDate(ctx.now, env.hotel(emp.primary_hotel_id).tz);
+  await checkPast(trx, p, today, t.start_date, t.type, emp.company_id, 'removal');
+  for (const d of eachDay(t.start_date, t.end_date))
+    for (const h of pe.hotelIds)
+      if (env.isClosed(h, d))
+        throw new AppError('PERIOD_CLOSED', 'The payroll period is closed', { date: d });
+  const { restored, notRestored } = await reverseAbsence(trx, ctx.now, t, emp);
   await audit(trx, ctx.actor, {
     action: 'absence_deleted',
     entityType: 'time_off',

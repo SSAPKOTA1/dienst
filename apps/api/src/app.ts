@@ -19,6 +19,8 @@ import { shiftRoutes } from './routes/shifts';
 import { scheduleRoutes } from './routes/schedule';
 import { kioskRoutes } from './routes/kiosk';
 import { liveRoutes } from './routes/live';
+import { approvalRoutes } from './routes/approvals';
+import { selfRoutes } from './routes/self';
 import { runAutoCheckout } from './jobs/autoCheckout';
 
 declare module 'fastify' {
@@ -164,6 +166,8 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       await api.register(scheduleRoutes);
       await api.register(kioskRoutes);
       await api.register(liveRoutes);
+      await api.register(approvalRoutes);
+      await api.register(selfRoutes);
       api.get('/health', async () => {
         await sql`select 1`.execute(db);
         return { status: 'ok', time: app.clock().toISOString() };
