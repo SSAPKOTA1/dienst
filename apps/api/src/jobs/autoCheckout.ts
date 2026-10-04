@@ -97,3 +97,14 @@ export async function runAutoCheckout(db: Db, now: Date): Promise<number> {
   }
   return n;
 }
+
+/** Plaintext credentials of an import (encrypted at rest) are wiped once the 24 h window has passed. */
+export async function wipeExpiredCredentials(db: Db, now: Date): Promise<number> {
+  const r = await db
+    .updateTable('import_job')
+    .set({ credentials_enc: null })
+    .where('credentials_enc', 'is not', null)
+    .where('credentials_expires_at', '<=', now)
+    .executeTakeFirst();
+  return Number(r.numUpdatedRows);
+}

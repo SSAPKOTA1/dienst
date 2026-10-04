@@ -284,16 +284,26 @@ export function Kiosk() {
                       background: 'var(--color-bg)',
                       cursor: 'pointer',
                     }}
-                    onClick={() =>
+                    onClick={async () => {
+                      // the search result does not know whether the person is already clocked in
+                      let state: 'not_in' | 'working' = 'not_in';
+                      try {
+                        const st = await kapi<{ state: 'not_in' | 'working' }>('/kiosk/punch-status', {
+                          query: { employeeRef: f.employeeRef },
+                        });
+                        state = st.state;
+                      } catch {
+                        /* fall back to clock-in; the server answers ALREADY_CLOCKED_IN if needed */
+                      }
                       pick({
                         employeeRef: f.employeeRef,
                         displayName: f.displayName,
                         departmentName: null,
                         plannedStart: null,
                         plannedEnd: null,
-                        state: 'not_in',
-                      })
-                    }
+                        state,
+                      });
+                    }}
                   >
                     {f.displayName}
                   </button>

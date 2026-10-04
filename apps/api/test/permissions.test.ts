@@ -273,6 +273,11 @@ const rows: Row[] = [
   },
   { method: 'GET', url: () => `/timesheets?employeeId=${empId}&month=2026-09`, allow: ['SA', 'AD', 'MG'] },
   { method: 'GET', url: () => '/me/timesheet?month=2026-09', allow: ['EM'] },
+  { method: 'GET', url: () => '/employees/import-template', allow: ['SA', 'AD'] },
+  { method: 'POST', url: () => '/employees/import', body: () => ({}), allow: ['SA', 'AD'] },
+  { method: 'GET', url: () => '/imports/999999', allow: ['SA', 'AD'] },
+  { method: 'GET', url: () => '/imports/999999/errors.csv', allow: ['SA', 'AD'] },
+  { method: 'GET', url: () => '/imports/999999/credentials.pdf', allow: ['SA', 'AD'] },
 ];
 
 const tokenFor = (r: Role): string | null =>

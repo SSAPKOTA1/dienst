@@ -193,6 +193,9 @@ importers:
       '@types/node':
         specifier: ^22.20.0
         version: 22.20.5
+      exceljs:
+        specifier: ^4.4.0
+        version: 4.4.0
       otplib:
         specifier: ^12.0.1
         version: 12.0.1

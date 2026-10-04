@@ -4,6 +4,7 @@ import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fas
 import helmet from '@fastify/helmet';
 import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
+import multipart from '@fastify/multipart';
 import { ZodError } from 'zod';
 import { loadConfig, type Config } from './config';
 import { createDb, type Db } from './db';
@@ -22,7 +23,8 @@ import { liveRoutes } from './routes/live';
 import { approvalRoutes } from './routes/approvals';
 import { selfRoutes } from './routes/self';
 import { exportRoutes } from './routes/exports';
-import { runAutoCheckout } from './jobs/autoCheckout';
+import { importRoutes } from './routes/imports';
+import { runAutoCheckout, wipeExpiredCredentials } from './jobs/autoCheckout';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -45,6 +47,7 @@ export interface AppOptions {
 export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> {
   const cfg = loadConfig({ ...process.env, ...(opts.config as NodeJS.ProcessEnv | undefined) });
   const app = Fastify({
+    trustProxy: cfg.TRUST_PROXY,
     logger: opts.logger ?? {
       level: cfg.LOG_LEVEL,
       redact: {
@@ -61,7 +64,6 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
         censor: '[redacted]',
       },
     },
-    trustProxy: true,
   });
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
@@ -87,8 +89,8 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   if (opts.autoCheckout) {
     const timer = setInterval(
       () =>
-        void runAutoCheckout(db, app.clock()).catch((e) =>
-          app.log.error({ err: (e as Error).message }, 'auto-checkout failed'),
+        void Promise.all([runAutoCheckout(db, app.clock()), wipeExpiredCredentials(db, app.clock())]).catch(
+          (e) => app.log.error({ err: (e as Error).message }, 'background job failed'),
         ),
       60_000,
     );
@@ -96,8 +98,9 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   }
 
   await app.register(helmet);
-  await app.register(rateLimit, { global: false });
+  await app.register(rateLimit, { global: true, max: cfg.RATE_LIMIT_GLOBAL, timeWindow: '1 minute' });
   await app.register(cookie);
+  await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 10 } });
   await app.register(cors, { origin: cfg.WEB_ORIGIN, credentials: true });
 
   app.setErrorHandler((err: unknown, req, reply) => {
@@ -170,7 +173,8 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       await api.register(approvalRoutes);
       await api.register(selfRoutes);
       await api.register(exportRoutes);
-      api.get('/health', async () => {
+      await api.register(importRoutes);
+      api.get('/health', { config: { rateLimit: false } }, async () => {
         await sql`select 1`.execute(db);
         return { status: 'ok', time: app.clock().toISOString() };
       });

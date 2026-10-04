@@ -112,6 +112,21 @@ export async function download(path: string, query: ReqOpts['query'], filename: 
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
+/** multipart upload (employee import); fields must be appended before the file */
+export async function upload<T = any>(path: string, form: FormData): Promise<T> {
+  const send = () =>
+    fetch(buildUrl(path), {
+      method: 'POST',
+      credentials: 'include',
+      headers: accessToken ? { authorization: `Bearer ${accessToken}` } : {},
+      body: form,
+    });
+  let r = await send();
+  if (r.status === 401 && (await refresh())) r = await send();
+  if (!r.ok) throw await toError(r);
+  return r.json() as Promise<T>;
+}
+
 export async function tryRestoreSession(): Promise<boolean> {
   return refresh();
 }

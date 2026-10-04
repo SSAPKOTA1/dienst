@@ -20,6 +20,7 @@ import {
 import { AdminAudit, AdminRules, AdminTablets } from './pages/AdminMore';
 import { Staff } from './pages/Staff';
 import { StaffNew } from './pages/StaffNew';
+import { StaffImport } from './pages/StaffImport';
 import {
   AdminCompanies,
   AdminHotels,
@@ -69,6 +70,7 @@ export function App() {
               <Route path="/requests" element={<Requests />} />
               <Route path="/staff" element={<Staff />} />
               <Route path="/staff/new" element={<StaffNew />} />
+              <Route path="/staff/import" element={<StaffImport />} />
               <Route path="/staff/:id" element={<Staff />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminIndex />} />

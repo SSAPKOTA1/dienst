@@ -195,13 +195,20 @@ export interface Hotel {
 export interface ImportJob {
   admin_id: number | null;
   created_at: Generated<Timestamp | null>;
+  created_by_user_id: number | null;
   created_count: number | null;
+  credentials_downloaded_at: Timestamp | null;
+  credentials_enc: Buffer | null;
+  credentials_expires_at: Timestamp | null;
   dry_run: Generated<boolean>;
   error_count: number | null;
+  file_name: string | null;
   finished_at: Timestamp | null;
   id: Generated<number>;
   import_type: Generated<string>;
   on_duplicate_email: Generated<string>;
+  raw_rows: Json | null;
+  result: Json | null;
   skipped_count: number | null;
   status: Generated<string>;
   total_rows: number | null;

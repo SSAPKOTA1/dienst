@@ -47,3 +47,9 @@
 - API: `GET /schedule/export` (xlsx, grid-based, German labels), `GET /timesheets` and `GET /me/timesheet` (pdf/xlsx, approved only), `GET /me/time-off-requests/preview`; attendance and audit CSV came with M7.
 - Web: Handy-Portal at `/me` (mobile-first with bottom tab bar): Start (next shifts, this week, vacation, time account, notifications), Dienstplan, Zeiten (hours hidden until approved, history, corrections), Urlaub (preview, request, withdraw), Konto (time account, timesheet download, profile); "Als Excel exportieren" in the planner; timesheet PDF/Excel in the staff detail.
 - Tests: exports (5), request preview, +3 matrix rows; e2e portal (4).
+
+## M9 Import and hardening - done
+- API: `GET /employees/import-template`, `POST /employees/import` (dry run, `onDuplicateEmail`), `GET /imports/:id`, `/imports/:id/errors.csv` (formula-injection neutralised), `/imports/:id/credentials.pdf` (once, 24 h); global rate limit, opt-in proxy trust, production config guard.
+- Web: `/staff/import` (template, dry run, confirm, error CSV, credentials PDF); kiosk search path fixed to use `punch-status`.
+- Tests: import (8), hardening (5), +5 matrix rows; e2e: full flow (plan by drag and drop -> publish -> tablet punch -> approve -> timesheet PDF), import, requests, portal, planning, kiosk.
+- README with setup, demo logins, commands and production notes.

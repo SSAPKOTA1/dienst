@@ -47,6 +47,7 @@ export async function startApp(opts: { now?: Date; rateLimit?: number } = {}): P
       MAIL_MODE: 'json',
       RATE_LIMIT_AUTH: opts.rateLimit ?? 100000,
       RATE_LIMIT_KIOSK: opts.rateLimit ?? 100000,
+      RATE_LIMIT_GLOBAL: opts.rateLimit ?? 100000,
       LOG_LEVEL: 'info',
     },
     logger: {
