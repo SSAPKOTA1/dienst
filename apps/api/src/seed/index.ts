@@ -8,6 +8,7 @@ import { loadConfig } from '../config';
 import { audit } from '../lib/audit';
 import { createEmployee } from '../services/employees';
 import { holidaysFor } from './holidays';
+import { seedSchedule } from './schedule';
 import {
   DEMO_KIOSK_TOKEN,
   DEMO_PASSWORD,
@@ -201,6 +202,7 @@ export async function runSeed(db: Db, now: Date): Promise<SeedResult> {
       company: company.id,
       hotels: hotelRows,
       depts: deptRows,
+      shifts: shiftRows,
       saUser,
       adUser,
       mgUser,
@@ -313,5 +315,6 @@ export async function runSeed(db: Db, now: Date): Promise<SeedResult> {
     i++;
   }
   void addDays;
+  await seedSchedule(db, result, now);
   return result;
 }

@@ -88,6 +88,116 @@ const rows: Row[] = [
   { method: 'GET', url: () => '/setup/status', allow: ['SA', 'AD'] },
   { method: 'GET', url: () => '/setup/overview', allow: ['SA', 'AD'] },
   { method: 'GET', url: () => '/me', allow: ['SA', 'AD', 'MG', 'EM'] },
+  { method: 'GET', url: () => '/shifts', allow: ['SA', 'AD', 'MG'] },
+  {
+    method: 'POST',
+    url: () => '/shifts',
+    body: () => ({
+      hotelId: org.hotelA1,
+      departmentId: org.deptA1,
+      name: 'P',
+      startTime: '06:00',
+      endTime: '14:00',
+    }),
+    allow: ['SA', 'AD', 'MG'],
+  },
+  { method: 'PUT', url: () => `/shifts/${org.deptA1}/staffing`, body: () => ({}), allow: ['SA', 'AD', 'MG'] },
+  {
+    method: 'GET',
+    url: () => `/schedule/grid?hotelIds=${org.hotelA1}&from=2026-10-12`,
+    allow: ['SA', 'AD', 'MG'],
+  },
+  {
+    method: 'POST',
+    url: () => '/schedule/validate',
+    body: () => ({ operation: 'delete', entryId: 999999 }),
+    allow: ['SA', 'AD', 'MG'],
+  },
+  {
+    method: 'POST',
+    url: () => '/schedule/entries',
+    body: () => ({
+      hotelId: org.hotelA1,
+      employeeId: empId,
+      date: '2026-10-12',
+      start: '08:00',
+      end: '12:00',
+    }),
+    allow: ['SA', 'AD', 'MG'],
+  },
+  {
+    method: 'PUT',
+    url: () => '/schedule/entries/999999',
+    body: () => ({ version: 1 }),
+    allow: ['SA', 'AD', 'MG'],
+  },
+  { method: 'DELETE', url: () => '/schedule/entries/999999', allow: ['SA', 'AD', 'MG'] },
+  {
+    method: 'POST',
+    url: () => '/schedule/move',
+    body: () => ({ entryId: 999999, version: 1 }),
+    allow: ['SA', 'AD', 'MG'],
+  },
+  {
+    method: 'POST',
+    url: () => '/schedule/copy',
+    body: () => ({ entryId: 999999 }),
+    allow: ['SA', 'AD', 'MG'],
+  },
+  {
+    method: 'POST',
+    url: () => '/schedule/swap',
+    body: () => ({ entryAId: 1, versionA: 1, entryBId: 2, versionB: 1 }),
+    allow: ['SA', 'AD', 'MG'],
+  },
+  {
+    method: 'POST',
+    url: () => '/schedule/copy-week',
+    body: () => ({ hotelIds: [org.hotelA1], fromWeek: '2026-10-12', toWeek: '2026-10-19' }),
+    allow: ['SA', 'AD', 'MG'],
+  },
+  {
+    method: 'POST',
+    url: () => '/schedule/bulk',
+    body: () => ({ operations: [{ op: 'delete', entryId: 999999 }] }),
+    allow: ['SA', 'AD', 'MG'],
+  },
+  {
+    method: 'POST',
+    url: () => '/schedule/absence',
+    body: () => ({ employeeId: empId, from: '2026-12-14', to: '2026-12-14', type: 'off_day' }),
+    allow: ['SA', 'AD', 'MG'],
+  },
+  { method: 'DELETE', url: () => '/schedule/absence/999999', allow: ['SA', 'AD', 'MG'] },
+  {
+    method: 'POST',
+    url: () => '/schedule/publish',
+    body: () => ({ hotelIds: [org.hotelA1], from: '2026-10-12', to: '2026-10-18' }),
+    allow: ['SA', 'AD', 'MG'],
+  },
+  {
+    method: 'GET',
+    url: () => `/schedule/changes?hotelIds=${org.hotelA1}&from=2026-10-12&to=2026-10-18`,
+    allow: ['SA', 'AD', 'MG'],
+  },
+  {
+    method: 'POST',
+    url: () => '/schedule/revert',
+    body: () => ({ hotelIds: [org.hotelA1], from: '2026-10-12', to: '2026-10-18' }),
+    allow: ['SA', 'AD', 'MG'],
+  },
+  {
+    method: 'POST',
+    url: () => '/schedule/clear-week',
+    body: () => ({ hotelIds: [org.hotelA1], from: '2026-10-12', to: '2026-10-18' }),
+    allow: ['SA', 'AD', 'MG'],
+  },
+  {
+    method: 'GET',
+    url: () =>
+      `/schedule/candidates?hotelIds=${org.hotelA1}&departmentId=${org.deptA1}&date=2026-10-12&start=08:00&end=12:00`,
+    allow: ['SA', 'AD', 'MG'],
+  },
 ];
 
 const tokenFor = (r: Role): string | null =>

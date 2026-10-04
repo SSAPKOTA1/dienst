@@ -16,6 +16,7 @@ import { organisationRoutes } from './routes/organisation';
 import { employeeRoutes } from './routes/employees';
 import { setupRoutes } from './routes/setup';
 import { shiftRoutes } from './routes/shifts';
+import { scheduleRoutes } from './routes/schedule';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -144,6 +145,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       await api.register(employeeRoutes);
       await api.register(setupRoutes);
       await api.register(shiftRoutes);
+      await api.register(scheduleRoutes);
       api.get('/health', async () => {
         await sql`select 1`.execute(db);
         return { status: 'ok', time: app.clock().toISOString() };

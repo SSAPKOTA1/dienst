@@ -21,3 +21,9 @@
 - Web: Hotels tab shows shifts and minimum per department; "Schichten & Besetzung" dialog edits shifts, weekday headcount and date overrides.
 - Seed: 9 shift templates with required headcount matching the prototype minimums.
 - Tests: shifts (5) + rules resolveRequired; all 188+ tests green.
+
+## M4 Planning API and rules - done
+- `packages/rules`: `checkEntry` (all SPEC 4.3 codes incl. MINOR_REST), `aggregate` with emergency override, 28 unit tests.
+- API: grid (employee/shift views, week/month, coverage, counts, changes, reduced views), validate dry run, entries CRUD with optimistic locking, move/copy/swap/bulk/copy-week, absences (planner), publish with snapshots and notifications, changes/revert/clear-week, substitute finder.
+- Seed: published week + draft week + absences + pending vacation request from the prototype patterns.
+- Tests: planning (13), absences (9), snapshots (8), grid (8), permission matrix (325 rows) - all green (full API suite ~330 tests).

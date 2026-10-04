@@ -297,3 +297,66 @@ export async function call(
   }
   return { status: res.statusCode, body, res };
 }
+
+// ---------------------------------------------------------------------------------------------
+// planning fixture
+
+export interface PlanFx extends Org {
+  early: number; // Rezeption A1 06:00-14:00
+  late: number; // 14:00-22:00
+  night: number; // 22:00-06:00
+  hk: number; // Housekeeping A1 08:00-16:30
+  early2: number; // Rezeption A2 06:00-14:00
+  emp: Record<string, number>;
+}
+
+export async function planFixture(ctx: TestCtx): Promise<PlanFx> {
+  const org = await setupOrg(ctx);
+  const shift = async (
+    hotelId: number,
+    departmentId: number,
+    name: string,
+    startTime: string,
+    endTime: string,
+    breakMinutes = 30,
+  ) =>
+    (
+      await call(ctx, 'POST', '/shifts', org.adminA.token, {
+        hotelId,
+        departmentId,
+        name,
+        startTime,
+        endTime,
+        breakMinutes,
+      })
+    ).body.id as number;
+  const early = await shift(org.hotelA1, org.deptA1, 'Früh', '06:00', '14:00');
+  const late = await shift(org.hotelA1, org.deptA1, 'Spät', '14:00', '22:00');
+  const night = await shift(org.hotelA1, org.deptA1, 'Nacht', '22:00', '06:00');
+  const hk = await shift(org.hotelA1, org.deptA1b, 'Tag', '08:00', '16:30');
+  const early2 = await shift(org.hotelA2, org.deptA2, 'Früh', '06:00', '14:00');
+  const mk = async (key: string, over: Record<string, unknown> = {}) => {
+    const r = await call(
+      ctx,
+      'POST',
+      '/employees',
+      org.adminA.token,
+      empBody(org, { firstName: key, lastName: 'Test', ...over }),
+    );
+    if (r.status !== 201) throw new Error(`employee ${key}: ${JSON.stringify(r.body)}`);
+    return r.body.employeeId as number;
+  };
+  const emp: Record<string, number> = {
+    maria: await mk('Maria'),
+    jon: await mk('Jon'),
+    lena: await mk('Lena', { dateOfBirth: '2009-02-14', employmentType: 'apprentice' }),
+    tom: await mk('Tom', { hotelIds: [org.hotelA2], departmentIds: [org.deptA2] }), // A1 + A2
+    piotr: await mk('Piotr', { primaryDepartmentId: org.deptA1b }), // housekeeping only
+    cap: await mk('Cap', { monthlyHoursCap: 20, workingModel: 'hourly', targetHoursPerWeek: 10 }),
+  };
+  return { ...org, early, late, night, hk, early2, emp };
+}
+
+export const plan = (fx: PlanFx, token: string, body: Record<string, unknown>) =>
+  call(ctxHolder.ctx!, 'POST', '/schedule/entries', token, { hotelId: fx.hotelA1, ...body });
+export const ctxHolder: { ctx: TestCtx | null } = { ctx: null };
