@@ -1,4 +1,4 @@
-import type { FastifyReply, FastifyRequest, preHandlerAsyncHookHandler } from 'fastify';
+import type { FastifyReply, FastifyRequest, preValidationAsyncHookHandler } from 'fastify';
 import type { Role } from '@dienst/shared';
 import { AppError } from './errors';
 import { verifyToken } from './jwt';
@@ -21,7 +21,7 @@ function bearer(req: FastifyRequest): string | null {
 }
 
 /** Authenticates the request and checks the role. `ANY` accepts every authenticated role. */
-export function requireRole(...roles: RoleSpec[]): preHandlerAsyncHookHandler {
+export function requireRole(...roles: RoleSpec[]): preValidationAsyncHookHandler {
   return async function (req: FastifyRequest, _reply: FastifyReply) {
     const app = req.server;
     const tok = bearer(req);
@@ -48,7 +48,7 @@ export function requireRole(...roles: RoleSpec[]): preHandlerAsyncHookHandler {
 }
 
 /** Accepts the short-lived pre-role token (after password check, before role selection) or a normal token. */
-export const requirePreOrAccess: preHandlerAsyncHookHandler = async (req) => {
+export const requirePreOrAccess: preValidationAsyncHookHandler = async (req) => {
   const app = req.server;
   const tok = bearer(req);
   if (!tok) throw new AppError('UNAUTHENTICATED', 'Missing token');

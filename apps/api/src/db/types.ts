@@ -105,7 +105,7 @@ export interface Employee {
   contract_end_date: string | null;
   contract_start_date: string;
   created_at: Generated<Timestamp | null>;
-  created_by_id: number;
+  created_by_id: number | null;
   date_of_birth: string;
   display_name: Generated<string | null>;
   employee_id: Generated<number>;
@@ -133,7 +133,7 @@ export interface EmployeeContract {
   account_min_hours: Numeric | null;
   carryover_limit_days: Generated<Numeric>;
   created_at: Generated<Timestamp | null>;
-  created_by_id: number;
+  created_by_id: number | null;
   daily_target_hours: Numeric | null;
   employee_id: number;
   employment_type: string;
@@ -193,7 +193,7 @@ export interface Hotel {
 }
 
 export interface ImportJob {
-  admin_id: number;
+  admin_id: number | null;
   created_at: Generated<Timestamp | null>;
   created_count: number | null;
   dry_run: Generated<boolean>;
@@ -221,7 +221,7 @@ export interface KioskDevice {
 
 export interface Manager {
   created_at: Generated<Timestamp | null>;
-  created_by_id: number;
+  created_by_id: number | null;
   first_name: string;
   last_name: string;
   manager_id: Generated<number>;

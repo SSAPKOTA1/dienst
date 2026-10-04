@@ -115,3 +115,34 @@ export async function download(path: string, query: ReqOpts['query'], filename: 
 export async function tryRestoreSession(): Promise<boolean> {
   return refresh();
 }
+
+import { useMutation, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
+
+export function useGet<T = any>(
+  path: string | null,
+  query?: ReqOpts['query'],
+  opts: { enabled?: boolean; refetchInterval?: number } = {},
+) {
+  return useQuery<T>({
+    queryKey: ['api', path, query ?? null],
+    queryFn: () => api<T>(path!, { query }),
+    enabled: path !== null && (opts.enabled ?? true),
+    refetchInterval: opts.refetchInterval,
+  });
+}
+
+export function useSend<TBody = any, TRes = any>(
+  method: string,
+  path: string | ((b: TBody) => string),
+  invalidate: QueryKey[] = [['api']],
+) {
+  const qc = useQueryClient();
+  return useMutation<TRes, ApiError, TBody>({
+    mutationFn: (body) =>
+      api<TRes>(typeof path === 'function' ? path(body) : path, {
+        method,
+        body: method === 'DELETE' ? undefined : (body ?? {}),
+      }),
+    onSuccess: () => invalidate.forEach((k) => void qc.invalidateQueries({ queryKey: k })),
+  });
+}

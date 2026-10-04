@@ -12,6 +12,9 @@ import { AppError } from './lib/errors';
 import { Mailer } from './lib/mail';
 import { authRoutes } from './routes/auth';
 import { meRoutes } from './routes/me';
+import { organisationRoutes } from './routes/organisation';
+import { employeeRoutes } from './routes/employees';
+import { setupRoutes } from './routes/setup';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -136,6 +139,9 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
     async (api) => {
       await api.register(authRoutes);
       await api.register(meRoutes);
+      await api.register(organisationRoutes);
+      await api.register(employeeRoutes);
+      await api.register(setupRoutes);
       api.get('/health', async () => {
         await sql`select 1`.execute(db);
         return { status: 'ok', time: app.clock().toISOString() };

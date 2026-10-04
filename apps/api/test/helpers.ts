@@ -147,3 +147,153 @@ export async function loginAs(
 }
 
 export const auth = (token: string) => ({ authorization: `Bearer ${token}` });
+
+export interface Org {
+  saToken: string;
+  adminA: { token: string; userId: number; adminId: number };
+  adminB: { token: string; userId: number; adminId: number };
+  mgrA1: { token: string; userId: number; managerId: number };
+  mgrA2: { token: string; userId: number; managerId: number };
+  superAdminId: number;
+  companyA: number;
+  companyB: number;
+  hotelA1: number;
+  hotelA2: number;
+  hotelB1: number;
+  deptA1: number; // Rezeption at A1
+  deptA1b: number; // Housekeeping at A1
+  deptA2: number;
+  deptB1: number;
+}
+
+/** Two companies, three hotels, admins for each company, managers for A1 and A2. Built by direct inserts. */
+export async function setupOrg(ctx: TestCtx): Promise<Org> {
+  const { db } = ctx;
+  const sa = await makeSuperAdmin(db);
+  const mk = async (name: string) =>
+    (
+      await db
+        .insertInto('company')
+        .values({ name, created_by_id: sa.superAdminId })
+        .returning('id')
+        .executeTakeFirstOrThrow()
+    ).id;
+  const companyA = await mk('Company A');
+  const companyB = await mk('Company B');
+  const hotel = async (companyId: number, name: string, state: string) =>
+    (
+      await db
+        .insertInto('hotel')
+        .values({ company_id: companyId, name, federal_state: state })
+        .returning('id')
+        .executeTakeFirstOrThrow()
+    ).id;
+  const hotelA1 = await hotel(companyA, 'A1 Frankfurt', 'HE');
+  const hotelA2 = await hotel(companyA, 'A2 Berlin', 'BE');
+  const hotelB1 = await hotel(companyB, 'B1 Hamburg', 'HH');
+  const dept = async (hotelId: number, name: string) =>
+    (
+      await db
+        .insertInto('department')
+        .values({ hotel_id: hotelId, name })
+        .returning('id')
+        .executeTakeFirstOrThrow()
+    ).id;
+  const deptA1 = await dept(hotelA1, 'Rezeption');
+  const deptA1b = await dept(hotelA1, 'Housekeeping');
+  const deptA2 = await dept(hotelA2, 'Rezeption');
+  const deptB1 = await dept(hotelB1, 'Rezeption');
+  const mkAdmin = async (email: string, companyId: number) => {
+    const userId = await makeUser(db, { email });
+    await enableTotp(db, userId);
+    const a = await db
+      .insertInto('admin')
+      .values({
+        user_id: userId,
+        first_name: 'Admin',
+        last_name: email.slice(0, 1).toUpperCase(),
+        created_by_id: sa.superAdminId,
+      })
+      .returning('admin_id')
+      .executeTakeFirstOrThrow();
+    await db
+      .insertInto('admin_company')
+      .values({ admin_id: a.admin_id, company_id: companyId, assigned_by_id: sa.superAdminId })
+      .execute();
+    return { userId, adminId: a.admin_id };
+  };
+  const mkMgr = async (email: string, hotelId: number, adminId: number) => {
+    const userId = await makeUser(db, { email });
+    const m = await db
+      .insertInto('manager')
+      .values({
+        user_id: userId,
+        first_name: 'Mgr',
+        last_name: email.slice(0, 1).toUpperCase(),
+        created_by_id: adminId,
+      })
+      .returning('manager_id')
+      .executeTakeFirstOrThrow();
+    await db.insertInto('manager_hotel').values({ manager_id: m.manager_id, hotel_id: hotelId }).execute();
+    return { userId, managerId: m.manager_id };
+  };
+  const a = await mkAdmin('admin.a@test.dev', companyA);
+  const b = await mkAdmin('admin.b@test.dev', companyB);
+  const m1 = await mkMgr('mgr.a1@test.dev', hotelA1, a.adminId);
+  const m2 = await mkMgr('mgr.a2@test.dev', hotelA2, a.adminId);
+  return {
+    superAdminId: sa.superAdminId,
+    saToken: await loginAs(ctx, 'sa@test.dev', 'superAdmin'),
+    adminA: { ...a, token: await loginAs(ctx, 'admin.a@test.dev', 'admin') },
+    adminB: { ...b, token: await loginAs(ctx, 'admin.b@test.dev', 'admin') },
+    mgrA1: { ...m1, token: await loginAs(ctx, 'mgr.a1@test.dev', 'manager') },
+    mgrA2: { ...m2, token: await loginAs(ctx, 'mgr.a2@test.dev', 'manager') },
+    companyA,
+    companyB,
+    hotelA1,
+    hotelA2,
+    hotelB1,
+    deptA1,
+    deptA1b,
+    deptA2,
+    deptB1,
+  };
+}
+
+export const empBody = (org: Org, over: Record<string, unknown> = {}) => ({
+  firstName: 'Maria',
+  lastName: 'Schmidt',
+  dateOfBirth: '1990-05-12',
+  email: null,
+  primaryHotelId: org.hotelA1,
+  primaryDepartmentId: org.deptA1,
+  contractStartDate: '2026-01-01',
+  employmentType: 'full_time',
+  workingModel: 'salary',
+  workDaysPerWeek: 5,
+  targetHoursPerWeek: 40,
+  vacationDaysPerYear: 30,
+  ...over,
+});
+
+export async function call(
+  ctx: TestCtx,
+  method: string,
+  url: string,
+  token: string | null,
+  payload?: unknown,
+) {
+  const res = await ctx.app.inject({
+    method: method as any,
+    url: `/api/v1${url}`,
+    headers: token ? auth(token) : {},
+    payload: payload as object | undefined,
+  });
+  let body: any = null;
+  try {
+    body = res.json();
+  } catch {
+    body = res.body;
+  }
+  return { status: res.statusCode, body, res };
+}

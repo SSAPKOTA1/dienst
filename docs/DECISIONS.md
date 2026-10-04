@@ -16,3 +16,12 @@ One line per decision: what and why.
 - **Scope layer** (`apps/api/src/lib/scope.ts`) is rebuilt from the database on every authenticated request (token claims `companyIds`/`hotelIds` are informational), so removing a role or hotel takes effect immediately. Super admin scope = all companies and hotels.
 - **audit_log** is made append-only by a trigger (migration `002`) because a separate restricted DB role is not practical in a single-role dev setup; entries are hash-chained (advisory lock serialises inserts).
 - **Seed admins have TOTP pre-enabled** with a fixed dev secret that is printed by `pnpm db:seed` (so e2e can log in); real setups go through the `/auth/2fa/setup` flow.
+- **Migration 003** makes `employee.created_by_id`, `employee_contract.created_by_id`, `manager.created_by_id`, `import_job.admin_id` nullable: a super admin has no `admin` row, so NULL means "created by a super admin" (the audit log always names the actor).
+- **GET /employees/:id for managers**: SPEC 5.4 lists AD/SA only, but 4.20 and 6.1 give managers a reduced list/detail; managers get the reduced/home-hotel view, never contact data or date of birth.
+- **Authentication runs in Fastify `preValidation`** (before zod body validation), so an anonymous or wrong-role request gets 401/403 even with an invalid body.
+- **`DELETE /kiosk-devices/:id` revokes** (status `revoked`) instead of deleting: punch records reference the device row.
+- **Seed**: contracts of the 15 sample employees start on the seed date and the sample "Zeitkonto" is stored as `opening_balance_hours`, so the computed time account equals the prototype value on seed day; "Resturlaub" is stored as allocated days (+ carry-over in `carried_contractual_days`). Demo PINs, the demo password (`Demo!2345`), the kiosk token and the admin TOTP secret are fixed so the printed output and the e2e suite are reproducible. `pnpm db:seed` always wipes the database (refuses in production).
+- **Time account** also credits public holidays (resolved for the home hotel) that fall on working weekdays without an absence or punch, for salary workers (SPEC 4.15 "public_holiday").
+- **Setup checklist "rules viewed"** is stored as an audit row (`rules_viewed`) per company instead of a new table.
+- **Extra endpoint** `GET /setup/overview` (KPIs, action needed, recent changes) feeds the admin overview; not in SPEC 5.9 but required by DESIGN 4.5.
+- **Employee create** accepts optional `openingBalanceHours`, `isFloater`, `phone`, `preferredLanguage` (additive to SPEC 5.4).

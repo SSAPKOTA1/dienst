@@ -224,12 +224,12 @@ export async function authRoutes(app: FastifyInstance) {
 
   r.post(
     '/auth/select-role',
-    { config: authLimit, preHandler: requirePreOrAccess, schema: { body: selectBody } },
+    { config: authLimit, preValidation: requirePreOrAccess, schema: { body: selectBody } },
     (req, reply) => selectRole(req, reply, req.body, false),
   );
   r.post(
     '/auth/switch-role',
-    { preHandler: requireRole('ANY'), schema: { body: selectBody } },
+    { preValidation: requireRole('ANY'), schema: { body: selectBody } },
     (req, reply) => {
       req.preUserId = getPrincipal(req).userId;
       return selectRole(req, reply, req.body, true);
@@ -415,7 +415,7 @@ export async function authRoutes(app: FastifyInstance) {
     return { u, roles };
   }
 
-  r.post('/auth/2fa/setup', { config: authLimit, preHandler: requirePreOrAccess }, async (req) => {
+  r.post('/auth/2fa/setup', { config: authLimit, preValidation: requirePreOrAccess }, async (req) => {
     const { u } = await twoFactorUser(req);
     if (u.totp_enabled) throw new AppError('CONFLICT', 'Two-factor is already enabled');
     const secret = authenticator.generateSecret();
@@ -443,7 +443,7 @@ export async function authRoutes(app: FastifyInstance) {
     '/auth/2fa/verify',
     {
       config: authLimit,
-      preHandler: requirePreOrAccess,
+      preValidation: requirePreOrAccess,
       schema: { body: z.object({ code: z.string().min(6).max(8) }) },
     },
     async (req) => {

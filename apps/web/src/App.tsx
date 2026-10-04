@@ -1,9 +1,20 @@
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AuthProvider, homePathFor, useAuth, type RoleName } from './lib/auth';
+import { ToastProvider } from './components/ui';
 import { PlannerShell } from './components/Shell';
 import { Login } from './pages/Login';
 import { AcceptInvitation, ForgotPassword } from './pages/AccountPages';
+import { Staff } from './pages/Staff';
+import { StaffNew } from './pages/StaffNew';
+import {
+  AdminCompanies,
+  AdminHotels,
+  AdminIndex,
+  AdminLayout,
+  AdminOverview,
+  AdminUsers,
+} from './pages/Admin';
 
 function Guard({ roles }: { roles: RoleName[] }) {
   const { ready, me } = useAuth();
@@ -31,24 +42,35 @@ const Placeholder = ({ title }: { title: string }) => {
 export function App() {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/accept-invitation" element={<AcceptInvitation />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route element={<Guard roles={['superAdmin', 'admin', 'manager']} />}>
-          <Route element={<PlannerShell />}>
-            <Route path="/planning" element={<Placeholder title="Dienstplan" />} />
-            <Route path="/live" element={<Placeholder title="Live" />} />
-            <Route path="/requests" element={<Placeholder title="Anträge" />} />
-            <Route path="/staff/*" element={<Placeholder title="Mitarbeiter" />} />
-            <Route path="/admin/*" element={<Placeholder title="Einrichtung" />} />
+      <ToastProvider>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/accept-invitation" element={<AcceptInvitation />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route element={<Guard roles={['superAdmin', 'admin', 'manager']} />}>
+            <Route element={<PlannerShell />}>
+              <Route path="/planning" element={<Placeholder title="Dienstplan" />} />
+              <Route path="/live" element={<Placeholder title="Live" />} />
+              <Route path="/requests" element={<Placeholder title="Anträge" />} />
+              <Route path="/staff" element={<Staff />} />
+              <Route path="/staff/new" element={<StaffNew />} />
+              <Route path="/staff/:id" element={<Staff />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminIndex />} />
+                <Route path="overview" element={<AdminOverview />} />
+                <Route path="hotels" element={<AdminHotels />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="companies" element={<AdminCompanies />} />
+                <Route path="*" element={<Placeholder title="Einrichtung" />} />
+              </Route>
+            </Route>
           </Route>
-        </Route>
-        <Route element={<Guard roles={['employee']} />}>
-          <Route path="/me/*" element={<Placeholder title="Handy-Portal" />} />
-        </Route>
-      </Routes>
+          <Route element={<Guard roles={['employee']} />}>
+            <Route path="/me/*" element={<Placeholder title="Handy-Portal" />} />
+          </Route>
+        </Routes>
+      </ToastProvider>
     </AuthProvider>
   );
 }

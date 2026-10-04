@@ -3,7 +3,7 @@ import { getPrincipal, requireRole } from '../lib/auth';
 import { loadAvailableRoles } from '../services/accounts';
 
 export async function meRoutes(app: FastifyInstance) {
-  app.get('/me', { preHandler: requireRole('ANY') }, async (req) => {
+  app.get('/me', { preValidation: requireRole('ANY') }, async (req) => {
     const p = getPrincipal(req);
     const u = await app.db
       .selectFrom('user_account')
