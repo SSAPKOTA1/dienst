@@ -8,6 +8,8 @@ import { AcceptInvitation, ForgotPassword } from './pages/AccountPages';
 import { Planning } from './pages/planning/Planning';
 import { Kiosk } from './pages/Kiosk';
 import { Live } from './pages/Live';
+import { Requests } from './pages/Requests';
+import { AdminAudit, AdminRules, AdminTablets } from './pages/AdminMore';
 import { Staff } from './pages/Staff';
 import { StaffNew } from './pages/StaffNew';
 import {
@@ -56,7 +58,7 @@ export function App() {
             <Route element={<PlannerShell />}>
               <Route path="/planning" element={<Planning />} />
               <Route path="/live" element={<Live />} />
-              <Route path="/requests" element={<Placeholder title="Anträge" />} />
+              <Route path="/requests" element={<Requests />} />
               <Route path="/staff" element={<Staff />} />
               <Route path="/staff/new" element={<StaffNew />} />
               <Route path="/staff/:id" element={<Staff />} />
@@ -65,6 +67,9 @@ export function App() {
                 <Route path="overview" element={<AdminOverview />} />
                 <Route path="hotels" element={<AdminHotels />} />
                 <Route path="users" element={<AdminUsers />} />
+                <Route path="tablets" element={<AdminTablets />} />
+                <Route path="rules" element={<AdminRules />} />
+                <Route path="audit" element={<AdminAudit />} />
                 <Route path="companies" element={<AdminCompanies />} />
                 <Route path="*" element={<Placeholder title="Einrichtung" />} />
               </Route>

@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PLANNER_NAV } from '../nav';
 import { useAuth, homePathFor, type AvailableRole } from '../lib/auth';
+import { useGet } from '../lib/api';
 import { LangSwitch } from './LangSwitch';
 import { roleLabel } from '../pages/Login';
 
@@ -96,6 +97,8 @@ export function PlannerShell() {
       s.items.some((i) => loc.pathname.startsWith(i.path.split('/').slice(0, 2).join('/'))),
     ) ?? PLANNER_NAV[0];
   const { me } = useAuth();
+  const count = useGet('/approvals/count', undefined, { refetchInterval: 30_000 });
+  const open: number = count.data?.total ?? 0;
   const sections = me?.role === 'manager' ? PLANNER_NAV.filter((s) => s.key !== 'admin') : PLANNER_NAV;
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -180,6 +183,22 @@ export function PlannerShell() {
                 }}
               >
                 {t(si.label)}
+                {si.path === '/requests' && open > 0 && (
+                  <span
+                    data-testid="inbox-badge"
+                    aria-label={`${open} ${t('offen')}`}
+                    style={{
+                      marginLeft: 6,
+                      fontSize: 11,
+                      fontWeight: 800,
+                      padding: '1px 6px',
+                      background: 'var(--color-accent)',
+                      color: 'var(--color-bg)',
+                    }}
+                  >
+                    {open}
+                  </span>
+                )}
               </button>
             );
           })}

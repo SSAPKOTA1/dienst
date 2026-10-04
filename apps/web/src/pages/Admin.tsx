@@ -14,6 +14,7 @@ import {
   Segmented,
   useToast,
 } from '../components/ui';
+import { ClosePeriods } from './AdminMore';
 
 const TABS = [
   ['overview', 'Übersicht'],
@@ -72,6 +73,7 @@ export const AdminIndex = () => <Navigate to="/admin/overview" replace />;
 export function AdminOverview() {
   const { t } = useTranslation();
   const nav = useNavigate();
+  const { me } = useAuth();
   const status = useGet('/setup/status');
   const ov = useGet('/setup/overview');
   const [hidden, setHidden] = useState(false);
@@ -334,6 +336,7 @@ export function AdminOverview() {
           ))}
         </section>
       </div>
+      {me?.role !== 'manager' && <ClosePeriods />}
     </div>
   );
 }

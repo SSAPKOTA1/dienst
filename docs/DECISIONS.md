@@ -47,3 +47,12 @@ One line per decision: what and why.
 - **Auto-checkout** runs every minute inside the API process (`buildApp({autoCheckout:true})`, enabled by `server.ts`); tests call `runAutoCheckout(db, clock)` directly. Records stay `source='kiosk'` with `auto_checked_out=true`.
 - **Live**: records needing review are listed only under "Prüfung nötig" (not also under "Eingestempelt"); expected/no-show consider published entries of the hotel-local today without a non-rejected time record.
 - **Seed punches**: today's started published entries get approved closed punches (or one open punch), plus an open unplanned punch for Piotr, Sven's auto-checked-out Wednesday with a pending missed-clock-out correction and Maria's late Tuesday with a pending wrong-time correction.
+- **Pending vacation requests** (inbox) are `annual_leave` rows with `status='pending'` created by the employee's own user; planner-entered absences are never pending.
+- **Bulk approve** runs one transaction per record so one flagged or closed record never blocks the rest; flagged records come back in `failed` with the flags.
+- **`GET /approvals/count`** (extra, read-only) feeds the inbox badge; it counts finished pending records, pending corrections and pending vacation requests of the caller's hotels.
+- **Corrections** are also refused at request time when the day lies in a closed period (SPEC 4.7 only names approval); the decision re-checks it.
+- **Vacation requests** may not start in the past (422-free `VALIDATION` 400) and may not overlap a pending/approved absence (409).
+- **Period close** treats open punches (no clock-out) in the range like pending approvals (`PENDING_APPROVALS`, `open: true`); overlapping an already closed range is 409 `CONFLICT`.
+- **Audit log** visibility: super admin sees everything, an admin only rows of their companies (rows without a company, e.g. logins, are super-admin only). CSV export is capped at 10 000 rows.
+- **Regeln tab** shows static text of the built-in rules; opening it calls `POST /setup/rules-viewed` for the onboarding checklist.
+- **E2E**: the test API runs with `RATE_LIMIT_AUTH=1000` (many logins from one IP) and the helper waits for a fresh TOTP window because the server rejects replayed codes.

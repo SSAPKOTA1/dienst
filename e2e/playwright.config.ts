@@ -24,6 +24,8 @@ export default defineConfig({
       reuseExistingServer: true,
       timeout: 60_000,
       cwd: '..',
+      // many logins from one IP in a minute: raise the production limits for the test server
+      env: { RATE_LIMIT_AUTH: '1000', RATE_LIMIT_KIOSK: '1000' },
     },
     {
       command: 'pnpm --filter @dienst/web dev',

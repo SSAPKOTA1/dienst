@@ -5,13 +5,22 @@ export const PASSWORD = 'Demo!2345';
 export const TOTP_SECRET = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP';
 export const KIOSK_TOKEN = 'kd_demo_frankfurt_4f1c9a7e2b6d8035a1e94c7b02d6f83a';
 
+let lastTotpStep = 0;
+/** The server rejects a replayed TOTP code, so two admin logins need different 30 s windows. */
+async function freshTotp(): Promise<string> {
+  const step = () => Math.floor(Date.now() / 30000);
+  while (step() === lastTotpStep) await new Promise((r) => setTimeout(r, 500));
+  lastTotpStep = step();
+  return authenticator.generate(TOTP_SECRET);
+}
+
 export async function login(page: Page, loginName: string, opts: { totp?: boolean; role?: RegExp } = {}) {
   await page.goto('/login');
   await page.fill('#login', loginName);
   await page.fill('#password', PASSWORD);
   await page.getByRole('button', { name: 'Anmelden' }).click();
   if (opts.totp) {
-    await page.fill('#totp', authenticator.generate(TOTP_SECRET));
+    await page.fill('#totp', await freshTotp());
     await page.getByRole('button', { name: 'Anmelden' }).click();
   }
   if (opts.role) await page.getByRole('button', { name: opts.role }).click();
