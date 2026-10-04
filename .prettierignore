@@ -1,0 +1,17 @@
+node_modules
+dist
+design
+db
+tests
+docs
+SPEC.md
+CLAUDE.md
+README.md
+PROMPT.md
+pnpm-lock.yaml
+apps/api/src/db/types.ts
+test-results
+playwright-report
+apps/web/src/styles/tokens.css
+apps/web/src/i18n/de.json
+apps/web/src/i18n/en.json

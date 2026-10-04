@@ -1,0 +1,35 @@
+{
+  "name": "@dienst/web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p . && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p .",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@dienst/shared": "workspace:*",
+    "@dnd-kit/core": "^6.3.1",
+    "@fontsource-variable/archivo": "^5.2.0",
+    "@tanstack/react-query": "^5.90.0",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
+    "i18next": "^25.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-i18next": "^16.0.0",
+    "react-router-dom": "^6.30.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "tailwindcss": "^4.1.0",
+    "vite": "^7.1.0",
+    "vitest": "^3.2.0"
+  }
+}

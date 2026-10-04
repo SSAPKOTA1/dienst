@@ -1,0 +1,39 @@
+{
+  "name": "dienst",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "db:migrate": "pnpm --filter @dienst/api db:migrate",
+    "db:seed": "pnpm --filter @dienst/api db:seed",
+    "db:codegen": "pnpm --filter @dienst/api db:codegen",
+    "dev": "pnpm --parallel --filter @dienst/api --filter @dienst/web dev",
+    "build": "pnpm --filter @dienst/web build",
+    "test": "pnpm -r --workspace-concurrency=1 test",
+    "e2e": "playwright test -c e2e/playwright.config.ts",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^22.20.0",
+    "eslint": "^9.39.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^16.0.0",
+    "prettier": "^3.6.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "argon2",
+      "esbuild"
+    ]
+  }
+}

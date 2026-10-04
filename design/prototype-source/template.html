@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="9560f178-f8bf-4045-b244-606e7793798d"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="omelette-owns-print" content="">
+<style>/* Modernist — design-system tokens and component classes. This file is the source of truth for the system's look; retune it here and see readme.md. */
+/* vietnamese */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("6c51fb84-c421-4d15-8741-a54e678d0bf1") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("b0e263be-bf95-4628-b232-30818cf1b3f5") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("dd7b58d6-b6b7-405b-92f2-4d7188b33cce") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("6c51fb84-c421-4d15-8741-a54e678d0bf1") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("b0e263be-bf95-4628-b232-30818cf1b3f5") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("dd7b58d6-b6b7-405b-92f2-4d7188b33cce") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 800;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("6c51fb84-c421-4d15-8741-a54e678d0bf1") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 800;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("b0e263be-bf95-4628-b232-30818cf1b3f5") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 800;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("dd7b58d6-b6b7-405b-92f2-4d7188b33cce") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+
+:root {
+  --color-bg: #f3f2f2;
+  --color-surface: #eae9e9;
+  --color-text: #201e1d;
+  --color-accent: #ec3013;
+  --color-accent-2: #e15b47;
+  --color-divider: color-mix(in srgb, #201e1d 40%, transparent);
+
+  /* Tonal ramps — generated in OKLCH on one shared lightness scale, so the
+     same step of any role matches the others in visual value. */
+  --color-neutral-100: #f8f4f4;
+  --color-neutral-200: #eae7e7;
+  --color-neutral-300: #d7d3d3;
+  --color-neutral-400: #bab6b6;
+  --color-neutral-500: #9b9797;
+  --color-neutral-600: #7d7979;
+  --color-neutral-700: #605d5d;
+  --color-neutral-800: #444141;
+  --color-neutral-900: #2d2b2b;
+
+  --color-accent-100: #fff2ef;
+  --color-accent-200: #ffe0d9;
+  --color-accent-300: #ffc4b8;
+  --color-accent-400: #ff9783;
+  --color-accent-500: #ff563c;
+  --color-accent-600: #dd2b0f;
+  --color-accent-700: #ae1800;
+  --color-accent-800: #7c1405;
+  --color-accent-900: #4d170e;
+
+  --color-accent-2-100: #fff2ef;
+  --color-accent-2-200: #ffe0da;
+  --color-accent-2-300: #ffc4b9;
+  --color-accent-2-400: #ff9784;
+  --color-accent-2-500: #ef6853;
+  --color-accent-2-600: #c94b39;
+  --color-accent-2-700: #9e3526;
+  --color-accent-2-800: #71261b;
+  --color-accent-2-900: #471d16;
+
+  --font-heading: "Archivo", system-ui, sans-serif;
+  --font-heading-weight: 800;
+  --font-body: "Archivo", system-ui, sans-serif;
+
+  --space-1: 4.0px;
+  --space-2: 8.0px;
+  --space-3: 12.0px;
+  --space-4: 16.0px;
+  --space-6: 24.0px;
+  --space-8: 32.0px;
+
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+
+  /* Elevation — derived from the ground: soft ink-tinted shadows on a
+     light theme, a hairline edge + ambient darkness on a dark one. */
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #2d2b2b 14%, transparent);
+  --shadow-md: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent);
+  --shadow-lg: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: var(--font-heading-weight); }
+
+.grayscale{filter:grayscale(1) contrast(1.08)}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Components — built with the tokens above. Plain CSS
+   on plain HTML: no JavaScript, no build step. Each class is documented in
+   readme.md and demonstrated in foundations/ and components/.
+   ══════════════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; font-size: 15px; line-height: 1.55; font-weight: 400; }
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  line-height: 1.12; letter-spacing: -0.015em; margin: 0 0 var(--space-2);
+}
+h1 { font-size: 42px; }
+h2 { font-size: 32px; }
+h3 { font-size: 25px; }
+h4 { font-size: 20px; }
+h5 { font-size: 16px; }
+h6 { font-size: 13px; }
+h6 { letter-spacing: 0.08em; text-transform: uppercase; }
+p { margin: 0 0 var(--space-3); }
+a { color: var(--color-accent); text-underline-offset: 3px; }
+img { display: block; max-width: 100%; }
+figure { margin: 0; }
+figcaption {
+  font-size: 11px; margin-top: var(--space-1);
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+}
+.text-muted { color: color-mix(in srgb, var(--color-text) 55%, transparent); }
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+::selection { background: color-mix(in srgb, var(--color-accent) 30%, transparent); }
+
+/* — rules — */
+.hr {
+  height: 2px; border: 0; margin: var(--space-4) 0;
+  background: var(--color-divider);
+}
+
+/* — buttons — */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer; text-decoration: none;
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: 14px; line-height: 1.2; color: var(--color-text); /* matches the .input's 14px —
+     the pair sits side by side in sign-up rows */
+  background: transparent; border: 1px solid transparent;
+  padding: var(--space-2) calc(var(--space-3) * 1.2);
+  border-radius: var(--radius-md);
+}
+.btn svg { display: block; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary { background: var(--color-accent); color: var(--color-bg); }
+.btn-primary:hover { background: var(--color-accent-600); }
+.btn-primary:active { background: var(--color-accent-700); }
+.btn-secondary { border-color: var(--color-divider); }
+.btn-secondary:hover { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
+.btn-secondary:active { background: color-mix(in srgb, var(--color-text) 14%, transparent); }
+.btn-ghost { color: var(--color-accent); padding-inline: var(--space-1); }
+.btn-ghost:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+.btn-ghost:active { background: color-mix(in srgb, var(--color-accent) 18%, transparent); }
+.btn-icon { width: 36px; height: 36px; padding: 0; }
+.btn-block { width: 100%; margin-top: var(--space-2); justify-content: flex-start; text-align: left; }
+
+/* — forms — */
+.field > label {
+  display: block; font-size: 12px; margin-bottom: 5px;
+  color: color-mix(in srgb, var(--color-text) 70%, transparent);
+}
+.input {
+  width: 100%; min-height: 36px; padding: 6px 10px; font: inherit;
+  font-size: 14px; color: var(--color-text); caret-color: var(--color-accent);
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider); border-radius: var(--radius-md);
+}
+.input:hover { border-color: color-mix(in srgb, var(--color-text) 45%, transparent); }
+.input:focus-visible { border-color: var(--color-accent); outline-offset: 0; }
+textarea.input { min-height: 90px; resize: vertical; }
+.radio { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; }
+.radio input, .seg-opt input {
+  position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
+}
+.radio .dot {
+  width: 16px; height: 16px; flex: none; border-radius: 50%;
+  border: 1.5px solid var(--color-divider);
+}
+.radio:hover .dot { border-color: var(--color-accent); }
+.radio input:checked + .dot {
+  border-color: var(--color-accent); background: var(--color-accent);
+  box-shadow: inset 0 0 0 4px var(--color-bg);
+}
+.radio input:focus-visible + .dot { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.seg {
+  display: inline-flex; overflow: hidden;
+  border: 1px solid var(--color-divider); border-radius: var(--radius-md);
+}
+.seg-opt {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; font-size: 13px; cursor: pointer;
+}
+.seg-opt + .seg-opt { border-left: 1px solid var(--color-divider); }
+.seg-opt:has(input:checked) { background: var(--color-accent); color: var(--color-bg); }
+.seg-opt:not(:has(input:checked)):hover { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
+.seg-opt:has(input:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+
+/* — cards — */
+.card {
+  display: flex; flex-direction: column; gap: var(--space-2);
+  padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-surface);
+}
+.card-kicker { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-accent); }
+.card-title {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: 17px; line-height: 1.2;
+}
+.card-body { margin: 0; font-size: 13px; opacity: 0.8; flex: 1; }
+.card-meta {
+  display: flex; align-items: center; gap: 6px; font-size: 11px;
+  color: color-mix(in srgb, var(--color-text) 50%, transparent);
+}
+.elev-sm { box-shadow: var(--shadow-sm); }
+.elev-md { box-shadow: var(--shadow-md); }
+.elev-lg { box-shadow: var(--shadow-lg); }
+
+/* — tags — */
+.tag {
+  display: inline-flex; align-items: center; font-size: 11px;
+  letter-spacing: 0.02em; padding: 3px 10px;
+  border-radius: calc(var(--radius-md) * 0.75);
+}
+.tag-accent { background: var(--color-accent-100); color: var(--color-accent-800); }
+.tag-accent-2 { background: var(--color-accent-2-100); color: var(--color-accent-2-800); }
+.tag-neutral { background: var(--color-neutral-100); color: var(--color-neutral-800); }
+.tag-outline { border: 1px solid var(--color-accent); color: var(--color-accent); }
+
+/* — navigation — */
+.nav {
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 2px solid var(--color-divider);
+}
+.nav-brand {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: 18px; margin-right: auto;
+}
+.nav a { color: inherit; text-decoration: none; font-size: 14px; }
+.nav a:hover, .nav a[aria-current='page'] { color: var(--color-accent); }
+
+/* — tables — */
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table th {
+  text-align: left; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+  padding: var(--space-2); border-bottom: 2px solid var(--color-divider);
+}
+.table td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-divider);
+}
+.table tbody tr:hover { background: color-mix(in srgb, var(--color-text) 4%, transparent); }
+
+/* — dialog — */
+.dialog-backdrop {
+  position: fixed; inset: 0; display: grid; place-items: center;
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--color-neutral-900) 50%, transparent);
+}
+.dialog {
+  width: min(440px, 100%); display: flex; flex-direction: column; gap: var(--space-3);
+  padding: var(--space-4); border-radius: var(--radius-lg);
+  background: var(--color-surface); box-shadow: var(--shadow-lg);
+}
+.dialog-title {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: 20px;
+}
+.dialog-body { font-size: 14px; opacity: 0.85; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
+
+</style>
+<script src="12815700-6de4-43bd-b1be-517e29db9d0a"></script>
+<style>
+body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body)}
+:root{--warn:var(--color-accent-700);--warn-bg:var(--color-accent-100)}
+@page{size:A4 landscape;margin:10mm}
+@media print{
+html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#fff}
+[data-noprint],.dialog-backdrop{display:none!important}
+[data-printonly]{display:block!important}
+[data-printmain]{display:block!important}
+[data-row]{break-inside:avoid}
+button{cursor:default}
+}
+a{color:var(--color-accent-700)}a:hover{color:var(--color-accent)}
+</style>
+</helmet>
+<div ref="{{ rootRef }}" style="min-height:100vh;display:flex;flex-direction:column">
+  <header class="nav" data-noprint="1" style="flex-wrap:wrap;gap:var(--space-3) var(--space-4);padding:var(--space-2) var(--space-4)">
+    <div class="nav-brand" style="display:flex;align-items:baseline;gap:var(--space-2)">Trip Inn<span style="font-weight:400;font-size:13px;color:var(--color-neutral-700)">Dienstplan &amp; Zeiterfassung</span></div>
+    <nav style="display:flex;gap:2px;flex-wrap:wrap">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="7">
+        <sc-if value="{{ n.active }}" hint-placeholder-val="{{ false }}"><button sc-camel-on-click="{{ n.go }}" style="font:inherit;font-size:13px;font-weight:700;padding:7px 11px;border:0;background:var(--color-text);color:var(--color-bg);cursor:pointer">{{ n.label }}</button></sc-if>
+        <sc-if value="{{ n.inactive }}" hint-placeholder-val="{{ true }}"><button sc-camel-on-click="{{ n.go }}" style="font:inherit;font-size:13px;padding:7px 11px;border:0;background:transparent;color:var(--color-text);cursor:pointer" style-hover="background:color-mix(in srgb, var(--color-text) 7%, transparent)">{{ n.label }}</button></sc-if>
+      </sc-for>
+    </nav>
+    <div style="display:flex;align-items:center;gap:var(--space-3);font-size:13px;flex-wrap:wrap">
+      <sc-if value="{{ isPortal }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;border:1px solid var(--color-divider)">
+          <sc-for list="{{ widthOpts }}" as="w" hint-placeholder-count="2"><button sc-camel-on-click="{{ w.pick }}" style="font:inherit;font-size:12px;padding:5px 10px;border:0;cursor:pointer;background:{{ w.bg }};color:{{ w.fg }}">{{ w.label }}</button></sc-for>
+        </div>
+      </sc-if>
+      
+      <div style="display:flex;border:1px solid var(--color-divider)">
+        <sc-for list="{{ langOpts }}" as="l" hint-placeholder-count="2"><button sc-camel-on-click="{{ l.pick }}" style="font:inherit;font-size:12px;font-weight:700;padding:5px 9px;border:0;cursor:pointer;background:{{ l.bg }};color:{{ l.fg }}">{{ l.label }}</button></sc-for>
+      </div>
+      <span style="color:var(--color-neutral-700)">{{ whoLabel }}</span>
+    </div>
+  </header>
+  <sc-if value="{{ hasSubNav }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:var(--space-1);flex-wrap:wrap;padding:0 var(--space-4);border-bottom:2px solid var(--color-divider);background:var(--color-bg)">
+    <sc-for list="{{ subItems }}" as="si" hint-placeholder-count="3"><button sc-camel-on-click="{{ si.go }}" style="font:inherit;font-size:14px;font-weight:{{ si.weight }};padding:10px 14px;border:0;border-bottom:3px solid {{ si.line }};margin-bottom:-2px;background:transparent;color:var(--color-text);cursor:pointer;display:flex;gap:8px;align-items:center">{{ si.label }}<sc-if value="{{ si.badge }}" hint-placeholder-val="{{ false }}"><span class="tag tag-accent" style="padding:0 6px">{{ si.badge }}</span></sc-if></button></sc-for>
+  </div></sc-if>
+
+  <sc-if value="{{ isRoster }}" hint-placeholder-val="{{ true }}">
+  <main data-printmain="1" style="display:grid;grid-template-columns:minmax(0,1fr) 330px;flex:1;min-height:0">
+    <section style="min-width:0;border-right:2px solid var(--color-divider)">
+      <div style="display:flex;align-items:flex-end;gap:var(--space-3);flex-wrap:wrap;padding:var(--space-4) var(--space-4) var(--space-2)">
+        <div style="margin-right:auto">
+          <div style="display:flex;gap:var(--space-2);align-items:center"><span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">{{ weekKicker }}</span><span class="tag tag-neutral">{{ wkStatus }}</span></div>
+          <h1 style="margin:2px 0 0;font-size:30px;line-height:1.1">{{ weekTitle }}</h1>
+          <div data-printonly="1" style="display:none;font-size:12px;margin-top:4px">{{ printLine }}</div>
+        </div>
+        <div data-noprint="1" style="display:flex;gap:2px;align-items:center">
+          <button class="btn btn-secondary btn-icon" sc-camel-on-click="{{ prevWeek }}" aria-label="Vorherige Woche"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m15 18-6-6 6-6"></path></svg></button>
+          <button class="btn btn-secondary" sc-camel-on-click="{{ thisWeek }}">Heute</button>
+          <button class="btn btn-secondary btn-icon" sc-camel-on-click="{{ nextWeek }}" aria-label="Nächste Woche"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 18 6-6-6-6"></path></svg></button>
+          <button class="btn btn-secondary" style="margin-left:var(--space-2)" sc-camel-on-click="{{ printPlan }}"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><path d="M6 14h12v8H6z"></path></svg>Dienstplan als PDF</button>
+          <sc-raw-select class="input" style="width:auto;min-height:36px;margin-left:var(--space-2)" value="{{ weekVal }}" sc-camel-on-change="{{ onWeek }}"><sc-for list="{{ weekOpts }}" as="o" hint-placeholder-count="10"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></sc-raw-select>
+        </div>
+      </div>
+      <div data-noprint="1" style="display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:center;padding:0 var(--space-4) var(--space-3)">
+        <div style="display:flex;border:1px solid var(--color-divider)"><sc-for list="{{ viewOpts }}" as="v" hint-placeholder-count="2"><button sc-camel-on-click="{{ v.pick }}" style="font:inherit;font-size:13px;font-weight:600;padding:7px 12px;border:0;border-left:1px solid var(--color-divider);cursor:pointer;background:{{ v.bg }};color:{{ v.fg }}">{{ v.label }}</button></sc-for></div>
+        <sc-for list="{{ ddowns }}" as="dd" hint-placeholder-count="2">
+        <div style="position:relative;display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700)">{{ dd.label }}</span>
+          <button sc-camel-on-click="{{ dd.toggle }}" style="font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--color-text);background:var(--color-bg);cursor:pointer;display:flex;gap:10px;align-items:center;justify-content:space-between;min-width:170px" style-hover="background:var(--color-surface)"><span>{{ dd.summary }}</span><svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"></path></svg></button>
+          <sc-if value="{{ dd.open }}" hint-placeholder-val="{{ false }}">
+            <div sc-camel-on-click="{{ closeDd }}" style="position:fixed;inset:0;z-index:40"></div>
+            <div style="position:absolute;top:100%;left:0;margin-top:4px;z-index:41;min-width:260px;background:var(--color-bg);border:2px solid var(--color-text);box-shadow:var(--shadow-md)">
+              <sc-if value="{{ dd.hasSearch }}" hint-placeholder-val="{{ false }}"><div style="padding:8px;border-bottom:1px solid var(--color-divider)"><input class="input" placeholder="Suchen" value="{{ dd.query }}" sc-camel-on-change="{{ dd.onQuery }}" sc-camel-on-input="{{ dd.onQuery }}"></div></sc-if>
+              <button sc-camel-on-click="{{ dd.all.pick }}" style="display:flex;gap:10px;align-items:center;width:100%;font:inherit;font-size:13px;font-weight:700;text-align:left;padding:9px 12px;border:0;border-bottom:2px solid var(--color-divider);background:transparent;cursor:pointer;color:var(--color-text)" style-hover="background:var(--color-surface)"><span style="width:16px;height:16px;border:2px solid var(--color-text);display:flex;align-items:center;justify-content:center;background:{{ dd.all.bg }};color:var(--color-bg)"><svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6 9 17l-5-5"></path></svg></span>{{ dd.all.label }}</button>
+              <div style="max-height:260px;overflow:auto">
+                <sc-for list="{{ dd.opts }}" as="o" hint-placeholder-count="3">
+                  <button sc-camel-on-click="{{ o.pick }}" style="display:flex;gap:10px;align-items:center;width:100%;font:inherit;font-size:13px;text-align:left;padding:9px 12px;border:0;border-bottom:1px solid var(--color-divider);background:transparent;cursor:pointer;color:var(--color-text)" style-hover="background:var(--color-surface)"><span style="width:16px;height:16px;border:2px solid var(--color-text);display:flex;align-items:center;justify-content:center;background:{{ o.bg }};color:var(--color-bg)"><svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="margin-right:auto">{{ o.label }}</span><span style="font-size:11px;color:var(--color-neutral-700)">{{ o.sub }}</span></button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+        <div style="margin-left:auto;display:flex;gap:var(--space-2);flex-wrap:wrap">
+          <button class="btn btn-secondary" sc-camel-on-click="{{ copyPrev }}">Vorwoche kopieren</button>
+          <button class="btn btn-secondary" sc-camel-on-click="{{ openClear }}">Plan leeren</button>
+          <sc-if value="{{ hasDrafts }}" hint-placeholder-val="{{ true }}"><button class="btn btn-primary" sc-camel-on-click="{{ publish }}">{{ publishLabel }}</button></sc-if>
+          <sc-if value="{{ noDrafts }}" hint-placeholder-val="{{ false }}"><span class="tag tag-neutral" style="padding:8px 12px">Alles veröffentlicht</span></sc-if>
+        </div>
+      </div>
+      <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}"><div data-noprint="1" style="margin:0 var(--space-4) var(--space-3);border:2px solid var(--warn);padding:8px 12px;font-size:13px;font-weight:600">{{ toast }}</div></sc-if>
+      <sc-if value="{{ hasChanges }}" hint-placeholder-val="{{ false }}"><div data-noprint="1" style="margin:0 var(--space-4) var(--space-3);border:2px solid var(--color-divider)">
+        <div style="display:flex;gap:var(--space-2);align-items:center;padding:4px 12px;background:var(--color-surface);border-bottom:1px solid var(--color-divider)"><b style="font-size:13px;margin-right:auto">Änderungen seit der letzten Veröffentlichung</b><span class="tag tag-accent">{{ changeCount }}</span><button class="btn btn-ghost" sc-camel-on-click="{{ revertAll }}">Alle verwerfen</button></div>
+        <div style="max-height:120px;overflow:auto"><sc-for list="{{ changes }}" as="cg" hint-placeholder-count="3"><button sc-camel-on-click="{{ cg.pick }}" style="display:grid;grid-template-columns:120px 80px minmax(0,1fr) 80px;gap:var(--space-2);width:100%;font:inherit;font-size:13px;text-align:left;padding:5px 12px;border:0;border-bottom:1px solid var(--color-divider);background:transparent;cursor:pointer;color:var(--color-text)" style-hover="background:color-mix(in srgb, var(--color-text) 5%, transparent)"><b>{{ cg.name }}</b><span>{{ cg.day }}</span><span>{{ cg.text }}</span><span style="font-size:11px;font-weight:700;color:var(--color-accent-700)">{{ cg.type }}</span></button></sc-for></div>
+        <sc-if value="{{ notifyNote }}" hint-placeholder-val="{{ false }}"><div style="padding:5px 12px;font-size:12px;color:var(--color-neutral-800)">Mitarbeitende mit veröffentlichten Schichten werden beim Veröffentlichen benachrichtigt.</div></sc-if>
+      </div></sc-if>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:2px solid var(--color-divider)">
+        <sc-for list="{{ summary }}" as="sm" hint-placeholder-count="4">
+          <div style="padding:8px var(--space-4);border-right:1px solid var(--color-divider);display:flex;align-items:baseline;gap:var(--space-2)">
+            <span style="font-size:28px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;color:{{ sm.color }}">{{ sm.value }}</span>
+            <span style="font-size:12px;color:var(--color-neutral-800)">{{ sm.label }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ showTools }}" hint-placeholder-val="{{ true }}">
+      <div data-noprint="1" style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;padding:8px var(--space-4);border-top:1px solid var(--color-divider);background:var(--color-surface)">
+        <sc-if value="{{ viewEmp }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;font-weight:700">Schicht ziehen</span></sc-if>
+        <sc-for list="{{ palette }}" as="p" hint-placeholder-count="6"><span draggable="true" sc-camel-on-drag-start="{{ p.dragStart }}" sc-camel-on-drag-end="{{ p.end }}" style="cursor:grab;font-size:12px;padding:4px 9px;border:1px solid var(--color-text);background:var(--color-bg);display:flex;gap:6px"><b>{{ p.name }}</b><span>{{ p.time }}</span></span></sc-for>
+        <span sc-camel-on-drag-over="{{ trashOver }}" sc-camel-on-drop="{{ trashDrop }}" style="margin-left:auto;display:flex;gap:6px;align-items:center;font-size:12px;padding:5px 10px;border:1px dashed {{ trashBorder }};background:{{ trashBg }}"><svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Zum Löschen hierher ziehen</span>
+      </div>
+      </sc-if>
+      <div style="display:flex;gap:var(--space-4);flex-wrap:wrap;padding:8px var(--space-4);border-top:1px solid var(--color-divider);font-size:12px;color:var(--color-neutral-700)">
+        <span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;background:var(--color-neutral-300)"></span>Veröffentlicht</span>
+        <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border:1px dashed var(--color-text)"></span>Entwurf</span>
+        <span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;background:repeating-linear-gradient(135deg,var(--color-neutral-300) 0 3px,transparent 3px 6px)"></span>Abwesenheit</span>
+        <span style="display:flex;align-items:center;gap:6px;color:var(--warn)"><svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>Warnung</span>
+      </div>
+
+      <sc-if value="{{ noGroups }}" hint-placeholder-val="{{ false }}"><div style="border-top:2px solid var(--color-divider);padding:var(--space-8) var(--space-4);font-size:15px;color:var(--color-neutral-800)">Keine Hotels oder Abteilungen ausgewählt. Wähle oben mindestens eines aus.</div></sc-if>
+      <sc-if value="{{ viewEmp }}" hint-placeholder-val="{{ true }}">
+      <div style="overflow-x:auto;border-top:2px solid var(--color-divider)">
+        <div style="min-width:820px">
+          <div style="display:grid;grid-template-columns:176px repeat(7,minmax(0,1fr)) 72px;border-bottom:2px solid var(--color-divider)">
+            <div style="padding:6px var(--space-4);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700);align-self:end">Mitarbeiter</div>
+            <sc-for list="{{ days }}" as="d" hint-placeholder-count="7">
+              <div style="padding:6px 8px;border-left:1px solid var(--color-divider);display:flex;align-items:baseline;gap:6px;background:{{ d.bg }}"><span style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700)">{{ d.dow }}</span><span style="font-weight:800;font-size:16px">{{ d.date }}</span></div>
+            </sc-for>
+            <div style="padding:6px 8px;border-left:1px solid var(--color-divider);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700);align-self:end">Std.</div>
+          </div>
+          <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+            <div style="padding:8px var(--space-4) 4px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--color-divider);background:var(--color-surface)">{{ g.name }}</div>
+            <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+              <div data-row="1" style="display:grid;grid-template-columns:176px repeat(7,minmax(0,1fr)) 72px;border-bottom:1px solid var(--color-divider)">
+                <div style="padding:4px var(--space-4);display:flex;flex-direction:column;justify-content:center;min-width:0">
+                  <button sc-camel-on-click="{{ r.open }}" style="font:inherit;font-size:13px;font-weight:700;text-align:left;border:0;background:transparent;padding:0;cursor:pointer;color:var(--color-text)" style-hover="color:var(--color-accent-700)">{{ r.name }}</button>
+                  <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+                    <span style="font-size:11px;color:var(--color-neutral-700)">{{ r.meta }}</span>
+                    <sc-if value="{{ r.minor }}" hint-placeholder-val="{{ false }}"><span class="tag tag-accent" style="padding:0 5px;font-size:10px">U18</span></sc-if>
+                    <sc-if value="{{ r.floating }}" hint-placeholder-val="{{ false }}"><span class="tag tag-outline" style="padding:0 5px;font-size:10px">Stammhaus: Berlin</span></sc-if>
+                  </div>
+                </div>
+                <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="7">
+                  <button sc-camel-on-click="{{ c.select }}" draggable="{{ c.canDrag }}" sc-camel-on-drag-start="{{ c.dragStart }}" sc-camel-on-drag-end="{{ c.end }}" sc-camel-on-drag-over="{{ c.over }}" sc-camel-on-drop="{{ c.drop }}" style="position:relative;font:inherit;text-align:left;border:0;border-left:1px solid var(--color-divider);background:transparent;padding:3px;min-height:44px;cursor:{{ c.cursor }};display:flex;opacity:{{ c.op }};" style-hover="background:color-mix(in srgb, var(--color-text) 5%, transparent)">
+                    <sc-if value="{{ c.isPub }}" hint-placeholder-val="{{ false }}"><span style="flex:1;background:var(--color-neutral-300);padding:4px 6px;display:flex;flex-direction:column;justify-content:center"><span style="font-size:12px;font-weight:700;line-height:1.2">{{ c.name }}</span><span style="font-size:11px;font-variant-numeric:tabular-nums">{{ c.time }}</span></span></sc-if>
+                    <sc-if value="{{ c.isDraft }}" hint-placeholder-val="{{ false }}"><span style="flex:1;border:1px dashed var(--color-text);padding:3px 5px;display:flex;flex-direction:column;justify-content:center"><span style="font-size:12px;font-weight:700;line-height:1.2">{{ c.name }}</span><span style="font-size:11px;font-variant-numeric:tabular-nums">{{ c.time }}</span></span></sc-if>
+                    <sc-if value="{{ c.isChanged }}" hint-placeholder-val="{{ false }}"><span style="flex:1;background:var(--color-neutral-300);border:2px solid var(--color-accent);padding:2px 4px;display:flex;flex-direction:column;justify-content:center"><span style="font-size:12px;font-weight:700;line-height:1.2">{{ c.name }}</span><span style="font-size:11px;font-variant-numeric:tabular-nums">{{ c.time }}</span></span></sc-if>
+                    <sc-if value="{{ c.isRemoved }}" hint-placeholder-val="{{ false }}"><span style="flex:1;border:1px dashed var(--color-accent);padding:3px 5px;display:flex;flex-direction:column;justify-content:center;text-decoration:line-through;color:var(--color-neutral-700)"><span style="font-size:12px;font-weight:700;line-height:1.2">{{ c.name }}</span><span style="font-size:11px">{{ c.time }}</span></span></sc-if>
+                    <sc-if value="{{ c.isOff }}" hint-placeholder-val="{{ false }}"><span style="flex:1;padding:4px 6px;font-size:12px;color:var(--color-neutral-700);align-self:center">Frei</span></sc-if>
+                    <sc-if value="{{ c.isAbs }}" hint-placeholder-val="{{ false }}"><span style="flex:1;padding:4px 6px;font-size:11px;font-weight:600;background:repeating-linear-gradient(135deg,var(--color-neutral-300) 0 3px,transparent 3px 7px);display:flex;align-items:center">{{ c.absLabel }}</span></sc-if>
+                    <sc-if value="{{ c.isElse }}" hint-placeholder-val="{{ false }}"><span style="flex:1;padding:4px 6px;display:flex;flex-direction:column;justify-content:center;color:var(--color-neutral-700)"><span style="font-size:11px;font-weight:600">In Berlin</span><span style="font-size:11px">06–14</span></span></sc-if>
+                    <sc-if value="{{ c.warn }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:5px;right:{{ c.warnRight }};color:var(--warn)"><svg width="13" height="13" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg></span></sc-if>
+                    <sc-if value="{{ c.selected }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:1px;outline:2px solid var(--color-accent);pointer-events:none"></span></sc-if>
+                    <sc-if value="{{ c.hover }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:0;border:2px dashed var(--color-accent);background:var(--color-accent-100);opacity:.7;pointer-events:none"></span></sc-if><sc-if value="{{ c.showX }}" hint-placeholder-val="{{ false }}"><span role="button" aria-label="Entfernen" sc-camel-on-click="{{ c.rm }}" style="position:absolute;top:0;right:0;width:18px;height:18px;background:var(--color-accent);color:var(--color-bg);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2" style-hover="background:var(--color-accent-700)"><svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></span></sc-if>
+                  </button>
+                </sc-for>
+                <div style="border-left:1px solid var(--color-divider);padding:4px 8px;display:flex;flex-direction:column;justify-content:center;font-variant-numeric:tabular-nums">
+                  <span style="font-size:13px;font-weight:800">{{ r.hours }}</span>
+                  <span style="font-size:10px;color:var(--color-neutral-700)">von {{ r.target }}</span>
+                </div>
+              </div>
+            </sc-for>
+            <div style="display:grid;grid-template-columns:176px repeat(7,minmax(0,1fr)) 72px;border-bottom:2px solid var(--color-divider)">
+              <div style="padding:5px var(--space-4);font-size:11px;color:var(--color-neutral-700)">Besetzung · min. {{ g.min }}</div>
+              <sc-for list="{{ g.cov }}" as="v" hint-placeholder-count="7">
+                <div style="border-left:1px solid var(--color-divider);padding:5px 8px;font-size:12px;font-variant-numeric:tabular-nums">
+                  <sc-if value="{{ v.ok }}" hint-placeholder-val="{{ true }}"><span>{{ v.label }}</span></sc-if>
+                  <sc-if value="{{ v.under }}" hint-placeholder-val="{{ false }}"><span style="font-weight:800;color:var(--warn)">{{ v.label }} zu wenig</span></sc-if>
+                </div>
+              </sc-for>
+              <div style="border-left:1px solid var(--color-divider)"></div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ viewShift }}" hint-placeholder-val="{{ false }}">
+      <div style="overflow-x:auto;border-top:2px solid var(--color-divider)">
+        <div style="min-width:820px">
+          <div style="display:grid;grid-template-columns:176px repeat(7,minmax(0,1fr));border-bottom:2px solid var(--color-divider)">
+            <div style="padding:6px var(--space-4);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700);align-self:end">Dienst</div>
+            <sc-for list="{{ days }}" as="d" hint-placeholder-count="7">
+              <div style="padding:6px 8px;border-left:1px solid var(--color-divider);display:flex;align-items:baseline;gap:6px;background:{{ d.bg }}"><span style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700)">{{ d.dow }}</span><span style="font-weight:800;font-size:16px">{{ d.date }}</span></div>
+            </sc-for>
+          </div>
+          <sc-for list="{{ shiftGroups }}" as="g" hint-placeholder-count="3">
+            <div style="padding:8px var(--space-4) 4px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--color-divider);background:var(--color-surface)">{{ g.name }}</div>
+            <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="2">
+              <div data-row="1" style="display:grid;grid-template-columns:176px repeat(7,minmax(0,1fr));border-bottom:2px solid var(--color-divider)">
+                <div style="padding:8px var(--space-4)"><div style="font-size:15px;font-weight:800">{{ r.name }}</div><div style="font-size:12px;font-variant-numeric:tabular-nums">{{ r.time }}</div><div style="font-size:11px;color:var(--color-neutral-700)">min. {{ r.min }}</div></div>
+                <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="7">
+                  <div sc-camel-on-click="{{ c.pick }}" sc-camel-on-drag-over="{{ c.over }}" sc-camel-on-drop="{{ c.drop }}" style="position:relative;border-left:1px solid var(--color-divider);padding:4px;min-height:64px;display:flex;flex-direction:column;gap:3px;opacity:{{ c.op }};;background:{{ c.bg }};cursor:pointer;outline:{{ c.outline }};outline-offset:-2px">
+                    <div style="font-size:11px;font-variant-numeric:tabular-nums;color:{{ c.countColor }};font-weight:{{ c.countWeight }}">{{ c.count }}</div>
+                    <sc-for list="{{ c.chips }}" as="ch" hint-placeholder-count="2">
+                      <button sc-camel-on-click="{{ ch.select }}" draggable="{{ ch.canDrag }}" sc-camel-on-drag-start="{{ ch.dragStart }}" sc-camel-on-drag-end="{{ ch.end }}" style="position:relative;font:inherit;font-size:12px;font-weight:600;text-align:left;padding:4px 6px;cursor:{{ ch.cursor }};background:{{ ch.bg }};border:{{ ch.border }};color:var(--color-text);text-decoration:{{ ch.deco }};outline:{{ ch.outline }};outline-offset:1px">{{ ch.name }}<sc-if value="{{ ch.warn }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:4px;right:{{ ch.warnRight }};color:var(--warn)"><svg width="11" height="11" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg></span></sc-if><sc-if value="{{ ch.showX }}" hint-placeholder-val="{{ false }}"><span role="button" aria-label="Entfernen" sc-camel-on-click="{{ ch.rm }}" style="position:absolute;top:0;right:0;width:18px;height:18px;background:var(--color-accent);color:var(--color-bg);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2" style-hover="background:var(--color-accent-700)"><svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></span></sc-if></button>
+                    </sc-for>
+                    <sc-if value="{{ c.hover }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:0;border:2px dashed var(--color-accent);background:var(--color-accent-100);opacity:.6;pointer-events:none"></span></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+    </section>
+
+    <aside data-noprint="1" style="padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-3);min-width:0">
+      <sc-if value="{{ hasSel }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">{{ sel.dateLabel }} · {{ sel.statusLabel }}</div>
+          <h2 style="margin:2px 0;font-size:26px;line-height:1.1">{{ sel.name }}</h2>
+          <div style="font-size:12px;color:var(--color-neutral-700)">{{ sel.meta }}</div><sc-if value="{{ sel.locked }}" hint-placeholder-val="{{ false }}"><span class="tag tag-neutral" style="margin-top:6px">Gesperrt (Vergangenheit)</span></sc-if>
+        </div>
+        <hr class="hr" style="margin:0">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)">
+          <div><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700)">Eintrag</div><div style="font-size:18px;font-weight:800;margin-top:2px">{{ sel.entry }}</div><div style="font-size:12px">{{ sel.entryTime }}</div></div>
+          <div><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700)">Woche gesamt</div><div style="font-size:18px;font-weight:800;margin-top:2px">{{ sel.week }}</div><div style="font-size:12px">Soll {{ sel.target }}</div></div>
+        </div>
+        <sc-for list="{{ sel.warnings }}" as="w" hint-placeholder-count="0">
+          <div style="border:2px solid var(--warn);padding:var(--space-3);display:flex;flex-direction:column;gap:3px">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--warn)"><svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>{{ w.title }}</div>
+            <div style="font-size:13px">{{ w.msg }}</div>
+            <div style="font-size:11px;color:var(--color-neutral-700)">{{ w.detail }}</div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ sel.hasDiff }}" hint-placeholder-val="{{ false }}"><div style="border:2px solid var(--color-divider);padding:var(--space-3);display:flex;flex-direction:column;gap:6px"><div style="font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase">Ungeveröffentlichte Änderung</div><sc-if value="{{ sel.diff }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px">{{ sel.diff }}</div></sc-if><button class="btn btn-secondary" style="align-self:flex-start" sc-camel-on-click="{{ sel.revert }}">Änderung verwerfen</button></div></sc-if>
+        <sc-if value="{{ sel.needsReason }}" hint-placeholder-val="{{ false }}">
+          <div class="field">
+            <label>Begründung (bei Minderjährigen Pflicht, wird protokolliert)</label>
+            <textarea class="input" value="{{ reason }}" sc-camel-on-change="{{ onReason }}" placeholder="z. B. Mit Lena und Ausbilderin abgestimmt; Freitagsschicht endet früher"></textarea>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sel.isEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:13px">Kein Eintrag. Zuweisen:</div>
+          <div style="display:flex;flex-wrap:wrap;gap:var(--space-2)">
+            <sc-for list="{{ sel.options }}" as="o" hint-placeholder-count="3"><button class="btn btn-secondary" sc-camel-on-click="{{ o.assign }}">{{ o.label }}</button></sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sel.editable }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-wrap:wrap;gap:var(--space-2)">
+            <button class="btn btn-primary" disabled="{{ saveDisabled }}" sc-camel-on-click="{{ save }}">Speichern</button>
+            <button class="btn btn-secondary" sc-camel-on-click="{{ openFinderSel }}">Vertretung finden</button>
+            <button class="btn btn-ghost" sc-camel-on-click="{{ removeSel }}">Entfernen</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ savedNote }}" hint-placeholder-val="{{ false }}"><div class="tag tag-neutral" style="align-self:flex-start">Gespeichert · Begründung protokolliert</div></sc-if>
+      </sc-if>
+      <sc-if value="{{ hasCellSel }}" hint-placeholder-val="{{ false }}">
+        <div>
+          <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">Dienst</div>
+          <h2 style="margin:2px 0;font-size:26px;line-height:1.1">{{ cs.title }}</h2>
+          <div style="font-size:12px;color:var(--color-neutral-700)">Besetzung <b style="color:{{ cs.color }}">{{ cs.count }}</b></div>
+        </div>
+        <hr class="hr" style="margin:0">
+        <sc-if value="{{ cs.locked }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;border:1px solid var(--color-divider);padding:var(--space-3)">Vergangener Tag. Keine Änderungen möglich.</div></sc-if>
+        <sc-if value="{{ cs.open }}" hint-placeholder-val="{{ true }}">
+          <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700)">Verfügbare Mitarbeiter</div>
+          <div style="border-top:2px solid var(--color-divider)">
+            <sc-for list="{{ cs.cands }}" as="cd" hint-placeholder-count="3">
+              <div draggable="true" sc-camel-on-drag-start="{{ cd.dragStart }}" sc-camel-on-drag-end="{{ cd.end }}" style="cursor:grab;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-2);padding:var(--space-2) 0;border-bottom:1px solid var(--color-divider);align-items:center">
+                <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span style="font-size:14px;font-weight:700">{{ cd.name }}</span>
+                    <sc-if value="{{ cd.floating }}" hint-placeholder-val="{{ false }}"><span class="tag tag-outline" style="padding:0 5px;font-size:10px">Springer</span></sc-if>
+                    <sc-if value="{{ cd.minor }}" hint-placeholder-val="{{ false }}"><span class="tag tag-accent" style="padding:0 5px;font-size:10px">U18</span></sc-if>
+                    <sc-if value="{{ cd.dayOff }}" hint-placeholder-val="{{ false }}"><span class="tag tag-neutral" style="padding:0 5px;font-size:10px">Frei geplant</span></sc-if>
+                    <sc-if value="{{ cd.wish }}" hint-placeholder-val="{{ false }}"><span class="tag tag-neutral" style="padding:0 5px;font-size:10px">{{ cd.wish }}</span></sc-if></div>
+                  <div style="font-size:12px;color:var(--color-neutral-700)">{{ cd.hours }}</div>
+                  <sc-if value="{{ cd.warn }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;font-weight:600;color:var(--warn)">{{ cd.warn }}</div></sc-if>
+                </div>
+                <button class="btn btn-secondary" sc-camel-on-click="{{ cd.assign }}">Zuweisen</button>
+              </div>
+            </sc-for>
+            <sc-if value="{{ cs.none }}" hint-placeholder-val="{{ false }}"><div style="padding:var(--space-3) 0;font-size:13px">Niemand verfügbar.</div></sc-if>
+          </div>
+        </sc-if>
+      </sc-if>
+      <sc-if value="{{ noSel }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:var(--color-neutral-800);border:1px solid var(--color-divider);padding:var(--space-3)">Wähle einen Eintrag im Plan oder ziehe Schichten per Drag &amp; Drop.</div></sc-if>
+      <sc-if value="{{ publishedNote }}" hint-placeholder-val="{{ false }}">
+        <div style="background:var(--color-text);color:var(--color-bg);padding:var(--space-3);font-size:13px">Woche veröffentlicht. Mitarbeitende und das Rezeptions-Tablet sehen jetzt 5.–11. Okt.</div>
+      </sc-if>
+    </aside>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ isStaff }}" hint-placeholder-val="{{ false }}">
+  <main style="display:grid;grid-template-columns:minmax(0,1fr) 380px;flex:1">
+    <section style="min-width:0;border-right:2px solid var(--color-divider)">
+      <div style="padding:var(--space-4);display:flex;align-items:flex-end;gap:var(--space-3);flex-wrap:wrap">
+        <div style="margin-right:auto"><div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">2 Hotels · 15 zugeordnet</div><h1 style="margin:2px 0 0;font-size:30px">Mitarbeiter</h1></div>
+        <input class="input" style="width:220px" placeholder="Name suchen">
+        <button class="btn btn-primary">Mitarbeiter anlegen</button>
+      </div>
+      <div style="overflow-x:auto;border-top:2px solid var(--color-divider)">
+        <sc-raw-table class="table" style="min-width:640px">
+          <sc-raw-thead><sc-raw-tr><sc-raw-th style="padding-left:var(--space-4)">Name</sc-raw-th><sc-raw-th>Nr.</sc-raw-th><sc-raw-th>Abteilung</sc-raw-th><sc-raw-th>Soll/Woche</sc-raw-th><sc-raw-th>Urlaub übrig</sc-raw-th><sc-raw-th>Zeitkonto</sc-raw-th></sc-raw-tr></sc-raw-thead>
+          <sc-raw-tbody>
+            <sc-for list="{{ staffRows }}" as="s" hint-placeholder-count="9">
+              <sc-raw-tr sc-camel-on-click="{{ s.pick }}" style="cursor:pointer;background:{{ s.bg }}">
+                <sc-raw-td style="padding-left:var(--space-4)"><span style="font-weight:700">{{ s.name }}</span> <sc-if value="{{ s.minor }}" hint-placeholder-val="{{ false }}"><span class="tag tag-accent" style="padding:0 5px;font-size:10px">U18</span></sc-if> <sc-if value="{{ s.floating }}" hint-placeholder-val="{{ false }}"><span class="tag tag-outline" style="padding:0 5px;font-size:10px">Springer</span></sc-if></sc-raw-td>
+                <sc-raw-td style="font-variant-numeric:tabular-nums">{{ s.num }}</sc-raw-td><sc-raw-td>{{ s.dept }}</sc-raw-td><sc-raw-td style="font-variant-numeric:tabular-nums">{{ s.target }}</sc-raw-td><sc-raw-td style="font-variant-numeric:tabular-nums">{{ s.vac }}</sc-raw-td><sc-raw-td style="font-variant-numeric:tabular-nums">{{ s.acct }}</sc-raw-td>
+              </sc-raw-tr>
+            </sc-for>
+          </sc-raw-tbody>
+        </sc-raw-table>
+      </div>
+    </section>
+    <aside data-noprint="1" style="padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-3);min-width:0">
+      <div>
+        <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">Personalnummer {{ st.num }}</div>
+        <h2 style="margin:2px 0;font-size:28px;line-height:1.1">{{ st.name }}</h2>
+        <div style="font-size:12px;color:var(--color-neutral-700)">{{ st.meta }}</div>
+      </div>
+      <sc-if value="{{ st.reduced }}" hint-placeholder-val="{{ false }}"><div style="border:1px solid var(--color-divider);padding:var(--space-3);font-size:13px">Reduzierte Ansicht: Stammhaus ist Berlin. Stundenlohn, Kontaktdaten und Abwesenheitsarten sieht nur die Leitung des Stammhauses.</div></sc-if>
+      <hr class="hr" style="margin:0">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3) var(--space-4)">
+        <sc-for list="{{ st.facts }}" as="fa" hint-placeholder-count="6">
+          <div><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700)">{{ fa.k }}</div><div style="font-size:14px;font-weight:600;margin-top:2px">{{ fa.v }}</div></div>
+        </sc-for>
+      </div>
+      <hr class="hr" style="margin:0">
+      <div>
+        <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700);margin-bottom:6px">Arbeitstage</div>
+        <div style="display:flex;gap:2px">
+          <sc-for list="{{ st.weekdays }}" as="wd" hint-placeholder-count="7"><span style="width:32px;padding:5px 0;text-align:center;font-size:12px;font-weight:700;background:{{ wd.bg }};color:{{ wd.fg }}">{{ wd.label }}</span></sc-for>
+        </div>
+      </div>
+      <hr class="hr" style="margin:0">
+      <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+        <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700)">Tablet-PIN</div>
+        <sc-if value="{{ st.hasPin }}" hint-placeholder-val="{{ false }}"><div style="border:2px solid var(--color-accent);padding:var(--space-3)"><div style="font-size:28px;font-weight:800;letter-spacing:.2em;font-variant-numeric:tabular-nums">{{ st.pin }}</div><div style="font-size:12px;color:var(--color-neutral-700)">Wird nur einmal angezeigt. Persönlich übergeben.</div></div></sc-if>
+        <div style="display:flex;gap:var(--space-2);flex-wrap:wrap"><button class="btn btn-secondary" sc-camel-on-click="{{ resetPin }}">PIN zurücksetzen</button><button class="btn btn-ghost">Sperre aufheben</button></div>
+      </div>
+    </aside>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ isVac }}" hint-placeholder-val="{{ false }}">
+  <main style="display:grid;grid-template-columns:minmax(0,1fr) 350px;flex:1;min-height:0">
+    <section style="min-width:0;border-right:2px solid var(--color-divider)">
+      <div style="display:flex;align-items:flex-end;gap:var(--space-3);flex-wrap:wrap;padding:var(--space-4) var(--space-4) var(--space-3)">
+        <div style="margin-right:auto"><div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">Urlaubsplanung</div><h1 style="margin:2px 0 0;font-size:30px;line-height:1.1">Urlaub 2026</h1></div>
+        <div style="display:flex;border:1px solid var(--color-divider)"><sc-for list="{{ vHotelOpts }}" as="vh" hint-placeholder-count="3"><button sc-camel-on-click="{{ vh.pick }}" style="font:inherit;font-size:13px;font-weight:600;padding:7px 12px;border:0;border-left:1px solid var(--color-divider);cursor:pointer;background:{{ vh.bg }};color:{{ vh.fg }}">{{ vh.label }}</button></sc-for></div>
+      </div>
+      <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}"><div style="margin:0 var(--space-4) var(--space-3);border:2px solid var(--warn);padding:8px 12px;font-size:13px;font-weight:600">{{ toast }}</div></sc-if>
+      <div style="overflow-x:auto;border-top:2px solid var(--color-divider)">
+        <sc-raw-table class="table" style="min-width:720px">
+          <sc-raw-thead><sc-raw-tr><sc-raw-th style="padding-left:var(--space-4)">Mitarbeiter</sc-raw-th><sc-raw-th>Anspruch</sc-raw-th><sc-raw-th>Übertrag</sc-raw-th><sc-raw-th>Genommen</sc-raw-th><sc-raw-th>Geplant</sc-raw-th><sc-raw-th>Beantragt</sc-raw-th><sc-raw-th>Rest</sc-raw-th></sc-raw-tr></sc-raw-thead>
+          <sc-raw-tbody>
+            <sc-for list="{{ vRows }}" as="r" hint-placeholder-count="8">
+              <sc-raw-tr sc-camel-on-click="{{ r.pick }}" style="cursor:pointer;background:{{ r.bg }}">
+                <sc-raw-td style="padding-left:var(--space-4)"><div style="font-weight:700">{{ r.name }}</div><div style="font-size:11px;color:var(--color-neutral-700)">{{ r.sub }}</div></sc-raw-td>
+                <sc-raw-td><input class="input" type="number" step="0.5" min="0" style="width:72px;min-height:30px;padding:2px 6px" value="{{ r.days }}" sc-camel-on-change="{{ r.onDays }}" sc-camel-on-click="{{ r.stop }}"></sc-raw-td>
+                <sc-raw-td><input class="input" type="number" step="0.5" min="0" style="width:72px;min-height:30px;padding:2px 6px" value="{{ r.carry }}" sc-camel-on-change="{{ r.onCarry }}" sc-camel-on-click="{{ r.stop }}"></sc-raw-td>
+                <sc-raw-td style="font-variant-numeric:tabular-nums">{{ r.taken }}</sc-raw-td>
+                <sc-raw-td style="font-variant-numeric:tabular-nums">{{ r.planned }}</sc-raw-td>
+                <sc-raw-td style="font-variant-numeric:tabular-nums">{{ r.pending }}</sc-raw-td>
+                <sc-raw-td style="font-variant-numeric:tabular-nums;font-weight:800;font-size:16px;color:{{ r.restColor }}">{{ r.rest }}</sc-raw-td>
+              </sc-raw-tr>
+            </sc-for>
+          </sc-raw-tbody>
+        </sc-raw-table>
+      </div>
+      <div style="padding:var(--space-4);border-top:2px solid var(--color-divider)">
+        <div style="display:flex;gap:var(--space-4);flex-wrap:wrap;align-items:center;margin-bottom:var(--space-3)"><h2 style="margin:0;font-size:18px;margin-right:auto">Jahresübersicht</h2>
+          <span style="display:flex;align-items:center;gap:6px;font-size:12px"><span style="width:18px;height:10px;background:var(--color-accent)"></span>Genehmigt</span>
+          <span style="display:flex;align-items:center;gap:6px;font-size:12px"><span style="width:18px;height:10px;border:1px dashed var(--color-text);background:var(--color-surface)"></span>Beantragt</span>
+          <span style="display:flex;align-items:center;gap:6px;font-size:12px"><span style="width:18px;height:10px;border:2px solid var(--color-accent)"></span>Wunsch</span>
+          <span style="display:flex;align-items:center;gap:6px;font-size:12px"><span style="width:18px;height:10px;background:var(--warn-bg);border:1px solid var(--warn)"></span>Sperrzeit</span>
+        </div>
+        <div style="overflow-x:auto"><div style="min-width:760px;border-top:2px solid var(--color-divider)">
+          <div style="display:grid;grid-template-columns:150px minmax(0,1fr);border-bottom:2px solid var(--color-divider)"><div></div><div style="position:relative;height:24px"><sc-for list="{{ months }}" as="m" hint-placeholder-count="12"><span style="position:absolute;left:{{ m.left }}%;top:4px;padding-left:4px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-700)">{{ m.label }}</span></sc-for></div></div>
+          <sc-for list="{{ tlRows }}" as="t" hint-placeholder-count="8">
+            <div style="display:grid;grid-template-columns:150px minmax(0,1fr);border-bottom:1px solid var(--color-divider)">
+              <div style="padding:4px 8px 4px 0;font-size:12px;font-weight:600;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.name }}</div>
+              <div style="position:relative;height:26px;background:{{ chartBg }}"><sc-for list="{{ t.bars }}" as="b" hint-placeholder-count="1"><div title="{{ b.title }}" style="position:absolute;left:{{ b.left }}%;width:{{ b.w }}%;top:4px;height:18px;background:{{ b.bg }};border:{{ b.border }};box-sizing:border-box"></div></sc-for></div>
+            </div>
+          </sc-for>
+        </div></div>
+      </div>
+    </section>
+    <aside style="padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-4);min-width:0">
+      <section>
+        <div style="display:flex;align-items:baseline;gap:var(--space-2);border-bottom:2px solid var(--color-text);padding-bottom:4px;margin-bottom:var(--space-2)"><h2 style="margin:0;font-size:18px;margin-right:auto">Wünsche der Mitarbeitenden</h2><span class="tag tag-accent">{{ wishCount }}</span></div>
+        <sc-for list="{{ wishes }}" as="w" hint-placeholder-count="3">
+          <div style="padding:var(--space-2) 0;border-bottom:1px solid var(--color-divider);display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;gap:6px;align-items:baseline;flex-wrap:wrap"><span style="font-size:14px;font-weight:700;margin-right:auto">{{ w.name }}</span><span class="tag tag-neutral" style="padding:0 6px;font-size:10px">{{ w.prio }}</span></div>
+            <div style="font-size:13px;font-variant-numeric:tabular-nums">{{ w.range }} · {{ w.days }} Tage · Rest danach {{ w.after }}</div>
+            <sc-for list="{{ w.warns }}" as="ww" hint-placeholder-count="0"><div style="font-size:12px;font-weight:600;color:var(--warn)">{{ ww.t }}</div></sc-for>
+            <div style="display:flex;gap:var(--space-2)"><button class="btn btn-primary" sc-camel-on-click="{{ w.accept }}">Übernehmen</button><button class="btn btn-secondary" sc-camel-on-click="{{ w.reject }}">Ablehnen</button></div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noWishes }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:var(--color-neutral-700);padding:var(--space-2) 0">Keine offenen Wünsche.</div></sc-if>
+      </section>
+      <section>
+        <h2 style="margin:0 0 var(--space-2);font-size:18px;border-bottom:2px solid var(--color-text);padding-bottom:4px">Manuell eintragen</h2>
+        <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+          <div class="field"><label>Mitarbeiter</label><sc-raw-select class="input" value="{{ vf.emp }}" sc-camel-on-change="{{ vh.emp }}"><sc-for list="{{ vEmpOpts }}" as="eo" hint-placeholder-count="6"><option value="{{ eo.id }}">{{ eo.label }}</option></sc-for></sc-raw-select></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2)"><div class="field"><label>Von</label><input class="input" type="date" value="{{ vf.from }}" sc-camel-on-change="{{ vh.from }}"></div><div class="field"><label>Bis</label><input class="input" type="date" value="{{ vf.to }}" sc-camel-on-change="{{ vh.to }}"></div></div>
+          <div style="display:flex;gap:var(--space-3);flex-wrap:wrap"><label class="radio"><input type="checkbox" checked="{{ vf.hs }}" sc-camel-on-change="{{ vh.hs }}"><span class="dot"></span>Erster Tag halb</label><label class="radio"><input type="checkbox" checked="{{ vf.he }}" sc-camel-on-change="{{ vh.he }}"><span class="dot"></span>Letzter Tag halb</label></div>
+          <div style="display:flex;align-items:center;gap:var(--space-3)"><span style="font-size:12px;color:var(--color-neutral-700)">Status</span><div style="display:flex;border:1px solid var(--color-divider)"><sc-for list="{{ vStatusOpts }}" as="so" hint-placeholder-count="2"><button sc-camel-on-click="{{ so.pick }}" style="font:inherit;font-size:13px;padding:6px 10px;border:0;border-left:1px solid var(--color-divider);cursor:pointer;background:{{ so.bg }};color:{{ so.fg }}">{{ so.label }}</button></sc-for></div></div>
+          <div style="border:2px solid var(--color-text);padding:var(--space-2) var(--space-3);font-size:13px">
+            <div><b>{{ vp.total }}</b> Urlaubstage · Rest danach <b style="color:{{ vp.color }}">{{ vp.after }}</b></div>
+            <sc-for list="{{ vp.skipped }}" as="sk" hint-placeholder-count="0"><div style="font-size:12px;color:var(--color-neutral-800)">Nicht gezählt: {{ sk.label }} · {{ sk.name }}</div></sc-for>
+            <sc-if value="{{ vp.blackout }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;font-weight:600;color:var(--warn)">Sperrzeit „Weihnachtsgeschäft“ (14.–23. Dez.)</div></sc-if>
+            <sc-if value="{{ vp.over }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;font-weight:700;color:var(--warn)">Überschreitet den Resturlaub.</div></sc-if>
+          </div>
+          <button class="btn btn-primary" style="align-self:flex-start" disabled="{{ vp.blocked }}" sc-camel-on-click="{{ addEntry }}">Eintragen</button>
+        </div>
+      </section>
+      <section>
+        <h2 style="margin:0 0 var(--space-2);font-size:18px;border-bottom:2px solid var(--color-text);padding-bottom:4px">Einträge: {{ vSel.name }}</h2>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 84px;gap:var(--space-2);align-items:center;padding:var(--space-2) 0;border-bottom:1px solid var(--color-divider)"><div style="font-size:13px">Bereits genommen (Stand 30. Sep.)</div><input class="input" type="number" step="0.5" min="0" style="min-height:30px;padding:2px 6px" value="{{ vSel.base }}" sc-camel-on-change="{{ vSel.onBase }}"></div>
+        <sc-for list="{{ vSel.entries }}" as="en" hint-placeholder-count="2">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-2);align-items:center;padding:var(--space-2) 0;border-bottom:1px solid var(--color-divider)">
+            <div style="display:flex;flex-direction:column;gap:2px"><div style="font-size:13px;font-variant-numeric:tabular-nums;font-weight:600">{{ en.range }} · {{ en.days }} Tage</div><div><span class="tag tag-neutral" style="padding:0 6px;font-size:10px">{{ en.label }}</span></div></div>
+            <div style="display:flex;gap:4px;align-items:center"><sc-if value="{{ en.canApprove }}" hint-placeholder-val="{{ false }}"><button class="btn btn-secondary" sc-camel-on-click="{{ en.approve }}">Genehmigen</button></sc-if><button class="btn btn-ghost btn-icon" aria-label="Entfernen" sc-camel-on-click="{{ en.remove }}"><svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button></div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ vSel.none }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:var(--color-neutral-700);padding:var(--space-2) 0">Keine weiteren Einträge.</div></sc-if>
+      </section>
+    </aside>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+  <main style="flex:1;min-width:0">
+    <div style="display:flex;align-items:flex-end;gap:var(--space-3);flex-wrap:wrap;padding:var(--space-4)">
+      <div style="margin-right:auto"><div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">Administration · Trip Inn Hotels</div><h1 style="margin:2px 0 0;font-size:30px;line-height:1.1">Admin</h1></div>
+      <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}"><div style="border:2px solid var(--warn);padding:8px 12px;font-size:13px;font-weight:600">{{ toast }}</div></sc-if>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;border-top:2px solid var(--color-divider);border-bottom:2px solid var(--color-divider)">
+      <sc-for list="{{ adminTabs }}" as="at" hint-placeholder-count="6"><button sc-camel-on-click="{{ at.pick }}" style="font:inherit;font-size:14px;font-weight:700;padding:11px 18px;border:0;border-right:1px solid var(--color-divider);cursor:pointer;background:{{ at.bg }};color:{{ at.fg }}">{{ at.label }}</button></sc-for>
+    </div>
+
+    <sc-if value="{{ aOverview }}" hint-placeholder-val="{{ true }}">
+      <sc-if value="{{ showSteps }}" hint-placeholder-val="{{ true }}"><section style="padding:var(--space-4);border-bottom:2px solid var(--color-divider);background:var(--color-surface)">
+        <div style="display:flex;gap:var(--space-3);align-items:baseline;flex-wrap:wrap;margin-bottom:var(--space-3)"><h2 style="margin:0;font-size:20px">Erste Schritte</h2><span style="font-size:13px;color:var(--color-neutral-800)">{{ stepsDone }} von {{ stepsTotal }} erledigt</span><div style="flex:1;min-width:120px;max-width:260px;height:8px;background:var(--color-bg);border:1px solid var(--color-text)"><div style="height:100%;width:{{ stepsPct }}%;background:var(--color-accent)"></div></div><span style="flex:1"></span><button class="btn btn-ghost" sc-camel-on-click="{{ hideSteps }}">Ausblenden</button></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:2px;background:var(--color-divider);border:2px solid var(--color-divider)">
+          <sc-for list="{{ steps }}" as="st" hint-placeholder-count="6"><div style="background:var(--color-bg);padding:var(--space-3);display:flex;flex-direction:column;gap:6px;min-height:118px">
+            <div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border:2px solid var(--color-text);display:flex;align-items:center;justify-content:center;background:{{ st.bg }};color:var(--color-bg)"><svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6 9 17l-5-5"></path></svg></span><span style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700)">Schritt {{ st.n }}</span></div>
+            <b style="font-size:15px">{{ st.title }}</b><span style="font-size:12px;color:var(--color-neutral-800)">{{ st.sub }}</span>
+            <button class="btn btn-secondary" style="margin-top:auto;align-self:flex-start" sc-camel-on-click="{{ st.go }}">{{ st.action }}</button>
+          </div></sc-for>
+        </div>
+      </section></sc-if>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));border-bottom:2px solid var(--color-divider)">
+        <sc-for list="{{ adminStats }}" as="as" hint-placeholder-count="5"><div style="padding:var(--space-4);border-right:1px solid var(--color-divider);display:flex;flex-direction:column;gap:2px"><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700)">{{ as.label }}</div><div style="font-size:40px;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums">{{ as.value }}</div><div style="font-size:12px;color:var(--color-neutral-800)">{{ as.sub }}</div></div></sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">
+        <section style="padding:var(--space-4);border-right:2px solid var(--color-divider)">
+          <h2 style="margin:0 0 var(--space-2);font-size:18px;border-bottom:2px solid var(--color-text);padding-bottom:4px">Handlungsbedarf</h2>
+          <sc-for list="{{ adminTodos }}" as="td" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-2);padding:var(--space-2) 0;border-bottom:1px solid var(--color-divider);align-items:center"><div><div style="font-size:14px;font-weight:700">{{ td.title }}</div><div style="font-size:12px;color:var(--color-neutral-700)">{{ td.sub }}</div></div><button class="btn btn-secondary" sc-camel-on-click="{{ td.go }}">{{ td.action }}</button></div></sc-for>
+        </section>
+        <section style="padding:var(--space-4)">
+          <h2 style="margin:0 0 var(--space-2);font-size:18px;border-bottom:2px solid var(--color-text);padding-bottom:4px">Letzte Änderungen</h2>
+          <sc-for list="{{ auditShort }}" as="au" hint-placeholder-count="5"><div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:var(--space-2);padding:8px 0;border-bottom:1px solid var(--color-divider);font-size:13px"><span style="color:var(--color-neutral-700);font-variant-numeric:tabular-nums">{{ au.when }}</span><span><b>{{ au.who }}</b> {{ au.what }}</span></div></sc-for>
+        </section>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ aHotels }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-4)">
+        <div style="display:flex;gap:var(--space-2);align-items:center"><h2 style="margin:0;font-size:20px;margin-right:auto">Hotels und Mindestbesetzung</h2><button class="btn btn-primary" sc-camel-on-click="{{ addHotel }}">Hotel anlegen</button></div>
+        <sc-for list="{{ adminHotels }}" as="ah" hint-placeholder-count="2">
+          <section style="border:2px solid var(--color-text)">
+            <div style="display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap;padding:var(--space-3) var(--space-4);background:var(--color-surface);border-bottom:2px solid var(--color-text)"><h3 style="margin:0;font-size:18px;margin-right:auto">{{ ah.name }}</h3><span style="font-size:13px">{{ ah.staff }} Mitarbeitende · {{ ah.tablets }} Tablet(s)</span><span class="tag tag-neutral">{{ ah.tz }}</span></div>
+            <sc-raw-table class="table"><sc-raw-thead><sc-raw-tr><sc-raw-th style="padding-left:var(--space-4)">Abteilung</sc-raw-th><sc-raw-th>Schichten</sc-raw-th><sc-raw-th style="width:150px">Mindestbesetzung</sc-raw-th></sc-raw-tr></sc-raw-thead><sc-raw-tbody>
+              <sc-for list="{{ ah.rows }}" as="ar" hint-placeholder-count="3"><sc-raw-tr><sc-raw-td style="padding-left:var(--space-4);font-weight:700">{{ ar.dept }}</sc-raw-td><sc-raw-td>{{ ar.shifts }}</sc-raw-td><sc-raw-td><input class="input" type="number" min="0" style="width:80px;min-height:30px;padding:2px 6px" value="{{ ar.min }}" sc-camel-on-change="{{ ar.onMin }}"></sc-raw-td></sc-raw-tr></sc-for>
+            </sc-raw-tbody></sc-raw-table>
+          </section>
+        </sc-for>
+        <div style="font-size:12px;color:var(--color-neutral-700)">Die Mindestbesetzung gilt für die Besetzungsanzeige im Dienstplan.</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ aUsers }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-3)">
+        <div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap"><h2 style="margin:0;font-size:20px;margin-right:auto">Benutzer und Rollen</h2><input class="input" style="width:220px" placeholder="Name suchen" value="{{ uQuery }}" sc-camel-on-change="{{ onUQuery }}" sc-camel-on-input="{{ onUQuery }}"><button class="btn btn-primary" sc-camel-on-click="{{ inviteUser }}">Benutzer einladen</button></div>
+        <div style="overflow-x:auto;border:2px solid var(--color-text)"><sc-raw-table class="table" style="min-width:760px"><sc-raw-thead><sc-raw-tr><sc-raw-th style="padding-left:var(--space-4)">Name</sc-raw-th><sc-raw-th>Rolle</sc-raw-th><sc-raw-th>Zugriff auf Hotels</sc-raw-th><sc-raw-th>Letzte Anmeldung</sc-raw-th><sc-raw-th>Aktiv</sc-raw-th></sc-raw-tr></sc-raw-thead><sc-raw-tbody>
+          <sc-for list="{{ adminUsers }}" as="au" hint-placeholder-count="8"><sc-raw-tr style="opacity:{{ au.op }}">
+            <sc-raw-td style="padding-left:var(--space-4)"><div style="font-weight:700">{{ au.name }}</div><div style="font-size:11px;color:var(--color-neutral-700)">{{ au.mail }}</div></sc-raw-td>
+            <sc-raw-td><sc-raw-select class="input" style="min-height:30px;padding:2px 6px;width:190px" value="{{ au.role }}" sc-camel-on-change="{{ au.onRole }}"><sc-for list="{{ roleOpts }}" as="ro" hint-placeholder-count="5"><option value="{{ ro }}">{{ ro }}</option></sc-for></sc-raw-select></sc-raw-td>
+            <sc-raw-td>{{ au.scope }}</sc-raw-td><sc-raw-td style="font-variant-numeric:tabular-nums">{{ au.last }}</sc-raw-td>
+            <sc-raw-td><button sc-camel-on-click="{{ au.toggle }}" aria-label="Aktiv umschalten" style="width:44px;height:24px;border:2px solid var(--color-text);background:{{ au.tbg }};padding:0;cursor:pointer;position:relative"><span style="position:absolute;top:2px;left:{{ au.tx }};width:16px;height:16px;background:{{ au.tfg }}"></span></button></sc-raw-td>
+          </sc-raw-tr></sc-for>
+        </sc-raw-tbody></sc-raw-table></div>
+        <div style="font-size:12px;color:var(--color-neutral-700)">Neue Benutzer erhalten einen Einladungslink und legen ihr Passwort selbst fest.</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ aTablets }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-3)">
+        <div style="display:flex;gap:var(--space-2);align-items:center"><h2 style="margin:0;font-size:20px;margin-right:auto">Tablets</h2><button class="btn btn-primary" sc-camel-on-click="{{ pairTablet }}">Tablet koppeln</button></div>
+        <sc-if value="{{ pairCode }}" hint-placeholder-val="{{ false }}"><div style="border:2px solid var(--color-accent);padding:var(--space-3) var(--space-4);display:flex;gap:var(--space-4);align-items:center;flex-wrap:wrap"><span style="font-size:36px;font-weight:800;letter-spacing:.15em;font-variant-numeric:tabular-nums">{{ pairCode }}</span><span style="font-size:13px">Code am Tablet eingeben. Gültig für 10 Minuten.</span></div></sc-if>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2px;background:var(--color-divider);border:2px solid var(--color-divider)">
+          <sc-for list="{{ adminTablets }}" as="tb" hint-placeholder-count="3"><div style="background:var(--color-bg);padding:var(--space-4);display:flex;flex-direction:column;gap:6px;opacity:{{ tb.op }}">
+            <div style="display:flex;gap:var(--space-2);align-items:center"><b style="font-size:16px;margin-right:auto">{{ tb.name }}</b><sc-if value="{{ tb.online }}" hint-placeholder-val="{{ true }}"><span class="tag tag-accent">Online</span></sc-if><sc-if value="{{ tb.offline }}" hint-placeholder-val="{{ false }}"><span class="tag tag-neutral">{{ tb.offlineLabel }}</span></sc-if></div>
+            <div style="font-size:13px">{{ tb.hotel }} · {{ tb.where }}</div>
+            <div style="font-size:12px;color:var(--color-neutral-700)">Zuletzt aktiv: {{ tb.seen }} · Version {{ tb.ver }}</div>
+            <div style="display:flex;gap:var(--space-2);margin-top:6px"><button class="btn btn-secondary" sc-camel-on-click="{{ tb.revoke }}">{{ tb.revokeLabel }}</button></div>
+          </div></sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ aRules }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:var(--space-4);display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:var(--space-6);max-width:1100px">
+        <section><h2 style="margin:0 0 var(--space-2);font-size:18px;border-bottom:2px solid var(--color-text);padding-bottom:4px">Arbeitszeit-Regeln</h2>
+          <sc-for list="{{ ruleNums }}" as="rn" hint-placeholder-count="5"><div style="display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:var(--space-3);align-items:center;padding:var(--space-2) 0;border-bottom:1px solid var(--color-divider)"><div><div style="font-size:14px;font-weight:700">{{ rn.label }}</div><div style="font-size:12px;color:var(--color-neutral-700)">{{ rn.sub }}</div></div><div style="display:flex;gap:6px;align-items:center"><input class="input" type="number" min="0" step="{{ rn.step }}" style="min-height:30px;padding:2px 6px" value="{{ rn.value }}" sc-camel-on-change="{{ rn.on }}"><span style="font-size:12px">{{ rn.unit }}</span></div></div></sc-for>
+        </section>
+        <section><h2 style="margin:0 0 var(--space-2);font-size:18px;border-bottom:2px solid var(--color-text);padding-bottom:4px">Funktionen</h2>
+          <sc-for list="{{ ruleToggles }}" as="rt" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-3);align-items:center;padding:var(--space-2) 0;border-bottom:1px solid var(--color-divider)"><div><div style="font-size:14px;font-weight:700">{{ rt.label }}</div><div style="font-size:12px;color:var(--color-neutral-700)">{{ rt.sub }}</div></div><button sc-camel-on-click="{{ rt.toggle }}" aria-label="Umschalten" style="width:44px;height:24px;border:2px solid var(--color-text);background:{{ rt.tbg }};padding:0;cursor:pointer;position:relative"><span style="position:absolute;top:2px;left:{{ rt.tx }};width:16px;height:16px;background:{{ rt.tfg }}"></span></button></div></sc-for>
+        </section>
+        <section style="grid-column:1/-1"><h2 style="margin:0 0 var(--space-2);font-size:18px;border-bottom:2px solid var(--color-text);padding-bottom:4px">Sperrzeiten für Urlaub</h2>
+          <sc-for list="{{ blackouts }}" as="bo" hint-placeholder-count="2"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:var(--space-3);align-items:center;padding:var(--space-2) 0;border-bottom:1px solid var(--color-divider)"><b style="font-size:14px">{{ bo.name }}</b><span style="font-size:13px;font-variant-numeric:tabular-nums">{{ bo.range }}</span><button class="btn btn-ghost" sc-camel-on-click="{{ bo.remove }}">Entfernen</button></div></sc-for>
+          <button class="btn btn-secondary" style="margin-top:var(--space-2)" sc-camel-on-click="{{ addBlackout }}">Sperrzeit hinzufügen</button>
+        </section>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ aAudit }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-3)">
+        <div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap"><h2 style="margin:0;font-size:20px;margin-right:auto">Änderungsprotokoll</h2>
+          <div style="display:flex;border:1px solid var(--color-divider)"><sc-for list="{{ auditFilters }}" as="af" hint-placeholder-count="4"><button sc-camel-on-click="{{ af.pick }}" style="font:inherit;font-size:13px;padding:7px 12px;border:0;border-left:1px solid var(--color-divider);cursor:pointer;background:{{ af.bg }};color:{{ af.fg }}">{{ af.label }}</button></sc-for></div>
+          <button class="btn btn-secondary" sc-camel-on-click="{{ exportAudit }}">Als CSV exportieren</button></div>
+        <div style="overflow-x:auto;border:2px solid var(--color-text)"><sc-raw-table class="table" style="min-width:720px"><sc-raw-thead><sc-raw-tr><sc-raw-th style="padding-left:var(--space-4)">Zeitpunkt</sc-raw-th><sc-raw-th>Benutzer</sc-raw-th><sc-raw-th>Bereich</sc-raw-th><sc-raw-th>Aktion</sc-raw-th></sc-raw-tr></sc-raw-thead><sc-raw-tbody>
+          <sc-for list="{{ auditRows }}" as="ar" hint-placeholder-count="8"><sc-raw-tr><sc-raw-td style="padding-left:var(--space-4);font-variant-numeric:tabular-nums;white-space:nowrap">{{ ar.when }}</sc-raw-td><sc-raw-td style="font-weight:700">{{ ar.who }}</sc-raw-td><sc-raw-td><span class="tag tag-neutral">{{ ar.area }}</span></sc-raw-td><sc-raw-td>{{ ar.what }}</sc-raw-td></sc-raw-tr></sc-for>
+        </sc-raw-tbody></sc-raw-table></div>
+        <div style="font-size:12px;color:var(--color-neutral-700)">Einträge zu Minderjährigen und manuellen Überschreibungen werden mit Begründung gespeichert und können nicht gelöscht werden.</div>
+      </div>
+    </sc-if>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ isLive }}" hint-placeholder-val="{{ false }}">
+  <main style="flex:1">
+    <div style="display:flex;align-items:flex-end;gap:var(--space-4);flex-wrap:wrap;padding:var(--space-4);border-bottom:2px solid var(--color-divider)">
+      <div style="margin-right:auto">
+        <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">Live-Übersicht · Frankfurt</div>
+        <h1 style="margin:2px 0 0;font-size:30px">Donnerstag, 1. Oktober</h1>
+      </div>
+      <div><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700)">Serverzeit</div><div style="font-size:36px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums">06:14</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))">
+      <sc-for list="{{ liveCols }}" as="col" hint-placeholder-count="4">
+        <section style="border-right:2px solid var(--color-divider);border-bottom:2px solid var(--color-divider);min-height:340px">
+          <div style="display:flex;align-items:baseline;gap:var(--space-2);padding:var(--space-3) var(--space-4);border-bottom:2px solid var(--color-divider);background:var(--color-surface)">
+            <h2 style="margin:0;font-size:14px;letter-spacing:.06em;text-transform:uppercase;margin-right:auto">{{ col.title }}</h2>
+            <span style="font-size:32px;line-height:1;font-weight:800;font-variant-numeric:tabular-nums">{{ col.count }}</span>
+          </div>
+          <sc-for list="{{ col.items }}" as="it" hint-placeholder-count="2">
+            <div style="padding:var(--space-2) var(--space-4);border-bottom:1px solid var(--color-divider);display:flex;flex-direction:column;gap:3px">
+              <div style="display:flex;gap:var(--space-2);align-items:baseline"><span style="font-size:15px;font-weight:700;margin-right:auto">{{ it.name }}</span><span style="font-size:12px;font-variant-numeric:tabular-nums">{{ it.right }}</span></div>
+              <div style="font-size:12px;color:var(--color-neutral-700)">{{ it.sub }}</div>
+              <sc-if value="{{ it.flag }}" hint-placeholder-val="{{ false }}"><span class="tag" style="align-self:flex-start;background:var(--warn-bg);color:var(--warn)">{{ it.flag }}</span></sc-if>
+              <sc-if value="{{ it.action }}" hint-placeholder-val="{{ false }}"><button class="btn btn-secondary" style="align-self:flex-start;margin-top:4px" sc-camel-on-click="{{ it.act }}">{{ it.action }}</button></sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ col.empty }}" hint-placeholder-val="{{ false }}"><div style="padding:var(--space-3) var(--space-4);font-size:13px;color:var(--color-neutral-700)">{{ col.empty }}</div></sc-if>
+        </section>
+      </sc-for>
+    </div>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ isRequests }}" hint-placeholder-val="{{ false }}">
+  <main style="flex:1;padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-6);max-width:1100px">
+    <div>
+      <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">Frankfurt · {{ pendingCount }} offen</div>
+      <h1 style="margin:2px 0 0;font-size:30px">Anträge</h1>
+    </div>
+    <sc-for list="{{ reqGroups }}" as="rg" hint-placeholder-count="3">
+      <section>
+        <div style="display:flex;align-items:baseline;gap:var(--space-2);border-bottom:2px solid var(--color-text);padding-bottom:4px"><h2 style="margin:0;font-size:20px">{{ rg.title }}</h2><span style="font-size:13px;color:var(--color-neutral-700)">{{ rg.open }} offen</span></div>
+        <sc-raw-table class="table">
+          <sc-raw-tbody>
+            <sc-for list="{{ rg.items }}" as="q" hint-placeholder-count="2">
+              <sc-raw-tr>
+                <sc-raw-td style="font-weight:700;width:170px">{{ q.name }}</sc-raw-td>
+                <sc-raw-td style="width:190px">{{ q.what }}</sc-raw-td>
+                <sc-raw-td style="color:var(--color-neutral-800)">{{ q.detail }}<sc-if value="{{ q.warn }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:var(--warn);margin-top:2px;font-weight:600">{{ q.warn }}</div></sc-if></sc-raw-td>
+                <sc-raw-td style="width:240px">
+                  <sc-if value="{{ q.pending }}" hint-placeholder-val="{{ true }}"><div style="display:flex;gap:var(--space-2)"><button class="btn btn-primary" sc-camel-on-click="{{ q.approve }}">Genehmigen</button><button class="btn btn-secondary" sc-camel-on-click="{{ q.reject }}">Ablehnen</button></div></sc-if>
+                  <sc-if value="{{ q.done }}" hint-placeholder-val="{{ false }}"><span class="tag tag-neutral">{{ q.statusLabel }}</span></sc-if>
+                </sc-raw-td>
+              </sc-raw-tr>
+            </sc-for>
+          </sc-raw-tbody>
+        </sc-raw-table>
+      </section>
+    </sc-for>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ isKiosk }}" hint-placeholder-val="{{ false }}">
+  <main style="flex:1;padding:var(--space-4)">
+    <div style="width:100%;max-width:1024px;min-height:700px;border:2px solid var(--color-text);display:flex;flex-direction:column;background:var(--color-bg)">
+      <div style="display:flex;align-items:center;gap:var(--space-4);padding:var(--space-4) var(--space-6);border-bottom:2px solid var(--color-divider)">
+        <div style="font-size:20px;font-weight:800;margin-right:auto">Trip Inn Frankfurt · Rezeptions-Tablet</div>
+        <div style="font-size:28px;font-weight:800;font-variant-numeric:tabular-nums">06:14</div>
+      </div>
+      <sc-if value="{{ kList }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-4)">
+          <h1 style="margin:0;font-size:40px">Tippe auf deinen Namen</h1>
+          <input class="input" style="font-size:18px;min-height:52px" placeholder="Nicht dabei? Namen suchen">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:2px;background:var(--color-divider);border:2px solid var(--color-divider)">
+            <sc-for list="{{ kEmps }}" as="ke" hint-placeholder-count="6">
+              <button sc-camel-on-click="{{ ke.pick }}" style="font:inherit;text-align:left;border:0;background:var(--color-bg);padding:var(--space-4);min-height:120px;cursor:pointer;display:flex;flex-direction:column;gap:6px" style-hover="background:var(--color-surface)" style-active="background:var(--color-accent-100)">
+                <span style="font-size:24px;font-weight:800">{{ ke.name }}</span>
+                <span style="font-size:15px">{{ ke.shift }}</span>
+                <sc-if value="{{ ke.isIn }}" hint-placeholder-val="{{ false }}"><span class="tag tag-accent" style="align-self:flex-start;margin-top:auto">{{ ke.status }}</span></sc-if>
+                <sc-if value="{{ ke.isOut }}" hint-placeholder-val="{{ true }}"><span class="tag tag-neutral" style="align-self:flex-start;margin-top:auto">{{ ke.status }}</span></sc-if>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ kPin }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);flex:1">
+          <div style="padding:var(--space-6);border-right:2px solid var(--color-divider);display:flex;flex-direction:column;gap:var(--space-4)">
+            <button class="btn btn-ghost" style="align-self:flex-start;font-size:16px" sc-camel-on-click="{{ kBack }}"><svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>Nicht du?</button>
+            <h1 style="margin:0;font-size:48px;line-height:1.05">{{ kEmp.name }}</h1>
+            <div style="font-size:18px">{{ kEmp.shift }}</div>
+            <div style="margin-top:auto;font-size:20px;font-weight:600">Gib deine 6-stellige PIN ein</div>
+            <div style="display:flex;gap:var(--space-3)">
+              <sc-for list="{{ pinDots }}" as="pd" hint-placeholder-count="6">
+                <sc-if value="{{ pd.on }}" hint-placeholder-val="{{ false }}"><span style="width:28px;height:28px;background:var(--color-text)"></span></sc-if>
+                <sc-if value="{{ pd.off }}" hint-placeholder-val="{{ true }}"><span style="width:24px;height:24px;border:2px solid var(--color-text)"></span></sc-if>
+              </sc-for>
+            </div>
+            <sc-if value="{{ pinError }}" hint-placeholder-val="{{ false }}"><div style="font-size:16px;color:var(--warn);font-weight:700">Falsche PIN. Noch 4 Versuche.</div></sc-if>
+            <div style="font-size:13px;color:var(--color-neutral-700)">Demo: jede PIN außer 000000 funktioniert.</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--color-divider)">
+            <sc-for list="{{ keys }}" as="k" hint-placeholder-count="12">
+              <button sc-camel-on-click="{{ k.press }}" style="font:inherit;font-size:32px;font-weight:700;border:0;background:var(--color-bg);cursor:pointer;min-height:96px;text-align:left;padding:0 var(--space-6)" style-hover="background:var(--color-surface)" style-active="background:var(--color-accent-100)">{{ k.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ kAction }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-6);flex:1">
+          <div><div style="font-size:16px;color:var(--color-neutral-700)">Hallo</div><h1 style="margin:0;font-size:48px">{{ kEmp.name }}</h1><div style="font-size:18px;margin-top:4px">{{ kEmp.shift }}</div></div>
+          <button class="btn btn-primary" style="justify-content:flex-start;font-size:30px;font-weight:800;min-height:140px;padding:0 var(--space-8)" sc-camel-on-click="{{ kPunch }}">{{ kActionLabel }}</button>
+          <div style="font-size:14px;color:var(--color-neutral-700)">Die Uhrzeit kommt vom Server. Deine geplante Pause wird automatisch abgezogen.</div>
+          <button class="btn btn-secondary" style="align-self:flex-start" sc-camel-on-click="{{ kBack }}">Abbrechen</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ kDone }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;background:var(--color-accent);color:var(--color-bg);padding:var(--space-8);display:flex;flex-direction:column;gap:var(--space-4)">
+          <svg width="64" height="64" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"></path></svg>
+          <h1 style="margin:0;font-size:56px;line-height:1">{{ kDoneTitle }}</h1>
+          <div style="font-size:22px">{{ kEmp.name }} · {{ kEmp.shift }}</div>
+          <sc-if value="{{ kDoneNote }}" hint-placeholder-val="{{ false }}"><div style="font-size:18px;border-top:2px solid var(--color-bg);padding-top:var(--space-3)">{{ kDoneNote }}</div></sc-if>
+          <button sc-camel-on-click="{{ kBack }}" style="margin-top:auto;align-self:flex-start;font:inherit;font-size:20px;font-weight:700;border:2px solid var(--color-bg);background:transparent;color:var(--color-bg);padding:14px 28px;cursor:pointer;text-align:left">Fertig</button>
+        </div>
+      </sc-if>
+    </div>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ isPortal }}" hint-placeholder-val="{{ false }}">
+  <main style="flex:1;width:100%;max-width:{{ portalMax }};margin:0 auto;box-sizing:border-box;border-left:{{ portalBorder }};border-right:{{ portalBorder }}">
+    <div style="padding:var(--space-4);border-bottom:2px solid var(--color-divider)">
+      <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">Mein Portal · Donnerstag, 1. Oktober</div>
+      <h1 style="margin:2px 0 0;font-size:30px">Guten Morgen, Maria</h1>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));border-bottom:2px solid var(--color-divider)">
+      <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+        <div style="padding:var(--space-4);border-right:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider);display:flex;flex-direction:column;gap:2px">
+          <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700)">{{ s.label }}</div>
+          <div style="font-size:40px;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums">{{ s.value }}</div>
+          <div style="font-size:12px;color:var(--color-neutral-800)">{{ s.sub }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="padding:var(--space-4);border-bottom:2px solid var(--color-divider);display:flex;flex-wrap:wrap;gap:var(--space-2)">
+      <sc-for list="{{ quick }}" as="qk" hint-placeholder-count="5"><button class="btn {{ qk.cls }}" sc-camel-on-click="{{ qk.open }}">{{ qk.label }}</button></sc-for>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+      <section style="padding:var(--space-4);border-right:2px solid var(--color-divider)">
+        <h2 style="margin:0 0 var(--space-2);font-size:18px">Nächste Schichten</h2>
+        <sc-for list="{{ nextShifts }}" as="ns" hint-placeholder-count="5">
+          <div style="display:grid;grid-template-columns:78px minmax(0,1fr) auto;gap:var(--space-2);padding:8px 0;border-bottom:1px solid var(--color-divider);font-size:14px;align-items:baseline">
+            <span style="font-weight:800">{{ ns.date }}</span><span>{{ ns.name }}<span style="color:var(--color-neutral-700)"> · {{ ns.hotel }}</span></span><span style="font-variant-numeric:tabular-nums">{{ ns.time }}</span>
+          </div>
+        </sc-for>
+        <div style="font-size:12px;color:var(--color-neutral-700);margin-top:var(--space-2)">Plan veröffentlicht bis 31. Okt.</div>
+      </section>
+      <section style="padding:var(--space-4)">
+        <h2 style="margin:0 0 var(--space-2);font-size:18px">Benachrichtigungen</h2>
+        <sc-for list="{{ notes }}" as="nt" hint-placeholder-count="3">
+          <div style="padding:8px 0;border-bottom:1px solid var(--color-divider);display:flex;flex-direction:column;gap:2px">
+            <div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap"><sc-if value="{{ nt.urgent }}" hint-placeholder-val="{{ false }}"><span class="tag" style="padding:0 6px;background:var(--warn-bg);color:var(--warn)">Kurzfristig</span></sc-if><span style="font-size:14px;font-weight:600">{{ nt.title }}</span></div>
+            <span style="font-size:12px;color:var(--color-neutral-700)">{{ nt.when }}</span>
+          </div>
+        </sc-for>
+      </section>
+    </div>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+  <main style="flex:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">
+    <section style="background:var(--color-accent);color:var(--color-bg);padding:var(--space-8);display:flex;flex-direction:column;justify-content:flex-end;min-height:360px">
+      <div style="font-size:13px;letter-spacing:.1em;text-transform:uppercase;font-weight:700">Trip Inn Hotels</div>
+      <h1 style="margin:var(--space-2) 0 0;font-size:72px;line-height:.95;letter-spacing:-.02em">Dienstplan &amp; Zeiterfassung</h1>
+    </section>
+    <section style="padding:var(--space-8);display:flex;flex-direction:column;justify-content:center;gap:var(--space-4);max-width:480px">
+      <h2 style="margin:0;font-size:28px">Anmelden</h2>
+      <div class="field"><label>E-Mail oder Benutzername</label><input class="input" placeholder="maria.garcia"></div>
+      <div class="field"><label>Passwort</label><input class="input" type="password" placeholder="mindestens 10 Zeichen"></div>
+      <button class="btn btn-primary btn-block" style="margin-top:0" sc-camel-on-click="{{ doLogin }}">Anmelden</button>
+      <button class="btn btn-ghost" style="align-self:flex-start" sc-camel-on-click="{{ toggleForgot }}">Passwort vergessen?</button>
+      <sc-if value="{{ loginForgot }}" hint-placeholder-val="{{ false }}"><div style="border:1px solid var(--color-divider);padding:var(--space-3);font-size:13px">Mit E-Mail-Adresse: Du bekommst einen Link, falls ein Konto existiert. Ohne E-Mail-Adresse: Bitte deine Leitung um einen Link zum Zurücksetzen.</div></sc-if>
+      <div style="font-size:12px;color:var(--color-neutral-700)">Neu hier? Öffne den Einladungslink, den du per E-Mail oder persönlich bekommen hast, und lege dein Passwort selbst fest.</div>
+    </section>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ clearOpen }}" hint-placeholder-val="{{ false }}">
+  <div class="dialog-backdrop" style="z-index:50">
+    <div class="dialog" style="width:min(480px,100%);padding:var(--space-4)">
+      <h2 style="margin:0 0 var(--space-3);font-size:24px">Plan dieser Woche leeren?</h2>
+      <div style="font-size:14px;display:flex;flex-direction:column;gap:6px">
+        <div><b>{{ clearInfo.n }}</b> Einträge werden gelöscht.</div>
+        <div><b>{{ clearInfo.pub }}</b> davon sind veröffentlicht. Betroffene Mitarbeitende werden benachrichtigt.</div>
+        <div style="color:var(--color-neutral-700)">Abwesenheiten und vergangene Tage bleiben unverändert.</div><div style="color:var(--color-neutral-700)">Nur die angezeigten Hotels und Abteilungen.</div>
+      </div>
+      <div style="display:flex;gap:var(--space-2);margin-top:var(--space-4)"><button class="btn btn-primary" sc-camel-on-click="{{ doClear }}">Plan leeren</button><button class="btn btn-secondary" sc-camel-on-click="{{ closeClear }}">Abbrechen</button></div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ finderOpen }}" hint-placeholder-val="{{ false }}">
+  <div class="dialog-backdrop" style="z-index:50">
+    <div class="dialog" style="width:min(680px,100%);max-height:92vh;overflow:auto;padding:var(--space-4)">
+      <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">Vertretung finden</div>
+      <h2 style="margin:2px 0 var(--space-3);font-size:24px">{{ finder.title }}</h2>
+      <div style="border-top:2px solid var(--color-divider)">
+        <sc-for list="{{ finder.cands }}" as="cd" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-3);padding:var(--space-2) 0;border-bottom:1px solid var(--color-divider);align-items:center">
+            <div style="display:flex;flex-direction:column;gap:3px">
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span style="font-size:15px;font-weight:700">{{ cd.name }}</span>
+                <sc-if value="{{ cd.floating }}" hint-placeholder-val="{{ false }}"><span class="tag tag-outline" style="padding:0 5px;font-size:10px">Springer</span></sc-if>
+                <sc-if value="{{ cd.minor }}" hint-placeholder-val="{{ false }}"><span class="tag tag-accent" style="padding:0 5px;font-size:10px">U18</span></sc-if>
+                <sc-if value="{{ cd.wish }}" hint-placeholder-val="{{ false }}"><span class="tag tag-neutral" style="padding:0 6px;font-size:10px">{{ cd.wish }}</span></sc-if></div>
+              <div style="font-size:12px;color:var(--color-neutral-700)">{{ cd.hours }}</div>
+              <sc-if value="{{ cd.warn }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;font-weight:600;color:var(--warn)">{{ cd.warn }}</div></sc-if>
+            </div>
+            <sc-if value="{{ finder.canAssign }}" hint-placeholder-val="{{ true }}"><button class="btn btn-secondary" sc-camel-on-click="{{ cd.assign }}">Zuweisen</button></sc-if>
+          </div>
+        </sc-for>
+        <sc-if value="{{ finder.none }}" hint-placeholder-val="{{ false }}"><div style="padding:var(--space-3) 0;font-size:14px">Keine passenden Kandidaten.</div></sc-if>
+      </div>
+      <div style="font-size:12px;color:var(--color-neutral-700);margin:var(--space-3) 0">Reihenfolge: Wunsch, keine Warnung, wenig Wochenstunden. Es wird niemand automatisch benachrichtigt.</div>
+      <div style="display:flex;gap:var(--space-2)"><button class="btn btn-secondary" sc-camel-on-click="{{ closeFinder }}">Schließen</button></div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ formOpen }}" hint-placeholder-val="{{ false }}">
+  <div class="dialog-backdrop" style="z-index:50;align-items:start;overflow:auto">
+    <div class="dialog" style="width:min(640px,100%);padding:var(--space-4);margin:var(--space-4) auto">
+      <div style="display:flex;gap:var(--space-2);align-items:center;margin-bottom:var(--space-3)"><h2 style="margin:0;font-size:24px;margin-right:auto">Antrag stellen</h2><button class="btn btn-ghost" sc-camel-on-click="{{ closeForm }}">Schließen</button></div>
+      <div style="display:flex;flex-wrap:wrap;border:1px solid var(--color-divider);margin-bottom:var(--space-4)">
+        <sc-for list="{{ formTabs }}" as="ft" hint-placeholder-count="5"><button sc-camel-on-click="{{ ft.pick }}" style="font:inherit;font-size:13px;padding:8px 12px;border:0;cursor:pointer;flex:1;text-align:left;background:{{ ft.bg }};color:{{ ft.fg }}">{{ ft.label }}</button></sc-for>
+      </div>
+
+      <sc-if value="{{ sent }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-4) 0">
+          <svg width="40" height="40" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.4"><path d="M20 6 9 17l-5-5"></path></svg>
+          <div style="font-size:22px;font-weight:800">{{ sentTitle }}</div>
+          <div style="font-size:14px">{{ sentNote }}</div>
+          <button class="btn btn-primary" style="align-self:flex-start" sc-camel-on-click="{{ closeForm }}">Fertig</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ tabLeave }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)">
+            <div class="field"><label>Von</label><input class="input" type="date" value="{{ f.from }}" sc-camel-on-change="{{ h.from }}"></div>
+            <div class="field"><label>Bis</label><input class="input" type="date" value="{{ f.to }}" sc-camel-on-change="{{ h.to }}"></div>
+          </div>
+          <div style="display:flex;gap:var(--space-4);flex-wrap:wrap">
+            <label class="radio"><input type="checkbox" checked="{{ f.hs }}" sc-camel-on-change="{{ h.hs }}"><span class="dot"></span>Erster Tag halbtags</label>
+            <label class="radio"><input type="checkbox" checked="{{ f.he }}" sc-camel-on-change="{{ h.he }}"><span class="dot"></span>Letzter Tag halbtags</label>
+          </div>
+          <div style="border:2px solid var(--color-text);padding:var(--space-3);display:flex;flex-direction:column;gap:var(--space-2)">
+            <div style="display:flex;align-items:baseline;gap:var(--space-3);flex-wrap:wrap"><span style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-700)">Vorschau</span><span style="font-size:32px;font-weight:800;line-height:1">{{ lp.total }}</span><span style="font-size:14px">Urlaubstage</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px">
+              <sc-for list="{{ lp.days }}" as="ld" hint-placeholder-count="5"><span style="font-size:12px;padding:3px 8px;background:var(--color-neutral-300);font-variant-numeric:tabular-nums">{{ ld.label }}<sc-if value="{{ ld.half }}" hint-placeholder-val="{{ false }}"><b> ½</b></sc-if></span></sc-for>
+            </div>
+            <sc-for list="{{ lp.skipped }}" as="sk" hint-placeholder-count="0"><div style="font-size:12px;color:var(--color-neutral-800)">Nicht gezählt: {{ sk.label }} · {{ sk.name }}</div></sc-for>
+            <div style="font-size:13px">Resturlaub 2026: <b>{{ lp.before }}</b> → <b>{{ lp.after }}</b> Tage</div>
+            <sc-if value="{{ lp.over }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;font-weight:700;color:var(--warn)">Nicht genug Resturlaub für diesen Zeitraum.</div></sc-if>
+            <sc-if value="{{ lp.blackout }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;font-weight:600;color:var(--warn)">Hinweis: Sperrzeit „Weihnachtsgeschäft“ (14.–23. Dez.). Die Leitung entscheidet.</div></sc-if>
+          </div>
+          <div class="field"><label>Grund (optional)</label><input class="input" value="{{ f.reason }}" sc-camel-on-change="{{ h.reason }}" placeholder="z. B. Familienbesuch"></div>
+          <button class="btn btn-primary" style="align-self:flex-start" disabled="{{ lp.blocked }}" sc-camel-on-click="{{ submitForm }}">Urlaub beantragen</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ tabSick }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)">
+            <div class="field"><label>Krank seit</label><input class="input" type="date" value="{{ f.sFrom }}" sc-camel-on-change="{{ h.sFrom }}"></div>
+            <div class="field"><label>Voraussichtlich bis</label><input class="input" type="date" value="{{ f.sTo }}" sc-camel-on-change="{{ h.sTo }}"></div>
+          </div>
+          <div style="border:1px solid var(--color-divider);padding:var(--space-3);font-size:13px">Es wird nur gespeichert, dass du krank bist, und von wann bis wann. Einen Grund oder Diagnosen gibst du nicht an. Ab dem 4. Tag ist eine ärztliche Bescheinigung nötig. Die Leitung bestätigt deine Meldung.</div>
+          <button class="btn btn-primary" style="align-self:flex-start" sc-camel-on-click="{{ submitForm }}">Krank melden</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ tabWish }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+          <div class="seg" style="align-self:flex-start"><sc-for list="{{ wishKinds }}" as="wk" hint-placeholder-count="3"><button sc-camel-on-click="{{ wk.pick }}" style="font:inherit;font-size:13px;padding:7px 12px;border:0;border-left:1px solid var(--color-divider);cursor:pointer;background:{{ wk.bg }};color:{{ wk.fg }}">{{ wk.label }}</button></sc-for></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)">
+            <div class="field"><label>Datum</label><input class="input" type="date" value="{{ f.wDate }}" sc-camel-on-change="{{ h.wDate }}"></div>
+            <sc-if value="{{ wishNeedsShift }}" hint-placeholder-val="{{ false }}"><div class="field"><label>Schicht</label><sc-raw-select class="input" value="{{ f.wShift }}" sc-camel-on-change="{{ h.wShift }}"><option value="Früh">Früh 06:00–14:00</option><option value="Spät">Spät 14:00–22:00</option><option value="Nacht">Nacht 22:00–06:00</option></sc-raw-select></div></sc-if>
+          </div>
+          <div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap"><span style="font-size:12px;color:var(--color-neutral-700)">Priorität</span><div class="seg"><sc-for list="{{ prios }}" as="pr" hint-placeholder-count="3"><button sc-camel-on-click="{{ pr.pick }}" style="font:inherit;font-size:13px;padding:7px 12px;border:0;border-left:1px solid var(--color-divider);cursor:pointer;background:{{ pr.bg }};color:{{ pr.fg }}">{{ pr.label }}</button></sc-for></div></div>
+          <div class="field"><label>Grund (optional)</label><input class="input" value="{{ f.wReason }}" sc-camel-on-change="{{ h.wReason }}"></div>
+          <div style="font-size:12px;color:var(--color-neutral-700)">Ein Wunsch ist keine Zusage. Die Leitung entscheidet bei der Planung.</div>
+          <button class="btn btn-primary" style="align-self:flex-start" sc-camel-on-click="{{ submitForm }}">Wunsch senden</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ tabCorr }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+          <div class="field"><label>Eintrag</label><sc-raw-select class="input" value="{{ f.cEntry }}" sc-camel-on-change="{{ h.cEntry }}"><option value="29">29. Sep. · ein 06:21 · aus 14:03</option><option value="30">30. Sep. · ein 05:58 · aus 14:00</option></sc-raw-select></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)">
+            <div class="field"><label>Richtig: Einstempeln</label><input class="input" type="time" value="{{ f.cIn }}" sc-camel-on-change="{{ h.cIn }}"></div>
+            <div class="field"><label>Richtig: Ausstempeln</label><input class="input" type="time" value="{{ f.cOut }}" sc-camel-on-change="{{ h.cOut }}"></div>
+          </div>
+          <div class="field"><label>Begründung (Pflicht)</label><input class="input" value="{{ f.cReason }}" sc-camel-on-change="{{ h.cReason }}" placeholder="z. B. Tablet war eingefroren"></div>
+          <div style="font-size:12px;color:var(--color-neutral-700)">Die Originalzeiten bleiben gespeichert. Erst nach Genehmigung durch die Leitung wird der Eintrag geändert.</div>
+          <button class="btn btn-primary" style="align-self:flex-start" disabled="{{ corrBlocked }}" sc-camel-on-click="{{ submitForm }}">Korrektur beantragen</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ tabAsk }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:var(--space-3)">
+            <div class="field"><label>Betreff</label><input class="input" maxlength="120" value="{{ f.qSubject }}" sc-camel-on-change="{{ h.qSubject }}" placeholder="z. B. Warum wurde meine Pause abgezogen?"></div>
+            <div class="field"><label>Thema</label><sc-raw-select class="input" value="{{ f.qCat }}" sc-camel-on-change="{{ h.qCat }}"><option>Dienstplan</option><option>Stunden</option><option>Urlaub</option><option>Zeiterfassung</option><option>Sonstiges</option></sc-raw-select></div>
+          </div>
+          <div class="field"><label>Nachricht</label><textarea class="input" maxlength="4000" value="{{ f.qBody }}" sc-camel-on-change="{{ h.qBody }}"></textarea></div>
+          <div style="border:1px solid var(--warn);padding:var(--space-3);font-size:13px">Krankheit meldest du über „Krank melden“. Bitte schreibe hier keine Gesundheitsdaten. Antworten sehen nur du und die Leitung deines Hotels.</div>
+          <button class="btn btn-primary" style="align-self:flex-start" disabled="{{ askBlocked }}" sc-camel-on-click="{{ submitForm }}">Frage senden</button>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;startView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;roster&quot;,&quot;staff&quot;,&quot;live&quot;,&quot;requests&quot;,&quot;kiosk&quot;,&quot;portal&quot;,&quot;login&quot;],&quot;default&quot;:&quot;roster&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;startLang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;de&quot;,&quot;en&quot;],&quot;default&quot;:&quot;de&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;highlightWarnings&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const SH={E:{n:'Früh',t:'06:00–14:00',s:'06–14',p:7.5,d:'fd'},L:{n:'Spät',t:'14:00–22:00',s:'14–22',p:7.5,d:'fd'},N:{n:'Nacht',t:'22:00–06:00',s:'22–06',p:7.5,d:'fd'},D:{n:'Tag',t:'08:00–16:30',s:'08–16:30',p:8,d:'hk'},B:{n:'Frühstück',t:'06:00–11:00',s:'06–11',p:4.5,d:'bf'}};
+const ABS={U:'Urlaub',S:'Berufsschule',K:'Krank'};
+const DAYS=[['Mo','5.'],['Di','6.'],['Mi','7.'],['Do','8.'],['Fr','9.'],['Sa','10.'],['So','11.']];
+const DEPTS=[{id:'fd',name:'Rezeption',min:3,opts:['E','L','N','F']},{id:'hk',name:'Housekeeping',min:3,opts:['D','F']},{id:'bf',name:'Frühstück',min:1,opts:['B','F']}];
+const EMPS=[
+ {id:'maria',name:'Maria Garcia',d:'fd',meta:'Vollzeit',t:40,w:'EELLEFF',num:'P100',birth:'12.05.1994',rate:'15,50 €',vac:'18,5',acct:'+12,5 h',carry:'0'},
+ {id:'jon',name:'Jon Schmidt',d:'fd',meta:'Vollzeit',t:40,w:'LLFNNFL',num:'P101',birth:'03.11.1991',rate:'16,20 €',vac:'22,0',acct:'−3,0 h',carry:'4'},
+ {id:'aylin',name:'Aylin Demir',d:'fd',meta:'Teilzeit',t:30,w:'XXEEL..',floating:true,num:'P107',birth:'21.08.1998',rate:'15,00 €',vac:'12,0',acct:'+5,5 h',carry:'0'},
+ {id:'lena',name:'Lena Hofmann',d:'fd',meta:'Azubi · 17',t:40,w:'SSEFLEF',minor:true,num:'P118',birth:'14.02.2009',rate:'11,50 €',vac:'24,0',acct:'+1,0 h',carry:'0'},
+ {id:'piotr',name:'Piotr Nowak',d:'hk',meta:'Vollzeit',t:40,w:'DDDDDFF',num:'P102',birth:'30.01.1987',rate:'14,80 €',vac:'9,5',acct:'+20,0 h',carry:'0'},
+ {id:'fatima',name:'Fatima Ali',d:'hk',meta:'Vollzeit',t:40,w:'DUUUUFF',num:'P103',birth:'09.09.1990',rate:'14,80 €',vac:'18,5',acct:'+2,0 h',carry:'2'},
+ {id:'sven',name:'Sven Becker',d:'hk',meta:'Minijob',t:20,w:'F.D.DFF',num:'P110',birth:'17.04.2001',rate:'13,90 €',vac:'6,0',acct:'−1,5 h',carry:'0'},
+ {id:'elena',name:'Elena Rossi',d:'bf',meta:'Teilzeit',t:20,w:'BBBFFBB',num:'P104',birth:'25.12.1985',rate:'14,20 €',vac:'15,0',acct:'+0,0 h',carry:'0'},
+ {id:'tom',name:'Tom Weber',d:'bf',meta:'Teilzeit',t:30,w:'KKBBBFF',num:'P105',birth:'06.06.1993',rate:'14,20 €',vac:'11,5',acct:'+7,0 h',carry:'0'}];
+EMPS.forEach(e=>e.h='ffm');
+EMPS.push(
+ {id:'clara',name:'Clara Neumann',d:'fd',h:'ber',meta:'Vollzeit',t:40,w:'EELLFFE',num:'B200',birth:'02.03.1992',rate:'15,80 €',vac:'20,0',acct:'+4,0 h',carry:'0'},
+ {id:'omer',name:'Ömer Kaya',d:'fd',h:'ber',meta:'Vollzeit',t:40,w:'LLEEFFL',num:'B201',birth:'11.07.1989',rate:'16,00 €',vac:'14,5',acct:'+1,5 h',carry:'0'},
+ {id:'hannah',name:'Hannah Voigt',d:'fd',h:'ber',meta:'Teilzeit',t:25,w:'FELFEFF',num:'B205',birth:'19.01.1996',rate:'15,20 €',vac:'17,0',acct:'−2,0 h',carry:'0'},
+ {id:'dmitri',name:'Dmitri Volkov',d:'hk',h:'ber',meta:'Vollzeit',t:40,w:'DDDDDFF',num:'B202',birth:'08.10.1984',rate:'14,80 €',vac:'10,0',acct:'+6,0 h',carry:'0'},
+ {id:'sophie',name:'Sophie Lange',d:'hk',h:'ber',meta:'Teilzeit',t:30,w:'DFDDFDF',num:'B206',birth:'23.05.1999',rate:'14,50 €',vac:'21,5',acct:'+0,5 h',carry:'0'},
+ {id:'nina',name:'Nina Braun',d:'bf',h:'ber',meta:'Teilzeit',t:20,w:'BBFBBFF',num:'B207',birth:'30.12.1995',rate:'14,20 €',vac:'13,0',acct:'+3,0 h',carry:'0'});
+const HOTELS={ffm:'Frankfurt',ber:'Berlin'};
+const TODAY='2026-10-01';
+const LW0=[{id:1,emp:'elena',from:'2026-12-21',to:'2026-12-25',prio:1},{id:2,emp:'maria',from:'2026-12-14',to:'2026-12-18',prio:2},{id:3,emp:'jon',from:'2026-11-02',to:'2026-11-06',prio:3},{id:4,emp:'clara',from:'2026-10-26',to:'2026-10-30',prio:1},{id:5,emp:'dmitri',from:'2026-12-28',to:'2026-12-30',prio:2}];
+const VE0={jon:[['2026-08-03','2026-08-14','approved']],fatima:[['2026-10-06','2026-10-09','pending']],piotr:[['2026-11-23','2026-11-27','approved']],sven:[['2026-10-19','2026-10-23','approved']],clara:[['2026-12-28','2026-12-30','approved']],tom:[['2026-07-13','2026-07-17','approved']]};
+const MOFF=[0,31,59,90,120,151,181,212,243,273,304,334],MLAB=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+const dnum=s=>Math.round((Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10))-Date.UTC(2026,0,1))/864e5);
+const wmin=(m,i)=>i>=5?Math.max(1,Math.floor(m/2)):m;
+const MIND={ffm:{fd:3,hk:3,bf:1},ber:{fd:2,hk:2,bf:1}},MINS={ffm:{E:2,L:2,N:1,D:3,B:1},ber:{E:1,L:1,D:2,B:1}},DSH={ffm:{fd:['E','L','N'],hk:['D'],bf:['B']},ber:{fd:['E','L'],hk:['D'],bf:['B']}};
+const WARN={
+ 'maria-4':{c:'E',list:[{title:'Ruhezeit',msg:'Nur 8 h seit der Spätschicht am Do (Ende 22:00).',detail:'Ruhezeit unterschritten · mindestens 11 h'}]},
+ 'lena-5':{c:'E',minor:true,list:[{title:'Jugendarbeitsschutz',msg:'Lena ist 17. Nur 8 h Ruhezeit nach der Spätschicht am Fr.',detail:'Ruhezeit · Grenze 12 h · tatsächlich 8 h'}]},
+ 'jon-6':{c:'L',list:[{title:'Widerspricht Wunsch',msg:'Jon möchte am So, 11. Okt. frei haben (Priorität 2).',detail:'Hinweis'}]}};
+const WISH={'jon-6':'avoid','aylin-5':'prefer','sven-5':'prefer'};
+const REQ0=[
+ {g:'Abwesenheiten',id:'a1',name:'Fatima Ali',what:'Urlaub',detail:'6.–9. Okt. · 4 Tage · Rest 18,5 → 14,5',warn:'Housekeeping am Di, 6. Okt. unterbesetzt, falls genehmigt'},
+ {g:'Abwesenheiten',id:'a2',name:'Tom Weber',what:'Krankmeldung',detail:'5.–6. Okt. · 2 Tage · noch keine AU nötig'},
+ {g:'Stempelkorrekturen',id:'c1',name:'Sven Becker',what:'Fehlendes Ausstempeln',detail:'30. Sep. · ein 15:02 · vorgeschlagen aus 23:30',warn:'Eintrag seit 15 h offen, Prüfung nötig'},
+ {g:'Stempelkorrekturen',id:'c2',name:'Maria Garcia',what:'Einstempelzeit',detail:'29. Sep. · 06:21 → 05:58 · „Tablet war eingefroren“'},
+ {g:'Wünsche',id:'w1',name:'Jon Schmidt',what:'Freiwunsch',detail:'So, 11. Okt. · Priorität 2'},
+ {g:'Wünsche',id:'w2',name:'Elena Rossi',what:'Urlaubswunsch',detail:'21.–25. Dez. · 3 Tage',warn:'Frühstück am 24. Dez. unter Mindestbesetzung'}];
+const KEMP0=[
+ {id:1,name:'Maria G.',shift:'Früh 06:00–14:00',in:true},
+ {id:2,name:'Lena H.',shift:'Früh 06:00–14:00',in:false,late:14},
+ {id:3,name:'Elena R.',shift:'Frühstück 06:00–11:00',in:true},
+ {id:4,name:'Jon S.',shift:'Nacht 22:00–06:00',in:true},
+ {id:5,name:'Piotr N.',shift:'Tag 08:00–16:30',in:false},
+ {id:6,name:'Fatima A.',shift:'Tag 08:00–16:30',in:false}];
+const HOL={'2026-12-25':'1. Weihnachtstag','2026-12-26':'2. Weihnachtstag','2027-01-01':'Neujahr','2026-10-03':'Tag der Deutschen Einheit'};
+const WD=['So','Mo','Di','Mi','Do','Fr','Sa'];
+const fnum=x=>String(x).replace('.',',');
+const iso=d=>d.toISOString().slice(0,10);
+const fmtD=d=>WD[d.getUTCDay()]+' '+d.getUTCDate()+'.'+(d.getUTCMonth()+1)+'.';
+const EN={'Planung':'Planning','Heute':'Today','Team':'Team','Ansichten':'Views','Einrichtung':'Setup','Handy-Portal':'Phone portal','Erste Schritte':'First steps','Ausblenden':'Hide','Schritt':'Step','Hotel und Abteilungen anlegen':'Create hotel and departments','Name, Zeitzone, Mindestbesetzung':'Name, time zone, minimum staffing','Mitarbeitende anlegen':'Add employees','Mitarbeitende einladen':'Invite employees','1 hat sich noch nie angemeldet':'1 has never signed in','Tablet koppeln':'Pair tablet','Für das Stempeln mit PIN an der Rezeption':'For PIN clock-in at reception','Regeln prüfen':'Review rules','Ruhezeiten, Pausen, Sperrzeiten':'Rest periods, breaks, blackout periods','Ersten Dienstplan veröffentlichen':'Publish the first roster','Danach sehen Mitarbeitende ihre Schichten':'Then employees see their shifts','Zum Dienstplan':'To roster','Administration · Trip Inn Hotels':'Administration · Trip Inn Hotels','Übersicht':'Overview','Benutzer & Rollen':'Users & roles','Regeln':'Rules','Protokoll':'Log','Handlungsbedarf':'Action needed','Letzte Änderungen':'Recent changes','Hotels und Mindestbesetzung':'Hotels and minimum staffing','Hotel anlegen':'Add hotel','Mindestbesetzung':'Minimum staffing','Schichten':'Shifts','Benutzer und Rollen':'Users and roles','Benutzer einladen':'Invite user','Rolle':'Role','Zugriff auf Hotels':'Hotel access','Letzte Anmeldung':'Last sign-in','Aktiv':'Active','Tablets':'Tablets','Tablet koppeln':'Pair tablet','Sperren':'Revoke','Entsperren':'Unrevoke','Arbeitszeit-Regeln':'Working time rules','Funktionen':'Features','Sperrzeiten für Urlaub':'Vacation blackout periods','Sperrzeit hinzufügen':'Add blackout period','Änderungsprotokoll':'Change log','Als CSV exportieren':'Export as CSV','Zeitpunkt':'Time','Benutzer':'User','Bereich':'Area','Aktion':'Action','Alle':'All','Mindest-Ruhezeit':'Minimum rest period','Tablet-Stempeln':'Tablet clock-in','Online':'Online','Offline':'Offline','Gesperrt':'Revoked','Mitarbeitende':'Employees','Aktive Benutzer':'Active users','Tablets online':'Tablets online','Offene Anträge':'Open requests','Urlaub':'Vacation','Urlaubsplanung':'Vacation planning','Urlaub 2026':'Vacation 2026','Mitarbeiter':'Staff','Anspruch':'Entitlement','Übertrag':'Carry-over','Genommen':'Taken','Geplant':'Planned','Beantragt':'Requested','Rest':'Remaining','Jahresübersicht':'Year overview','Genehmigt':'Approved','Wunsch':'Wish','Sperrzeit':'Blackout','Wünsche der Mitarbeitenden':'Employee wishes','Keine offenen Wünsche.':'No open wishes.','Übernehmen':'Accept','Manuell eintragen':'Enter manually','Erster Tag halb':'First day half','Letzter Tag halb':'Last day half','Status':'Status','Eintragen':'Add entry','Überschreitet den Resturlaub.':'Exceeds remaining vacation.','Sperrzeit „Weihnachtsgeschäft“ (14.–23. Dez.)':'Blackout “Christmas season” (14–23 Dec)','Bereits genommen (Stand 30. Sep.)':'Already taken (as of 30 Sep)','Keine weiteren Einträge.':'No further entries.','Sperrzeit „Weihnachtsgeschäft“ (14.–23. Dez.)':'Blackout “Christmas season” (14–23 Dec)','Resturlaub reicht nicht':'Not enough vacation left','Wunsch abgelehnt.':'Wish rejected.','Urlaubstage':'vacation days','Wunsch (':'Wish (','Dienstplan als PDF':'Roster as PDF','Bitte Strg/Cmd + P zum Drucken nutzen.':'Please use Ctrl/Cmd + P to print.','Drucken / PDF':'Print / PDF','Auswahl aufheben':'Clear selection','Keine Auswahl':'None selected','Keine Hotels oder Abteilungen ausgewählt. Wähle oben mindestens eines aus.':'No hotels or departments selected. Choose at least one above.','Alle Hotels':'All hotels','Alle Abteilungen':'All departments','Alle auswählen':'Select all','Suchen':'Search','Anna Krüger · Regionalleitung':'Anna Krüger · Regional manager','2 Hotels · 15 zugeordnet':'2 hotels · 15 assigned','Berlin (Stammhaus)':'Berlin (home)','Nur die angezeigten Hotels und Abteilungen.':'Only the hotels and departments shown.','Hotels':'Hotels','Abteilungen':'Departments','Neu':'New','Geändert':'Changed','Entfernt':'Removed','Änderungen':'Changes','Änderungen seit der letzten Veröffentlichung':'Changes since last publication','Alle verwerfen':'Discard all','Änderung verwerfen':'Discard change','Ungeveröffentlichte Änderung':'Unpublished change','Änderungen verworfen.':'Changes discarded.','Mitarbeitende mit veröffentlichten Schichten werden beim Veröffentlichen benachrichtigt.':'Staff with published shifts are notified when you publish.','Frei geplant':'Day off planned','Verfügbare Mitarbeiter':'Available staff','Besetzung':'Coverage','Niemand verfügbar.':'Nobody available.','Vergangener Tag. Keine Änderungen möglich.':'Past day. No changes possible.','Schicht ziehen':'Drag a shift','Zum Löschen hierher ziehen':'Drag here to delete','Nach Mitarbeiter':'By employee','Nach Dienst':'By shift','Dienst':'Shift','Plan leeren':'Clear plan','Aktuelle Woche':'Current week','Vergangen · gesperrt':'Past · locked','Kommende Woche':'Upcoming week','Vergangene Tage sind gesperrt.':'Past days are locked.','Wähle einen Eintrag im Plan oder ziehe Schichten per Drag & Drop.':'Select an entry in the plan, or drag shifts with drag and drop.','Gesperrt (Vergangenheit)':'Locked (past)','Plan dieser Woche leeren?':'Clear this week’s plan?','Einträge werden gelöscht.':'entries will be deleted.','davon sind veröffentlicht. Betroffene Mitarbeitende werden benachrichtigt.':'of them are published. Affected staff are notified.','Abwesenheiten und vergangene Tage bleiben unverändert.':'Absences and past days stay unchanged.','Eintrag gelöscht.':'Entry deleted.','Plan geleert.':'Plan cleared.','Nichts zu kopieren.':'Nothing to copy.','Nichts zu löschen.':'Nothing to delete.','Vorherige Woche':'Previous week','Nächste Woche':'Next week','Dienstplan & Zeiterfassung':'Roster & Attendance','Dienstplan':'Roster','Live':'Live','Anträge':'Requests','Mitarbeiter':'Staff','Tablet':'Tablet','Portal':'Portal','Anmelden':'Sign in','Desktop':'Desktop','Handy':'Phone','Alle Abteilungen':'All departments','Rezeption':'Front desk','Frühstück':'Breakfast','Vorwoche kopieren':'Copy last week','Wunsch':'Wish','Korrektur':'Correction','Frage':'Question','Alles veröffentlicht':'All published','Veröffentlicht':'Published','Entwurf':'Draft','Abwesenheit':'Absence','Warnung':'Warning','Std.':'h','von':'of','Stammhaus: Berlin':'Home: Berlin','In Berlin':'At Berlin','Frei':'Off','zu wenig':'short','Eintrag':'Entry','Woche gesamt':'Week total','Soll':'Target','Zuweisen':'Assign','Zuweisen:':'Assign:','Kein Eintrag. Zuweisen:':'No entry. Assign:','Speichern':'Save','Vertretung finden':'Find cover','Entfernen':'Remove','Gespeichert · Begründung protokolliert':'Saved · reason logged','Begründung (bei Minderjährigen Pflicht, wird protokolliert)':'Reason (required for minors, audited)','z. B. Mit Lena und Ausbilderin abgestimmt; Freitagsschicht endet früher':'e.g. agreed with Lena and her trainer; Friday shift ends earlier','Woche veröffentlicht. Mitarbeitende und das Rezeptions-Tablet sehen jetzt 5.–11. Okt.':'Week published. Staff and the front desk tablet now see 5–11 Oct.','KW 41 · Frankfurt':'Week 41 · Frankfurt','5. – 11. Oktober 2026':'5 – 11 October 2026','Besetzung · min.':'Coverage · min.',
+'Entwürfe':'Drafts','Warnungen':'Warnings','Unterbesetzt':'Understaffed','Offene Anträge':'Open requests','Ruhezeit':'Rest period','Jugendarbeitsschutz':'Youth protection','Widerspricht Wunsch':'Conflicts with wish','Nur 8 h seit der Spätschicht am Do (Ende 22:00).':'Only 8 h since the Late shift on Thu (ends 22:00).','Ruhezeit unterschritten · mindestens 11 h':'Rest period too short · minimum 11 h','Lena ist 17. Nur 8 h Ruhezeit nach der Spätschicht am Fr.':'Lena is 17. Only 8 h rest after the Late shift on Fri.','Ruhezeit · Grenze 12 h · tatsächlich 8 h':'Rest period · limit 12 h · actual 8 h','Jon möchte am So, 11. Okt. frei haben (Priorität 2).':'Jon wants Sun 11 Oct off (priority 2).','Hinweis':'Note',
+'Springer':'Floating','Vollzeit':'Full time','Teilzeit':'Part time','Azubi · 17':'Apprentice · 17','Minijob':'Mini job','Urlaub':'Vacation','Berufsschule':'Vocational school','Krank':'Sick','Früh':'Early','Spät':'Late','Nacht':'Night','Tag':'Day','Housekeeping':'Housekeeping','bezahlt':'paid','Leer':'Empty','Anderes Hotel':'Other hotel',
+'Frankfurt · 9 zugeordnet':'Frankfurt · 9 assigned','Mitarbeiter anlegen':'Add employee','Name suchen':'Search name','Name':'Name','Nr.':'No.','Abteilung':'Department','Soll/Woche':'Target/week','Urlaub übrig':'Vacation left','Zeitkonto':'Time account','Personalnummer':'Personnel no.','Reduzierte Ansicht: Stammhaus ist Berlin. Stundenlohn, Kontaktdaten und Abwesenheitsarten sieht nur die Leitung des Stammhauses.':'Reduced view: home hotel is Berlin. Only the home hotel manager sees hourly rate, contact data and absence types.','Arbeitstage':'Work days','Tablet-PIN':'Tablet PIN','PIN zurücksetzen':'Reset PIN','Sperre aufheben':'Unlock','Wird nur einmal angezeigt. Persönlich übergeben.':'Shown only once. Hand over in person.','Stammhaus':'Home hotel','Hotels':'Hotels','Abteilungen':'Departments','Geburtsdatum':'Date of birth','Beschäftigung':'Employment','Stundenlohn':'Hourly rate','Soll pro Woche':'Target per week','Resturlaub 2026':'Vacation left 2026','Übertrag':'Carry-over','Frankfurt (Stammhaus)':'Frankfurt (home)','Berlin (Stammhaus) · Frankfurt':'Berlin (home) · Frankfurt','nur Leitung Stammhaus':'home hotel manager only','Mo':'Mon','Di':'Tue','Mi':'Wed','Do':'Thu','Fr':'Fri','Sa':'Sat','So':'Sun',
+'Live-Übersicht · Frankfurt':'Live board · Frankfurt','Donnerstag, 1. Oktober':'Thursday, 1 October','Serverzeit':'Server time','Eingestempelt':'Clocked in','Erwartet, nicht da':'Expected, not arrived','Prüfung nötig':'Needs review','Nicht erschienen':'No-shows','Per Korrektur schließen':'Close with correction','Alle Erwarteten sind da.':'Everyone due has arrived.','Heute niemand.':'None today.','Nicht da':'Not in','Sven B.':'Sven B.','Eingestempelt Mi 15:02, nie ausgestempelt':'Clocked in Wed 15:02, never clocked out',
+'offen':'open','Abwesenheiten':'Absences','Stempelkorrekturen':'Clock corrections','Wünsche':'Wishes','Genehmigen':'Approve','Ablehnen':'Reject','Genehmigt':'Approved','Abgelehnt':'Rejected','Krankmeldung':'Sick report','Fehlendes Ausstempeln':'Missing clock-out','Einstempelzeit':'Clock-in time','Freiwunsch':'Day-off wish','Urlaubswunsch':'Leave wish','Housekeeping am Di, 6. Okt. unterbesetzt, falls genehmigt':'Housekeeping understaffed on Tue 6 Oct if approved','Eintrag seit 15 h offen, Prüfung nötig':'Entry open for 15 h, needs review','Frühstück am 24. Dez. unter Mindestbesetzung':'Breakfast below minimum on 24 Dec',
+'Trip Inn Frankfurt · Rezeptions-Tablet':'Trip Inn Frankfurt · Front desk tablet','Tippe auf deinen Namen':'Tap your name','Nicht dabei? Namen suchen':'Not listed? Search your name','Nicht du?':'Not you?','Gib deine 6-stellige PIN ein':'Enter your 6-digit PIN','Falsche PIN. Noch 4 Versuche.':'Wrong PIN. 4 attempts left.','Demo: jede PIN außer 000000 funktioniert.':'Demo: any PIN works except 000000.','Hallo':'Hello','Ausstempeln':'Clock out','Einstempeln':'Clock in','Die Uhrzeit kommt vom Server. Deine geplante Pause wird automatisch abgezogen.':'Time is taken from the server. Your scheduled break is deducted automatically.','Abbrechen':'Cancel','Fertig':'Done','Löschen':'Clear','Eingestempelt 06:14':'Clocked in 06:14','Ausgestempelt 06:14':'Clocked out 06:14','Deine Leitung sieht das.':'Your manager can see this.',
+'Mein Portal · Donnerstag, 1. Oktober':'My portal · Thursday, 1 October','Guten Morgen, Maria':'Good morning, Maria','Heute':'Today','Diese Woche':'This week','Arbeitszeitkonto':'Time account','Urlaub 2026':'Vacation 2026','Urlaub beantragen':'Request vacation','Krank melden':'Report sick','Schicht- oder Freiwunsch':'Shift or day-off wish','Stempelzeit korrigieren':'Correct a clock time','Frage an die Leitung':'Ask a manager','Nächste Schichten':'Next shifts','Plan veröffentlicht bis 31. Okt.':'Plan published until 31 Oct.','Benachrichtigungen':'Notifications','Kurzfristig':'Short notice','Gestern':'Yesterday','Heute 05:40':'Today 05:40','Deine Schicht am Fr, 2. Okt. wurde auf Früh geändert':'Your shift on Fri 2 Oct changed to Early','Dienstplan veröffentlicht bis 31. Okt.':'Roster published until 31 Oct','Anna hat geantwortet: „Warum wurde meine Pause abgezogen?“':'Anna answered: “Why was my break deducted?”','Mo, 28. Sep.':'Mon, 28 Sep','Stand 30. Sep.':'As of 30 Sep','Tage übrig · 3 beantragt · 8,5 genommen':'days left · 3 pending · 8.5 used','gearbeitet · 32 h geplant · Soll 40 h':'worked · 32 h planned · target 40 h',
+'Dienstplan & Zeiterfassung ':'Roster & Attendance','Trip Inn Hotels':'Trip Inn Hotels','E-Mail oder Benutzername':'E-mail or username','Passwort':'Password','mindestens 10 Zeichen':'at least 10 characters','Passwort vergessen?':'Forgot password?','Mit E-Mail-Adresse: Du bekommst einen Link, falls ein Konto existiert. Ohne E-Mail-Adresse: Bitte deine Leitung um einen Link zum Zurücksetzen.':'With an e-mail address: you get a link if an account exists. Without one: ask your manager for a reset link.','Neu hier? Öffne den Einladungslink, den du per E-Mail oder persönlich bekommen hast, und lege dein Passwort selbst fest.':'New here? Open the invitation link you received by e-mail or in person and set your own password.',
+'Zuweisen ':'Assign','Reihenfolge: Wunsch, keine Warnung, wenig Wochenstunden. Es wird niemand automatisch benachrichtigt.':'Order: wish, no warning, fewer weekly hours. Nobody is notified automatically.','Schließen':'Close','Keine passenden Kandidaten.':'No matching candidates.','Wunsch: Schicht gewünscht':'Wish: wants this shift','Wunsch: möchte frei':'Wish: wants the day off','Ruhezeit nur 8 h nach Spätschicht':'Rest period only 8 h after Late shift','Jugendarbeitsschutz prüfen':'Check youth protection rules','Vertretung für':'Cover for',
+'Antrag stellen':'Submit a request','Von':'From','Bis':'To','Erster Tag halbtags':'First day half day','Letzter Tag halbtags':'Last day half day','Vorschau':'Preview','Urlaubstage':'vacation days','Tage':'days','Nicht genug Resturlaub für diesen Zeitraum.':'Not enough vacation left for this period.','Hinweis: Sperrzeit „Weihnachtsgeschäft“ (14.–23. Dez.). Die Leitung entscheidet.':'Note: blackout period “Christmas season” (14–23 Dec). Your manager decides.','Grund (optional)':'Reason (optional)','z. B. Familienbesuch':'e.g. family visit','Krank seit':'Sick since','Voraussichtlich bis':'Expected until','Es wird nur gespeichert, dass du krank bist, und von wann bis wann. Einen Grund oder Diagnosen gibst du nicht an. Ab dem 4. Tag ist eine ärztliche Bescheinigung nötig. Die Leitung bestätigt deine Meldung.':'Only the fact that you are sick and the dates are stored. You do not enter a reason or diagnosis. From day 4 a medical certificate is required. Your manager confirms your report.','Frei haben':'Day off','Schicht bevorzugen':'Prefer a shift','Schicht vermeiden':'Avoid a shift','Datum':'Date','Schicht':'Shift','Priorität':'Priority','hoch':'high','mittel':'medium','niedrig':'low','Ein Wunsch ist keine Zusage. Die Leitung entscheidet bei der Planung.':'A wish is not a promise. Your manager decides when planning.','Wunsch senden':'Send wish','Richtig: Einstempeln':'Correct: clock in','Richtig: Ausstempeln':'Correct: clock out','Begründung (Pflicht)':'Reason (required)','z. B. Tablet war eingefroren':'e.g. tablet was frozen','Die Originalzeiten bleiben gespeichert. Erst nach Genehmigung durch die Leitung wird der Eintrag geändert.':'The original times stay on record. The entry only changes after your manager approves.','Korrektur beantragen':'Request correction','Betreff':'Subject','Thema':'Category','Nachricht':'Message','z. B. Warum wurde meine Pause abgezogen?':'e.g. Why was my break deducted?','Krankheit meldest du über „Krank melden“. Bitte schreibe hier keine Gesundheitsdaten. Antworten sehen nur du und die Leitung deines Hotels.':'Report sickness via “Report sick”. Please do not write health details here. Only you and your hotel’s managers see replies.','Frage senden':'Send question','Stunden':'Hours','Zeiterfassung':'Attendance','Sonstiges':'Other','Antrag gesendet':'Request sent','Krankmeldung gesendet':'Sick report sent','Wunsch gesendet':'Wish sent','Korrektur beantragt':'Correction requested','Frage gesendet':'Question sent','Wartet auf Genehmigung durch Anna Krüger.':'Waiting for approval by Anna Krüger.','Anna Krüger bestätigt die Meldung. Gute Besserung.':'Anna Krüger will confirm the report. Get well soon.','Die Leitung sieht den Wunsch bei der Planung.':'Your manager sees the wish when planning.','Original und Vorschlag sind gespeichert.':'Original and proposal are saved.','Die Leitung deines Hotels antwortet dir hier.':'Your hotel’s managers reply here.','Anna Krüger · Regionalleitung':'Anna Krüger · Regional manager','Gerät: Rezeptions-Tablet':'Device: Front desk tablet','1. Weihnachtstag':'Christmas Day','2. Weihnachtstag':'Boxing Day','Neujahr':'New Year','Tag der Deutschen Einheit':'German Unity Day','Nicht gezählt:':'Not counted:','Resturlaub 2026:':'Vacation left 2026:','Urlaub, ':'Vacation, ','Eintrag ':'Entry '};
+const sw=s=>s.replace(/Früh(stück)?/g,(m,x)=>x?'Breakfast':'Early').replace(/Spät/g,'Late').replace(/Nacht/g,'Night').replace(/\bTag\b/g,'Day').replace(/\bFrei\b/g,'Off');
+const RX=[[/^(\d+) von (\d+) erledigt$/,'$1 of $2 done'],[/^(\d+) angelegt, Arbeitstage und Soll hinterlegt$/,'$1 added, work days and targets set'],[/^Schritt (\d+)$/,'Step $1'],[/^Priorität (\d)$/,'Priority $1'],[/^(.*) · (.*) Tage$/,'$1 · $2 days'],[/^Rest danach (.*)$/,'Remaining after: $1'],[/^(.*) Tage · Rest danach (.*)$/,'$1 days · remaining after $2'],[/^Einträge: (.*)$/,'Entries: $1'],[/^(\d+) weitere Person(en)? der Abteilung zur selben Zeit abwesend$/,'$1 more in the department absent at the same time'],[/^Überschneidet sich mit (.*)\.$/,'Overlaps with $1.'],[/^Eingetragen: (.*)$/,'Added: $1'],[/^Wunsch übernommen: (.*)$/,'Wish accepted: $1'],[/^Sperrzeit „Weihnachtsgeschäft“ \(14\.–23\. Dez\.\)$/,'Blackout “Christmas season” (14–23 Dec)'],[/^(\d+) von (\d+)$/,'$1 of $2'],[/^(\d+) Mitarbeiter$/,'$1 employees'],[/^(.*) ist diesem Hotel nicht zugeordnet\.$/,'$1 is not assigned to this hotel.'],[/^Vorher: (.*)$/,(m,a)=>'Before: '+sw(a).replace(' jetzt ',' now ').replace('(entfernt)','(removed)')],[/^(.*) → (.*)$/,(m,a,b)=>sw(a)+' → '+sw(b)],[/^(\d+) Änderungen veröffentlichen$/,'Publish $1 changes'],[/^1 Änderung veröffentlichen$/,'Publish 1 change'],[/^1 Entwurf veröffentlichen$/,'Publish 1 draft'],[/^KW (\d+) · (.*)$/,(m,n,r)=>'Week '+n+' · '+r.replace(' · aktuell',' · current')],[/^(.*) arbeitet nicht in (.*)\.$/,(m,a,b)=>a+' does not work in '+(b==='Rezeption'?'Front desk':b==='Frühstück'?'Breakfast':b)+'.'],[/^(.*) ist an diesem Tag abwesend oder in einem anderen Hotel eingeplant\.$/,'$1 is absent that day or scheduled at another hotel.'],[/^(.*) hat an diesem Tag schon einen Eintrag\.$/,'$1 already has an entry that day.'],[/^(\d+) Einträge als Entwurf übernommen\.$/,'$1 entries copied as drafts.'],[/^(\d+) Entwürfe veröffentlichen$/,'Publish $1 drafts'],[/^(\d+) Min\. zu spät$/,'$1 min late'],[/^seit (\d\d:\d\d)$/,'since $1'],[/^offen seit (\d+) h$/,'open for $1 h'],[/^Überstunden (\d+) Min\.$/,'Overtime $1 min'],[/^Verspätet (\d+) Min\.$/,'Late $1 min'],[/^Erfasst: (\d+) Min\. nach Schichtbeginn\.$/,'Recorded: $1 min after shift start.'],[/^Heute gearbeitet: (.*) Min\. nach Pause$/,'Worked today: $1 min after break'],[/^Heute gearbeitet: siehe Portal$/,'Worked today: see portal'],[/^(\d+) offen$/,'$1 open'],[/^Frankfurt · (\d+) offen$/,'Frankfurt · $1 open'],[/^(\d+) (Urlaubs)?Tage?$/,'$1 days'],[/^(.*) · (\d+(?:,\d)?) h bezahlt$/,'$1 · $2 h paid'],[/^(Mo|Di|Mi|Do|Fr|Sa|So),? (\d+)\.(\d+)\.?$/,(m,d,a,b)=>({Mo:'Mon',Di:'Tue',Mi:'Wed',Do:'Thu',Fr:'Fri',Sa:'Sat',So:'Sun'})[d]+' '+a+'/'+b],[/^(Mo|Di|Mi|Do|Fr|Sa|So), (\d+)\. Okt\. · (.*)$/,(m,d,a,s)=>({Mo:'Mon',Di:'Tue',Mi:'Wed',Do:'Thu',Fr:'Fri',Sa:'Sat',So:'Sun'})[d]+' '+a+' Oct · '+s],[/^Vertretung für (.*)$/,'Cover for $1'],[/^Personalnummer (.*)$/,'Personnel no. $1']];
+const MON=[[/\bRezeption\b/g,'Front desk'],[/\bFrühstück\b/g,'Breakfast'],[/\bVollzeit\b/g,'Full time'],[/\bTeilzeit\b/g,'Part time'],[/\b(\d{1,2})\. (?=Jan|Feb|März|Apr|Mai|Juni|Juli|Aug|Sep|Okt|Nov|Dez)/g,'$1 '],[/März/g,'Mar'],[/Juni/g,'Jun'],[/Juli/g,'Jul'],[/\bMai\b/g,'May'],[/Jan\./g,'Jan'],[/Feb\./g,'Feb'],[/Apr\./g,'Apr'],[/Aug\./g,'Aug'],[/Nov\./g,'Nov'],[/Okt\./g,'Oct'],[/Sep\./g,'Sep'],[/Dez\./g,'Dec'],[/ Tage/g,' days'],[/Stunden/g,'Hours']];
+const xl=t=>{if(EN[t])return EN[t];let s=t;for(const [r,v] of RX)if(r.test(s)){s=s.replace(r,v);break}if(s===t){s=s.replace(/(\d),(\d)/g,'$1.$2');for(const [r,v] of MON)s=s.replace(r,v)}return s};
+
+class Component extends DCLogic {
+  rootRef=React.createRef(); trMap=new WeakMap();
+  state={view:this.props.startView??'roster',lang:this.props.startLang??'de',mobile:false,off:0,rview:'emp',grids:{},drafts:new Set(EMPS.flatMap(e=>[4,5,6].filter(i=>e.w[i]!=='.'&&e.w[i]!=='X'&&!ABS[e.w[i]]).map(i=>'1:'+e.id+'-'+i))),openDd:null,ddQ:'',fHotels:['ffm','ber'],stepsHidden:false,fDepts:['fd','hk','bf'],sel:null,selCell:null,snaps:{},vac:null,lw:LW0,aTab:'overview',aAuditF:'all',uQuery:'',pairCode:null,
+    rules:{rest:11,restMinor:12,breakMin:30,round:5,maxDay:10},flags:{kiosk:true,self:true,wishes:true,offline:false},
+    users:[{id:1,name:'Anna Krüger',mail:'a.krueger@tripinn.example',role:'Regionalleitung',scope:'Frankfurt, Berlin',last:'Heute 06:02',on:true},{id:2,name:'Jan Albrecht',mail:'j.albrecht@tripinn.example',role:'Admin',scope:'Alle Hotels',last:'Heute 05:40',on:true},{id:3,name:'Katrin Vogel',mail:'k.vogel@tripinn.example',role:'Hotelleitung',scope:'Frankfurt',last:'Gestern 17:15',on:true},{id:4,name:'Marcus Lindner',mail:'m.lindner@tripinn.example',role:'Hotelleitung',scope:'Berlin',last:'Mo 28. Sep.',on:true},{id:5,name:'Sabine Roth',mail:'s.roth@tripinn.example',role:'Abteilungsleitung',scope:'Frankfurt · Rezeption',last:'Gestern 14:08',on:true},{id:6,name:'Maria Garcia',mail:'m.garcia@tripinn.example',role:'Mitarbeiter',scope:'Frankfurt',last:'Heute 05:58',on:true},{id:7,name:'Lena Hofmann',mail:'—',role:'Mitarbeiter',scope:'Frankfurt',last:'Noch nie',on:true},{id:8,name:'Tobias Wehner',mail:'t.wehner@tripinn.example',role:'Hotelleitung',scope:'Berlin',last:'12. Aug.',on:false}],
+    tablets:[{id:1,name:'Rezeption Frankfurt',hotel:'Frankfurt',where:'Eingang Lobby',seen:'Heute 06:14',ver:'2.4.1',online:true,revoked:false},{id:2,name:'Housekeeping-Büro',hotel:'Frankfurt',where:'Untergeschoss',seen:'Heute 06:11',ver:'2.4.1',online:true,revoked:false},{id:3,name:'Rezeption Berlin',hotel:'Berlin',where:'Eingang Lobby',seen:'Gestern 22:03',ver:'2.3.8',online:false,revoked:false}],
+    blackouts:[{id:1,name:'Weihnachtsgeschäft',range:'14.–23. Dez. 2026'},{id:2,name:'Messe Frankfurt',range:'12.–16. Nov. 2026'}],
+    audit:[{w:'Heute 06:02',who:'Anna Krüger',area:'Dienstplan',what:'hat KW 41 veröffentlicht (3 Änderungen)'},{w:'Heute 05:40',who:'Jan Albrecht',area:'Benutzer',what:'hat Tobias Wehner deaktiviert'},{w:'Gestern 17:15',who:'Katrin Vogel',area:'Anträge',what:'hat Urlaub von Fatima Ali genehmigt (6.–9. Okt.)'},{w:'Gestern 14:08',who:'Sabine Roth',area:'Dienstplan',what:'hat Überschreibung für Lena Hofmann gespeichert: „Mit Ausbilderin abgestimmt“'},{w:'Mo 28. Sep. 09:30',who:'Jan Albrecht',area:'Regeln',what:'hat Mindest-Ruhezeit von 10 h auf 11 h geändert'},{w:'Mo 28. Sep. 08:12',who:'Marcus Lindner',area:'Stempelzeiten',what:'hat Korrektur für Sven Becker genehmigt (30. Sep.)'},{w:'Fr 25. Sep. 16:45',who:'Jan Albrecht',area:'Tablets',what:'hat „Rezeption Berlin“ gekoppelt'},{w:'Do 24. Sep. 11:20',who:'Anna Krüger',area:'Urlaub',what:'hat Sperrzeit „Messe Frankfurt“ angelegt'}],vSel:'maria',vHotel:'all',vf:{emp:'maria',from:'2026-11-23',to:'2026-11-27',hs:false,he:false,status:'approved'},toast:null,clearOpen:false,dropKey:null,reason:'',saved:false,published:false,req:{},kStep:'list',kEmp:null,pin:'',pinError:false,kEmps:KEMP0,kResult:null,finder:null,staffSel:'maria',pins:{},loginForgot:false,form:null,sent:false,f:{from:'2026-12-21',to:'2026-12-28',hs:false,he:false,reason:'',sFrom:'2026-10-01',sTo:'2026-10-02',wKind:'off',wDate:'2026-10-14',wShift:'Früh',wPrio:2,wReason:'',cEntry:'29',cIn:'05:58',cOut:'14:03',cReason:'',qSubject:'',qCat:'Zeiterfassung',qBody:''}};
+  set=(o)=>this.setState(o);
+  componentDidMount(){this.tr()} componentDidUpdate(){this.tr()}
+  tr(){const root=this.rootRef.current;if(!root)return;const en=this.state.lang==='en';const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;const nodes=[];while(n=w.nextNode())nodes.push(n);
+    for(const n of nodes){const m=this.trMap.get(n),v=n.nodeValue;if(m&&v===m.tr){if(!en){n.nodeValue=m.orig;this.trMap.delete(n)}continue}if(m)this.trMap.delete(n);if(!en)continue;const t=v.trim();if(!t)continue;const r=xl(t);if(r!==t){const nv=v.replace(t,r);this.trMap.set(n,{orig:v,tr:nv});n.nodeValue=nv}}
+    root.querySelectorAll('[placeholder]').forEach(el=>{if(en){if(!el.dataset.de)el.dataset.de=el.getAttribute('placeholder');el.setAttribute('placeholder',xl(el.dataset.de))}else if(el.dataset.de){el.setAttribute('placeholder',el.dataset.de);delete el.dataset.de}})}
+  hoursOf(e,G){return (G||this.gridFor(this.state.off))[e.id].reduce((a,c)=>a+(SH[c]?SH[c].p:ABS[c]?e.t/5:0),0)}
+  gridFor(off){const s=this.state;if(s.grids[off])return s.grids[off];return this.baseGrid(off)}
+  baseGrid(off){return Object.fromEntries(EMPS.map(e=>{let w=e.w;if(off>=2)w='.......';return [e.id,w.split('')]}))}
+  snapFor(off){const s=this.state;if(s.snaps[off])return s.snaps[off];const g=this.baseGrid(off);if(off===1)EMPS.forEach(e=>[4,5,6].forEach(i=>{const c=e.w[i];if(c!=='.'&&c!=='X'&&!ABS[c])g[e.id][i]='.'}));return g}
+  diffOf(off,G,SN){const out=[];[0,1,2,3,4,5,6].forEach(i=>EMPS.filter(e=>this.visible(e)).forEach(e=>{const a=SN[e.id][i],c=G[e.id][i];if(a===c||ABS[a]||ABS[c]||a==='X'||c==='X')return;out.push({eid:e.id,day:i,from:a,type:a==='.'?'new':c==='.'?'removed':'changed'})}));return out}
+  visible(e){const s=this.state;return s.fHotels.includes(e.h)&&s.fDepts.includes(e.d)}
+  countDays(from,to,hs,he){const a=new Date(from+'T00:00:00Z'),b=new Date(to+'T00:00:00Z'),days=[],skipped=[];if(isNaN(a)||isNaN(b)||b<a)return {n:0,days,skipped,ok:false};
+    for(let d=new Date(a),i=0;d<=b&&i<366;d=new Date(d.getTime()+864e5),i++){const wd=d.getUTCDay();if(wd===0||wd===6)continue;if(HOL[iso(d)]){skipped.push({label:fmtD(d),name:HOL[iso(d)]});continue}days.push({d:new Date(d),frac:1})}
+    if(days.length){if(hs)days[0].frac=.5;if(he)days[days.length-1].frac=.5}
+    return {n:days.reduce((s,x)=>s+x.frac,0),days,skipped,ok:true}}
+  vacData(){const s=this.state;if(s.vac)return s.vac;const v={};let id=100;EMPS.forEach(e=>{const rest0=parseFloat(e.vac.replace(',','.')),carry=parseFloat(e.carry),days=30;const entries=(VE0[e.id]||[]).map(([fr,to,st])=>({id:id++,from:fr,to,status:st,n:this.countDays(fr,to,false,false).n}));const used=entries.filter(x=>x.status==='approved').reduce((a,x)=>a+x.n,0);v[e.id]={days,carry,base:Math.max(0,days+carry-rest0-used),entries}});return v}
+  vTotals(e,V){const d=V[e.id];const cls=x=>x.status==='pending'?'pending':x.to<TODAY?'taken':'planned';const sum=k=>d.entries.filter(x=>cls(x)===k).reduce((a,x)=>a+x.n,0);const taken=d.base+sum('taken'),planned=sum('planned'),pending=sum('pending');return {taken,planned,pending,rest:d.days+d.carry-taken-planned,cls}}
+  setVac(id,patch){const V=this.vacData();this.set({vac:{...V,[id]:{...V[id],...patch}}})}
+  dayDate(off,i){return new Date(Date.UTC(2026,8,28)+(off*7+i)*864e5)}
+  locked(off,i){return iso(this.dayDate(off,i))<'2026-10-01'}
+  setCells(off,ch){const s=this.state;const g=Object.fromEntries(Object.entries(this.gridFor(off)).map(([k,v])=>[k,[...v]]));const dr=new Set(s.drafts);ch.forEach(([eid,day,code])=>{g[eid][day]=code;const k=off+':'+eid+'-'+day;if(code==='.')dr.delete(k);else dr.add(k)});this.set({grids:{...s.grids,[off]:g},drafts:dr,published:false})}
+  toast(m){this.set({toast:m});clearTimeout(this.tt);this.tt=setTimeout(()=>this.set({toast:null}),4000)}
+  startDrag(d){return e=>{if(e.dataTransfer){e.dataTransfer.setData('text/plain','x');e.dataTransfer.effectAllowed='move'}this.drag=d}}
+  over(key){return e=>{e.preventDefault();if(this.state.dropKey!==key)this.set({dropKey:key})}}
+  drop(tEid,tDay,tCode,tHotel){return e=>{e.preventDefault();this.set({dropKey:null});this.doDrop(tEid,tDay,tCode,tHotel)}}
+  doDrop(tEid,tDay,tCode,tHotel){const s=this.state,off=s.off,G=this.gridFor(off),d=this.drag;this.drag=null;if(!d)return;
+    const emp=id=>EMPS.find(x=>x.id===id),dn=id=>DEPTS.find(x=>x.id===id).name,fits=(c,id)=>c==='F'||c==='.'||SH[c].d===emp(id).d,LK='Vergangene Tage sind gesperrt.';
+    const ab=id=>emp(id).name+' ist an diesem Tag abwesend oder in einem anderen Hotel eingeplant.',nf=(c,id)=>emp(id).name+' arbeitet nicht in '+dn(SH[c].d)+'.';
+    if(this.locked(off,tDay))return this.toast(LK);
+    if(d.type==='pool'){if(!fits(tCode,d.eid))return this.toast(nf(tCode,d.eid));if(emp(d.eid).h!==tHotel)return this.toast(emp(d.eid).name+' ist diesem Hotel nicht zugeordnet.');const cur=G[d.eid][tDay];if(ABS[cur]||cur==='X')return this.toast(ab(d.eid));if(SH[cur])return this.toast(emp(d.eid).name+' hat an diesem Tag schon einen Eintrag.');return this.setCells(off,[[d.eid,tDay,tCode]])}
+    if(d.type==='tpl'){if(!fits(d.code,tEid))return this.toast(nf(d.code,tEid));const cur=G[tEid][tDay];if(ABS[cur]||cur==='X')return this.toast(ab(tEid));return this.setCells(off,[[tEid,tDay,d.code]])}
+    if(this.locked(off,d.day))return this.toast(LK);
+    if(tEid!==null){if(tEid===d.eid&&tDay===d.day)return;const src=G[d.eid][d.day],tg=G[tEid][tDay];if(ABS[tg]||tg==='X')return this.toast(ab(tEid));if(!fits(src,tEid))return this.toast(nf(src,tEid));if(!fits(tg,d.eid))return this.toast(nf(tg,d.eid));return this.setCells(off,[[tEid,tDay,src],[d.eid,d.day,tg]])}
+    if(!fits(tCode,d.eid))return this.toast(nf(tCode,d.eid));if(emp(d.eid).h!==tHotel)return this.toast(emp(d.eid).name+' ist diesem Hotel nicht zugeordnet.');const cur=G[d.eid][tDay];
+    if(tDay===d.day){if(cur===tCode)return;return this.setCells(off,[[d.eid,tDay,tCode]])}
+    if(ABS[cur]||cur==='X')return this.toast(ab(d.eid));if(cur!=='.')return this.toast(emp(d.eid).name+' hat an diesem Tag schon einen Eintrag.');
+    this.setCells(off,[[d.eid,tDay,tCode],[d.eid,d.day,'.']])}
+  trashDrop=(e)=>{e.preventDefault();const d=this.drag;this.drag=null;this.set({dropKey:null});const s=this.state;if(!d||d.type!=='cell')return;if(this.locked(s.off,d.day))return this.toast('Vergangene Tage sind gesperrt.');this.setCells(s.off,[[d.eid,d.day,'.']]);this.toast('Eintrag gelöscht.')}
+  clearList(){const s=this.state,G=this.gridFor(s.off),out=[];EMPS.forEach(e=>G[e.id].forEach((c,i)=>{if((SH[c]||c==='F')&&!this.locked(s.off,i)&&this.visible(e))out.push([e.id,i,c])}));return out}
+  copyPrev=()=>{const s=this.state,P=this.gridFor(s.off-1),G=this.gridFor(s.off),ch=[];EMPS.forEach(e=>P[e.id].forEach((c,i)=>{if((SH[c]||c==='F')&&G[e.id][i]==='.'&&!this.locked(s.off,i)&&this.visible(e))ch.push([e.id,i,c])}));if(!ch.length)return this.toast('Nichts zu kopieren.');this.setCells(s.off,ch);this.toast(ch.length+' Einträge als Entwurf übernommen.')}
+  leavePreview(){const f=this.state.f;const days=[],skipped=[];const a=new Date(f.from+'T00:00:00Z'),b=new Date(f.to+'T00:00:00Z');if(isNaN(a)||isNaN(b)||b<a)return {days,skipped,total:'0',before:'18,5',after:'18,5',over:false,blackout:false,blocked:true};
+    for(let d=new Date(a),i=0;d<=b&&i<62;d=new Date(d.getTime()+864e5),i++){const wd=d.getUTCDay();if(wd===0||wd===6)continue;if(HOL[iso(d)]){skipped.push({label:fmtD(d),name:HOL[iso(d)]});continue}days.push({d:new Date(d),frac:1})}
+    if(days.length){if(f.hs)days[0].frac=.5;if(f.he)days[days.length-1].frac=days.length===1&&f.hs?.5:.5}
+    const total=days.reduce((s,x)=>s+x.frac,0);const after=18.5-total;const bo=a<=new Date('2026-12-23T00:00:00Z')&&b>=new Date('2026-12-14T00:00:00Z');
+    return {days:days.map(x=>({label:fmtD(x.d),half:x.frac<1})),skipped,total:fnum(total),before:'18,5',after:fnum(after),over:after<0,blackout:bo,blocked:after<0||total===0}}
+  candidates(code,day,exclude,off,hotel){const s=this.state,dept=SH[code].d,G=this.gridFor(off);
+    return EMPS.filter(e=>e.d===dept&&e.id!==exclude&&e.h===hotel).filter(e=>{const c=G[e.id][day];return !SH[c]&&!ABS[c]&&c!=='X'}).map(e=>{const prev=day>0?G[e.id][day-1]:'.';const wish=off===1?WISH[e.id+'-'+day]:null;const warns=[];if(code==='E'&&(prev==='L'||prev==='N'))warns.push('Ruhezeit nur 8 h nach Spätschicht');if(e.minor)warns.push('Jugendarbeitsschutz prüfen');if(wish==='avoid')warns.push('Wunsch: möchte frei');
+      return {e,wish,warns,h:this.hoursOf(e,G)}}).sort((a,b)=>(b.wish==='prefer')-(a.wish==='prefer')||a.warns.length-b.warns.length||a.h-b.h)}
+  renderVals(){
+    const s=this.state, hl=this.props.highlightWarnings??true, f=s.f;
+    const views=[['roster','Dienstplan'],['staff','Mitarbeiter'],['vac','Urlaub'],['admin','Admin'],['live','Live'],['requests','Anträge'],['kiosk','Tablet'],['portal','Portal'],['login','Anmelden']];
+    const navItems=views.map(([k,l])=>({label:l,active:s.view===k,inactive:s.view!==k,go:()=>this.set({view:k})}));
+    const off=s.off,G=this.gridFor(off),kw=40+off,WN=['Mo','Di','Mi','Do','Fr','Sa','So'],MN=['Jan.','Feb.','März','Apr.','Mai','Juni','Juli','Aug.','Sep.','Okt.','Nov.','Dez.'];
+    const dd=i=>this.dayDate(off,i),mon=dd(0),sun=dd(6),editable=off>=0;
+    const SECS=[['plan','Planung',[['roster','Dienstplan'],['vac','Urlaub']]],['today','Heute',[['live','Live'],['requests','Anträge']]],['team','Team',[['staff','Mitarbeiter']]],['admin','Admin',[['admin','Einrichtung']]],['apps','Ansichten',[['kiosk','Tablet'],['portal','Handy-Portal'],['login','Anmelden']]]];
+    const curSec=SECS.find(x=>x[2].some(v=>v[0]===s.view))||SECS[0];
+    const secItems=SECS.map(([k,l,vs])=>({label:l,active:curSec[0]===k,inactive:curSec[0]!==k,go:()=>this.set({view:vs[0][0]})}));
+    const reqOpen=REQ0.filter(r=>!s.req[r.id]).length;
+    const subItems=curSec[2].map(([k,l])=>({label:l,badge:k==='requests'&&reqOpen?String(reqOpen):null,weight:s.view===k?800:500,line:s.view===k?'var(--color-accent)':'transparent',go:()=>this.set({view:k})}));
+    const steps=[{t:'Hotel und Abteilungen anlegen',sub:'Name, Zeitzone, Mindestbesetzung',a:'Hotels',done:true,go:()=>this.set({aTab:'hotels'})},{t:'Mitarbeitende anlegen',sub:EMPS.length+' angelegt, Arbeitstage und Soll hinterlegt',a:'Mitarbeiter',done:true,go:()=>this.set({view:'staff'})},{t:'Mitarbeitende einladen',sub:'1 hat sich noch nie angemeldet',a:'Benutzer',done:false,go:()=>this.set({aTab:'users'})},{t:'Tablet koppeln',sub:'Für das Stempeln mit PIN an der Rezeption',a:'Tablets',done:s.tablets.some(t=>!t.revoked),go:()=>this.set({aTab:'tablets'})},{t:'Regeln prüfen',sub:'Ruhezeiten, Pausen, Sperrzeiten',a:'Regeln',done:false,go:()=>this.set({aTab:'rules'})},{t:'Ersten Dienstplan veröffentlichen',sub:'Danach sehen Mitarbeitende ihre Schichten',a:'Zum Dienstplan',done:Object.keys(s.snaps).length>0||s.published,go:()=>this.set({view:'roster'})}].map((x,i)=>({n:i+1,title:x.t,sub:x.sub,action:x.a,done:x.done,bg:x.done?'var(--color-text)':'transparent',go:x.go}));
+    const warnFor=(key,code)=>{const w=off===1?WARN[key]:null;return w&&w.c===code?w:null};
+    const endEv=()=>{this.drag=null;this.set({dropKey:null})};
+    const days=[0,1,2,3,4,5,6].map(i=>({dow:WN[i],date:dd(i).getUTCDate()+'.',bg:iso(dd(i))==='2026-10-01'?'var(--color-accent-100)':'transparent'}));
+    let warnCount=0,underCount=0;
+    const SN=this.snapFor(off),diff=this.diffOf(off,G,SN),dmap={};diff.forEach(d=>dmap[d.eid+'-'+d.day]=d);
+    const lab=c=>c==='.'?'—':c==='F'?'Frei':SH[c]?SH[c].n+' '+SH[c].s:(ABS[c]||c),nm=e=>e.name.split(' ')[0]+' '+e.name.split(' ')[1][0]+'.';
+    const tog=(key,id,label)=>{const on=s[key].includes(id);return {label,bg:on?'var(--color-text)':'transparent',fg:on?'var(--color-bg)':'var(--color-text)',pick:()=>{const cur=s[key],nx=on?cur.filter(x=>x!==id):[...cur,id];if(!nx.length)return;this.set({[key]:nx,sel:null,selCell:null})}}};
+    const mkDd=(id,key,label,all,items,search)=>{const sel=s[key],open=s.openDd===id,q=s.ddQ.trim().toLowerCase(),on=x=>sel.includes(x.id);
+      const names=items.filter(on).map(x=>x.label);const summary=sel.length===0?'Keine Auswahl':sel.length===items.length?all:names.length<=2?names.join(', '):sel.length+' von '+items.length;
+      const apply=nx=>this.set({[key]:nx,sel:null,selCell:null});
+      return {label,summary,open,hasSearch:search,query:s.ddQ,onQuery:e=>this.set({ddQ:e.target.value}),toggle:()=>this.set({openDd:open?null:id,ddQ:''}),
+        all:{label:sel.length===items.length?'Auswahl aufheben':'Alle auswählen',bg:sel.length===items.length?'var(--color-text)':'transparent',pick:()=>apply(sel.length===items.length?[]:items.map(x=>x.id))},
+        opts:items.filter(x=>!q||x.label.toLowerCase().includes(q)).map(x=>({label:x.label,sub:x.sub||'',bg:on(x)?'var(--color-text)':'transparent',pick:()=>apply(on(x)?sel.filter(y=>y!==x.id):[...sel,x.id])}))}};
+    const ddowns=[mkDd('h','fHotels','Hotels','Alle Hotels',Object.keys(HOTELS).map(h=>({id:h,label:HOTELS[h],sub:EMPS.filter(e=>e.h===h).length+' Mitarbeiter'})),true),mkDd('d','fDepts','Abteilungen','Alle Abteilungen',DEPTS.map(d=>({id:d.id,label:d.name})),false)];
+    const V=this.vacData(),n1=x=>fnum(Math.round(x*10)/10),vf=s.vf,rangeL=(a,b)=>+a.slice(8)+'.'+(+a.slice(5,7))+'.–'+(+b.slice(8))+'.'+(+b.slice(5,7))+'.';
+    const vEmps=EMPS.filter(e=>s.vHotel==='all'||e.h===s.vHotel);
+    const vRows=vEmps.map(e=>{const t=this.vTotals(e,V),d=V[e.id],num=(k)=>ev=>this.setVac(e.id,{[k]:Math.max(0,parseFloat(ev.target.value)||0)});return {name:e.name,sub:DEPTS.find(x=>x.id===e.d).name+' · '+HOTELS[e.h],days:String(d.days),carry:String(d.carry),onDays:num('days'),onCarry:num('carry'),stop:ev=>ev.stopPropagation(),taken:n1(t.taken),planned:n1(t.planned),pending:n1(t.pending),rest:n1(t.rest),restColor:t.rest<0?'var(--warn)':'var(--color-text)',bg:s.vSel===e.id?'var(--color-accent-100)':'transparent',pick:()=>this.set({vSel:e.id,vf:{...vf,emp:e.id}})}});
+    const chartBg=(()=>{const L=dnum('2026-12-14')/365*100,R=(dnum('2026-12-23')+1)/365*100,T=dnum(TODAY)/365*100;const g=['linear-gradient(to right,transparent '+T+'%,var(--color-accent) '+T+'%,var(--color-accent) calc('+T+'% + 2px),transparent calc('+T+'% + 2px))','linear-gradient(to right,transparent '+L+'%,var(--warn-bg) '+L+'%,var(--warn-bg) '+R+'%,transparent '+R+'%)'];MOFF.forEach(o=>{const p=o/365*100;g.push('linear-gradient(to right,transparent '+p+'%,var(--color-divider) '+p+'%,var(--color-divider) calc('+p+'% + 1px),transparent calc('+p+'% + 1px))')});return g.join(',')})();
+    const bar=(from,to,kind,title)=>{const l=dnum(from),w=dnum(to)-l+1;return {left:l/365*100,w:Math.max(w/365*100,0.6),title,bg:kind==='approved'?'var(--color-accent)':kind==='pending'?'var(--color-surface)':'var(--color-bg)',border:kind==='approved'?'1px solid var(--color-accent)':kind==='pending'?'1px dashed var(--color-text)':'2px solid var(--color-accent)'}};
+    const tlRows=vEmps.map(e=>({name:e.name,bars:V[e.id].entries.map(x=>bar(x.from,x.to,x.status,e.name+' '+rangeL(x.from,x.to))).concat(s.lw.filter(w=>w.emp===e.id).map(w=>bar(w.from,w.to,'wish',e.name+' (Wunsch) '+rangeL(w.from,w.to))))}));
+    const overlapN=(w,e)=>EMPS.filter(o=>o.id!==e.id&&o.d===e.d&&o.h===e.h).filter(o=>V[o.id].entries.some(x=>x.from<=w.to&&x.to>=w.from)).length;
+    const wishes=s.lw.map(w=>{const e=EMPS.find(x=>x.id===w.emp),c=this.countDays(w.from,w.to,false,false),t=this.vTotals(e,V),warns=[],ov=overlapN(w,e);if(w.from<='2026-12-23'&&w.to>='2026-12-14')warns.push({t:'Sperrzeit „Weihnachtsgeschäft“ (14.–23. Dez.)'});if(ov>0)warns.push({t:ov+(ov===1?' weitere Person':' weitere Personen')+' der Abteilung zur selben Zeit abwesend'});if(t.rest-c.n<0)warns.push({t:'Resturlaub reicht nicht'});
+      return {name:e.name,prio:'Priorität '+w.prio,range:rangeL(w.from,w.to),days:n1(c.n),after:n1(t.rest-c.n),warns,accept:()=>{const d=V[e.id];this.set({vac:{...V,[e.id]:{...d,entries:[...d.entries,{id:Date.now(),from:w.from,to:w.to,status:'approved',n:c.n}]}},lw:s.lw.filter(x=>x.id!==w.id)});this.toast('Wunsch übernommen: '+e.name+' '+rangeL(w.from,w.to))},reject:()=>{this.set({lw:s.lw.filter(x=>x.id!==w.id)});this.toast('Wunsch abgelehnt.')}}});
+    const vEmp=EMPS.find(e=>e.id===vf.emp)||EMPS[0],vcd=this.countDays(vf.from,vf.to,vf.hs,vf.he),vtt=this.vTotals(vEmp,V);
+    const vp={total:n1(vcd.n),after:n1(vtt.rest-(vf.status==='approved'?vcd.n:0)),color:vtt.rest-(vf.status==='approved'?vcd.n:0)<0?'var(--warn)':'var(--color-text)',skipped:vcd.skipped,blackout:vf.from<='2026-12-23'&&vf.to>='2026-12-14',over:vtt.rest-vcd.n<0,blocked:!vcd.ok||vcd.n===0};
+    const vSelE=EMPS.find(e=>e.id===s.vSel)||EMPS[0],vSd=V[vSelE.id],vSt=this.vTotals(vSelE,V);
+    const vSel={name:vSelE.name,base:String(vSd.base),onBase:ev=>this.setVac(vSelE.id,{base:Math.max(0,parseFloat(ev.target.value)||0)}),none:vSd.entries.length===0,entries:vSd.entries.slice().sort((a,b)=>a.from<b.from?-1:1).map(x=>({range:rangeL(x.from,x.to),days:n1(x.n),label:({taken:'Genommen',planned:'Geplant',pending:'Beantragt'})[vSt.cls(x)],canApprove:x.status==='pending',approve:()=>this.setVac(vSelE.id,{entries:vSd.entries.map(y=>y===x?{...y,status:'approved'}:y)}),remove:()=>this.setVac(vSelE.id,{entries:vSd.entries.filter(y=>y!==x)})}))};
+    const vh={};['emp','from','to'].forEach(k=>vh[k]=ev=>this.set({vf:{...vf,[k]:ev.target.value}}));['hs','he'].forEach(k=>vh[k]=ev=>this.set({vf:{...vf,[k]:ev.target.checked}}));
+    const addEntry=()=>{const ov=V[vEmp.id].entries.find(x=>x.from<=vf.to&&x.to>=vf.from);if(ov)return this.toast('Überschneidet sich mit '+rangeL(ov.from,ov.to)+'.');this.setVac(vEmp.id,{entries:[...V[vEmp.id].entries,{id:Date.now(),from:vf.from,to:vf.to,status:vf.status,n:vcd.n}]});this.set({vSel:vEmp.id});this.toast('Eingetragen: '+vEmp.name+' '+rangeL(vf.from,vf.to))};
+    const combos=[];DEPTS.forEach(d=>Object.keys(HOTELS).forEach(h=>{if(s.fDepts.includes(d.id)&&s.fHotels.includes(h))combos.push({d,h})}));
+    const groups=combos.map(({d,h})=>{
+      const emps=EMPS.filter(e=>e.d===d.id&&e.h===h),gmin=MIND[h][d.id];
+      const rows=emps.map(e=>{
+        let hrs=0;
+        const cells=G[e.id].map((c,i)=>{
+          const key=e.id+'-'+i, dm=dmap[key], st=dm&&dm.type, sh=SH[c], ghost=st==='removed'?SH[SN[e.id][i]]:null, draft=st==='new', lk=this.locked(off,i), dk='c'+off+key;
+          if(sh)hrs+=sh.p; if(ABS[c])hrs+=e.t/5; const wn=!!warnFor(key,c); if(wn)warnCount++;
+          return {isPub:!!sh&&!draft&&st!=='changed',isDraft:!!sh&&draft,isChanged:!!sh&&st==='changed',isRemoved:!!ghost,isOff:c==='F',isAbs:!!ABS[c],absLabel:ABS[c],isElse:c==='X',name:(sh||ghost||{}).n,time:(sh||ghost||{}).s,warn:hl&&wn,selected:s.sel===key,select:()=>this.set({sel:key,selCell:null,reason:'',saved:false}),
+            canDrag:(!!sh||c==='F')&&!lk,showX:s.sel===key&&(!!sh||c==='F')&&!lk,warnRight:s.sel===key?'24px':'6px',rm:ev=>{ev.stopPropagation();this.setCells(off,[[e.id,i,'.']]);this.set({sel:null})},cursor:lk?'default':'pointer',op:lk?'0.55':'1',hover:s.dropKey===dk&&!lk,dragStart:this.startDrag({type:'cell',eid:e.id,day:i}),end:endEv,over:lk?(ev=>ev.preventDefault()):this.over(dk),drop:this.drop(e.id,i,null)};
+        });
+        return {name:e.name,meta:e.meta,minor:!!e.minor,floating:!!e.floating,cells,hours:fnum(Math.round(hrs*10)/10)+' h',target:e.t+' h',open:()=>this.set({view:'staff',staffSel:e.id})};
+      });
+      const cov=[0,1,2,3,4,5,6].map(i=>{const n=emps.filter(e=>SH[G[e.id][i]]).length,gm=wmin(gmin,i);if(n<gm)underCount++;return {label:n+'/'+gm,ok:n>=gm,under:n<gm}});
+      return {name:d.name+' · '+HOTELS[h],min:gmin,rows,cov};
+    });
+    const shiftGroups=combos.map(({d,h})=>({name:d.name+' · '+HOTELS[h],rows:DSH[h][d.id].map(code=>({name:SH[code].n,time:SH[code].t,min:MINS[h][code],cells:[0,1,2,3,4,5,6].map(i=>{
+      const lk=this.locked(off,i),dk='s'+h+code+i,hs=EMPS.filter(e=>e.h===h),es=hs.filter(e=>G[e.id][i]===code),wm=wmin(MINS[h][code],i),under=es.length<wm,isSel=s.selCell&&s.selCell.code===code&&s.selCell.day===i&&s.selCell.hotel===h;
+      return {pick:()=>this.set({selCell:{code,day:i,hotel:h},sel:null,reason:'',saved:false}),outline:isSel?'2px solid var(--color-accent)':'none',op:lk?'0.55':'1',bg:'transparent',count:es.length+'/'+wm,countColor:under?'var(--warn)':'var(--color-neutral-700)',countWeight:under?800:400,hover:s.dropKey===dk&&!lk,over:lk?(ev=>ev.preventDefault()):this.over(dk),drop:this.drop(null,i,code,h),
+        chips:es.map(e=>{const k=e.id+'-'+i,st=(dmap[k]||{}).type,draft=st==='new';return {deco:'none',name:nm(e),warn:hl&&!!warnFor(k,code),bg:draft?'transparent':'var(--color-neutral-300)',border:draft?'1px dashed var(--color-text)':st==='changed'?'2px solid var(--color-accent)':'1px solid transparent',outline:s.sel===k?'2px solid var(--color-accent)':'none',canDrag:!lk,showX:s.sel===k&&!lk,warnRight:s.sel===k?'24px':'4px',rm:ev=>{ev.stopPropagation();this.setCells(off,[[e.id,i,'.']]);this.set({sel:null})},cursor:lk?'default':'grab',select:ev=>{ev.stopPropagation();this.set({sel:k,selCell:null,reason:'',saved:false})},dragStart:this.startDrag({type:'cell',eid:e.id,day:i}),end:endEv}}).concat(hs.filter(e=>SN[e.id][i]===code&&G[e.id][i]!==code&&this.visible(e)).map(e=>({deco:'line-through',name:nm(e),warn:false,bg:'transparent',border:'1px dashed var(--color-accent)',outline:s.sel===e.id+'-'+i?'2px solid var(--color-accent)':'none',canDrag:false,cursor:'pointer',showX:false,warnRight:'4px',rm:()=>{},select:ev=>{ev.stopPropagation();this.set({sel:e.id+'-'+i,selCell:null,reason:'',saved:false})},dragStart:()=>{},end:()=>{}})))}
+    })}))}));
+    const palette=['E','L','N','D','B','F'].map(c=>({name:c==='F'?'Frei':SH[c].n,time:c==='F'?'':SH[c].s,dragStart:this.startDrag({type:'tpl',code:c}),end:endEv}));
+    const dcount=diff.length;
+    let sel=null,selCode=null,selEmp=null,selDay=null;
+    if(s.sel){const [eid,ix]=s.sel.split('-');const i=+ix;const e=EMPS.find(x=>x.id===eid);const c=G[eid][i];const sh=SH[c];const w=warnFor(s.sel,c);const dept=DEPTS.find(d=>d.id===e.d);selCode=sh?c:null;selEmp=eid;selDay=i;const lk=this.locked(off,i),dm=dmap[s.sel];
+      
+      sel={name:e.name,meta:dept.name+' · '+HOTELS[e.h]+' · '+e.meta+(e.floating?' · Stammhaus Berlin':''),locked:lk,dateLabel:WN[i]+', '+dd(i).getUTCDate()+'. '+MN[dd(i).getUTCMonth()],statusLabel:dm?({new:'Entwurf',changed:'Geändert',removed:'Entfernt'})[dm.type]:sh?'Veröffentlicht':(c==='F'?'Frei':ABS[c]?'Abwesenheit':c==='X'?'Anderes Hotel':'Leer'),hasDiff:!!dm,diff:dm&&dm.type!=='new'?'Vorher: '+lab(dm.from)+(dm.type==='removed'?' (entfernt)':' → jetzt '+lab(c)):null,revert:()=>this.setCells(off,[[eid,i,SN[eid][i]]]),
+        entry:sh?sh.n:c==='F'?'Frei':ABS[c]||(c==='X'?'Berlin · Früh':'—'),entryTime:sh?sh.t+' · '+fnum(sh.p)+' h bezahlt':c==='X'?'06:00–14:00 in Berlin':'',week:fnum(Math.round(this.hoursOf(e,G)*10)/10)+' h',target:e.t+' h',
+        warnings:w?w.list:[],needsReason:!!(w&&w.minor)&&!lk,isEmpty:c==='.'&&!lk,editable:(!!sh||c==='F')&&!lk,
+        options:dept.opts.map(o=>({label:SH[o]?SH[o].n+' '+SH[o].s:'Frei',assign:()=>this.setCells(off,[[eid,i,o]])}))};
+    }
+    let cs={};if(s.selCell){const {code,day,hotel}=s.selCell,lk=this.locked(off,day),n=EMPS.filter(e=>e.h===hotel&&G[e.id][day]===code).length,mn=wmin(MINS[hotel][code],day);
+      const cands=lk?[]:this.candidates(code,day,null,off,s.selCell.hotel);
+      cs={title:SH[code].n+' '+SH[code].s+' · '+fmtD(dd(day))+' · '+HOTELS[hotel],count:n+'/'+mn,color:n<mn?'var(--warn)':'var(--color-text)',locked:lk,open:!lk,none:!lk&&!cands.length,
+        cands:cands.map(c=>({name:c.e.name,floating:!!c.e.floating,minor:!!c.e.minor,dayOff:G[c.e.id][day]==='F',wish:c.wish==='prefer'?'Wunsch: Schicht gewünscht':null,hours:fnum(Math.round(c.h*10)/10)+' h diese Woche · Soll '+c.e.t+' h',warn:c.warns.join(' · ')||null,assign:()=>this.setCells(off,[[c.e.id,day,code]]),dragStart:this.startDrag({type:'pool',eid:c.e.id}),end:()=>{this.drag=null;this.set({dropKey:null})}}))}}
+    const weekOpts=[];for(let o=-6;o<=10;o++){const m=this.dayDate(o,0),u=this.dayDate(o,6);weekOpts.push({v:String(o),label:'KW '+(40+o)+' · '+m.getUTCDate()+'.'+(m.getUTCMonth()+1)+'.–'+u.getUTCDate()+'.'+(u.getUTCMonth()+1)+'.'+(o===0?' · aktuell':'')})}
+    const go=o=>()=>this.set({off:Math.max(-6,Math.min(10,o)),sel:null,selCell:null,toast:null});
+    const clr=this.clearList();
+    const reqItems=REQ0.map(r=>{const st=s.req[r.id];return {...r,pending:!st,done:!!st,statusLabel:st==='approved'?'Genehmigt':'Abgelehnt',approve:()=>this.set({req:{...s.req,[r.id]:'approved'}}),reject:()=>this.set({req:{...s.req,[r.id]:'rejected'}})}});
+    const reqGroups=['Abwesenheiten','Stempelkorrekturen','Wünsche'].map(t=>{const items=reqItems.filter(r=>r.g===t);return {title:t,items,open:items.filter(r=>r.pending).length}});
+    const pendingCount=reqItems.filter(r=>r.pending).length;
+    const ke=s.kEmp;
+    const press=(k)=>()=>{if(k==='C')return this.set({pin:'',pinError:false});if(k==='B')return this.set({pin:s.pin.slice(0,-1)});const p=s.pin+k;if(p.length<6)return this.set({pin:p,pinError:false});if(p==='000000')return this.set({pin:'',pinError:true});this.set({pin:'',pinError:false,kStep:'action'})};
+    const kPunch=()=>{const inNow=!ke.in;this.set({kEmps:s.kEmps.map(x=>x.id===ke.id?{...x,in:inNow}:x),kStep:'done',kResult:{title:inNow?'Eingestempelt 06:14':'Ausgestempelt 06:14',note:inNow&&ke.late?'Erfasst: '+ke.late+' Min. nach Schichtbeginn. Deine Leitung sieht das.':(!inNow?'Heute gearbeitet: '+(ke.id===4?'7 h 48 Min. nach Pause':'siehe Portal'):'')}})};
+    // staff
+    const stE=EMPS.find(e=>e.id===s.staffSel)||EMPS[0];
+    const stDept=DEPTS.find(d=>d.id===stE.d).name;
+    const wdSet=stE.id==='sven'?[1,3,5]:stE.id==='elena'?[1,2,3,6,7]:[1,2,3,4,5];
+    const st={num:stE.num,name:stE.name,meta:stDept+' · '+stE.meta+(stE.minor?' · minderjährig':''),reduced:!!stE.floating,hasPin:!!s.pins[stE.id],pin:s.pins[stE.id],
+      facts:[{k:'Stammhaus',v:stE.floating||stE.h==='ber'?'Berlin':'Frankfurt'},{k:'Hotels',v:stE.floating?'Berlin (Stammhaus) · Frankfurt':stE.h==='ber'?'Berlin (Stammhaus)':'Frankfurt (Stammhaus)'},{k:'Abteilungen',v:stDept},{k:'Geburtsdatum',v:stE.birth},{k:'Beschäftigung',v:stE.meta},{k:'Stundenlohn',v:stE.floating?'nur Leitung Stammhaus':stE.rate},{k:'Soll pro Woche',v:stE.t+' h'},{k:'Zeitkonto',v:stE.acct},{k:'Resturlaub 2026',v:stE.vac+' Tage'},{k:'Übertrag',v:stE.carry+' Tage'}],
+      weekdays:['Mo','Di','Mi','Do','Fr','Sa','So'].map((l,i)=>({label:l,bg:wdSet.includes(i+1)?'var(--color-text)':'var(--color-neutral-300)',fg:wdSet.includes(i+1)?'var(--color-bg)':'var(--color-neutral-700)'}))};
+    const staffRows=EMPS.map(e=>({name:e.name,num:e.num,dept:DEPTS.find(d=>d.id===e.d).name+' · '+HOTELS[e.h],target:e.t+' h',vac:e.vac+' Tage',acct:e.acct,minor:!!e.minor,floating:!!e.floating,bg:e.id===stE.id?'var(--color-accent-100)':'transparent',pick:()=>this.set({staffSel:e.id})}));
+    // finder
+    let finder={cands:[],title:'',none:false,canAssign:true},finderOpen=!!s.finder;
+    if(s.finder){const {code,day,from,exclude}=s.finder;const cs=this.candidates(code,day,exclude,s.finder.off,s.finder.hotel||'ffm');
+      finder={title:'Vertretung für '+SH[code].n+' '+SH[code].s+' · '+(from==='live'?'Heute':fmtD(this.dayDate(s.finder.off,day))),canAssign:from!=='live',none:cs.length===0,
+        cands:cs.map(c=>({name:c.e.name,floating:!!c.e.floating,minor:!!c.e.minor,wish:c.wish==='prefer'?'Wunsch: Schicht gewünscht':null,hours:fnum(Math.round(c.h*10)/10)+' h diese Woche · Soll '+c.e.t+' h',warn:c.warns.join(' · ')||null,
+          assign:()=>{this.setCells(s.finder.off,[[c.e.id,day,code]]);this.set({finder:null,sel:c.e.id+'-'+day})}}))}}
+    // forms
+    const tabs=[['leave','Urlaub'],['sick','Krank melden'],['wish','Wunsch'],['corr','Korrektur'],['ask','Frage']];
+    const setF=(o)=>this.set({f:{...s.f,...o}});
+    const h={};['from','to','reason','sFrom','sTo','wDate','wShift','wReason','cEntry','cIn','cOut','cReason','qSubject','qCat','qBody'].forEach(k=>h[k]=e=>setF({[k]:e.target.value}));
+    ['hs','he'].forEach(k=>h[k]=e=>setF({[k]:e.target.checked}));
+    const seg=(arr,cur,fn)=>arr.map(([k,l])=>({label:l,bg:cur===k?'var(--color-accent)':'transparent',fg:cur===k?'var(--color-bg)':'var(--color-text)',pick:()=>fn(k)}));
+    const sentMap={leave:['Antrag gesendet','Wartet auf Genehmigung durch Anna Krüger.'],sick:['Krankmeldung gesendet','Anna Krüger bestätigt die Meldung. Gute Besserung.'],wish:['Wunsch gesendet','Die Leitung sieht den Wunsch bei der Planung.'],corr:['Korrektur beantragt','Original und Vorschlag sind gespeichert.'],ask:['Frage gesendet','Die Leitung deines Hotels antwortet dir hier.']};
+    const openForm=(t)=>()=>this.set({form:t,sent:false});
+    const lp=this.leavePreview();
+    const mob=s.mobile;
+    return {
+      rootRef:this.rootRef,navItems:secItems,subItems,hasSubNav:subItems.length>1&&s.view!=='login'&&s.view!=='kiosk',
+      showSteps:!s.stepsHidden,hideSteps:()=>this.set({stepsHidden:true}),stepsDone:steps.filter(x=>x.done).length,stepsTotal:steps.length,stepsPct:Math.round(steps.filter(x=>x.done).length/steps.length*100),steps,whoLabel:s.view==='portal'?'Maria Garcia':s.view==='kiosk'?'Gerät: Rezeptions-Tablet':s.view==='login'?'':'Anna Krüger · Regionalleitung',
+      langOpts:[['de','DE'],['en','EN']].map(([k,l])=>({label:l,bg:s.lang===k?'var(--color-text)':'transparent',fg:s.lang===k?'var(--color-bg)':'var(--color-text)',pick:()=>this.set({lang:k})})),
+      widthOpts:[[false,'Desktop'],[true,'Handy']].map(([k,l])=>({label:l,bg:mob===k?'var(--color-text)':'transparent',fg:mob===k?'var(--color-bg)':'var(--color-text)',pick:()=>this.set({mobile:k})})),
+      isRoster:s.view==='roster',isStaff:s.view==='staff',isLive:s.view==='live',isRequests:s.view==='requests',isKiosk:s.view==='kiosk',isPortal:s.view==='portal',isLogin:s.view==='login',
+      days,groups,shiftGroups,palette,showTools:editable,viewEmp:s.rview==='emp',viewShift:s.rview==='shift',
+      weekKicker:'KW '+kw+' · '+s.fHotels.map(h=>HOTELS[h]).join(' + '),printPlan:()=>{try{window.print()}catch(e){this.toast('Bitte Strg/Cmd + P zum Drucken nutzen.')}},printLine:'Hotels: '+ddowns[0].summary+' · Abteilungen: '+ddowns[1].summary+' · Ansicht: '+(s.rview==='emp'?'Nach Mitarbeiter':'Nach Dienst')+' · Stand 1. Okt. 2026',isAdmin:s.view==='admin',adminTabs:[['overview','Übersicht'],['hotels','Hotels'],['users','Benutzer & Rollen'],['tablets','Tablets'],['rules','Regeln'],['audit','Protokoll']].map(([k,l])=>({label:l,bg:s.aTab===k?'var(--color-text)':'transparent',fg:s.aTab===k?'var(--color-bg)':'var(--color-text)',pick:()=>this.set({aTab:k})})),
+      aOverview:s.aTab==='overview',aHotels:s.aTab==='hotels',aUsers:s.aTab==='users',aTablets:s.aTab==='tablets',aRules:s.aTab==='rules',aAudit:s.aTab==='audit',
+      adminStats:[{label:'Mitarbeitende',value:EMPS.length,sub:'Frankfurt '+EMPS.filter(e=>e.h==='ffm').length+' · Berlin '+EMPS.filter(e=>e.h==='ber').length},{label:'Hotels',value:2,sub:'3 Abteilungen je Hotel'},{label:'Tablets online',value:s.tablets.filter(t=>t.online&&!t.revoked).length+'/'+s.tablets.filter(t=>!t.revoked).length,sub:'1 seit über 12 h offline'},{label:'Aktive Benutzer',value:s.users.filter(u=>u.on).length,sub:s.users.filter(u=>!u.on).length+' deaktiviert'},{label:'Offene Anträge',value:6,sub:'älteste seit 3 Tagen'}],
+      adminTodos:[{title:'Tablet „Rezeption Berlin“ ist offline',sub:'Zuletzt aktiv Gestern 22:03',action:'Ansehen',go:()=>this.set({aTab:'tablets'})},{title:'Lena Hofmann hat sich noch nie angemeldet',sub:'Einladung erneut senden',action:'Benutzer',go:()=>this.set({aTab:'users'})},{title:'Sven Becker: Eintrag seit 15 h offen',sub:'Stempelkorrektur prüfen',action:'Zu Anträgen',go:()=>this.set({view:'requests'})},{title:'Sperrzeit „Weihnachtsgeschäft“ endet in 83 Tagen',sub:'Regel prüfen',action:'Regeln',go:()=>this.set({aTab:'rules'})}],
+      auditShort:s.audit.slice(0,5).map(a=>({when:a.w,who:a.who,what:a.what})),
+      adminHotels:Object.keys(HOTELS).map(h=>({name:'Trip Inn '+HOTELS[h],staff:EMPS.filter(e=>e.h===h).length,tablets:s.tablets.filter(t=>t.hotel===HOTELS[h]&&!t.revoked).length,tz:'Europe/Berlin',rows:DEPTS.map(d=>({dept:d.name,shifts:DSH[h][d.id].map(c=>SH[c].n).join(', '),min:MIND[h][d.id],onMin:ev=>{MIND[h][d.id]=Math.max(0,parseInt(ev.target.value)||0);this.set({aAudit2:Date.now()});this.toast(d.name+' · '+HOTELS[h]+': Mindestbesetzung '+MIND[h][d.id])}}))})),
+      addHotel:()=>this.toast('Hotel anlegen: Name, Zeitzone und Abteilungen festlegen (nicht in der Demo).'),
+      roleOpts:['Admin','Regionalleitung','Hotelleitung','Abteilungsleitung','Mitarbeiter'],uQuery:s.uQuery,onUQuery:ev=>this.set({uQuery:ev.target.value}),
+      adminUsers:s.users.filter(u=>!s.uQuery.trim()||u.name.toLowerCase().includes(s.uQuery.trim().toLowerCase())).map(u=>({name:u.name,mail:u.mail,role:u.role,scope:u.scope,last:u.last,op:u.on?'1':'0.5',onRole:ev=>this.set({users:s.users.map(x=>x.id===u.id?{...x,role:ev.target.value}:x),audit:[{w:'Heute 06:20',who:'Jan Albrecht',area:'Benutzer',what:'hat die Rolle von '+u.name+' auf '+ev.target.value+' gesetzt'},...s.audit]}),
+        toggle:()=>this.set({users:s.users.map(x=>x.id===u.id?{...x,on:!x.on}:x),audit:[{w:'Heute 06:20',who:'Jan Albrecht',area:'Benutzer',what:'hat '+u.name+(u.on?' deaktiviert':' aktiviert')},...s.audit]}),tbg:u.on?'var(--color-accent)':'transparent',tfg:u.on?'var(--color-bg)':'var(--color-text)',tx:u.on?'22px':'2px'})),
+      inviteUser:()=>this.toast('Einladungslink wurde erzeugt und kopiert (Demo).'),
+      adminTablets:s.tablets.map(t=>({name:t.name,hotel:t.hotel,where:t.where,seen:t.seen,ver:t.ver,op:t.revoked?'0.5':'1',online:t.online&&!t.revoked,offline:!(t.online&&!t.revoked),offlineLabel:t.revoked?'Gesperrt':'Offline',revokeLabel:t.revoked?'Entsperren':'Sperren',revoke:()=>this.set({tablets:s.tablets.map(x=>x.id===t.id?{...x,revoked:!x.revoked}:x),audit:[{w:'Heute 06:20',who:'Jan Albrecht',area:'Tablets',what:'hat „'+t.name+'“ '+(t.revoked?'entsperrt':'gesperrt')},...s.audit]})})),
+      pairCode:s.pairCode,pairTablet:()=>this.set({pairCode:String(Math.floor(100000+Math.random()*900000)).replace(/(\d{3})(\d{3})/,'$1 $2')}),
+      ruleNums:[['rest','Mindest-Ruhezeit','Zwischen zwei Schichten','h',1],['restMinor','Ruhezeit Minderjährige','Jugendarbeitsschutz','h',1],['breakMin','Automatische Pause','Wird bei Schichten ab 6 h abgezogen','min',5],['round','Stempelzeit runden','Auf die nächsten Minuten','min',1],['maxDay','Höchstarbeitszeit pro Tag','Warnung im Dienstplan','h',0.5]].map(([k,l,sub,u,st])=>({label:l,sub,unit:u,step:st,value:String(s.rules[k]),on:ev=>{const v=Math.max(0,parseFloat(ev.target.value)||0);this.set({rules:{...s.rules,[k]:v},audit:[{w:'Heute 06:20',who:'Jan Albrecht',area:'Regeln',what:'hat „'+l+'“ auf '+v+' '+u+' gesetzt'},...s.audit]})}})),
+      ruleToggles:[['kiosk','Tablet-Stempeln','Mitarbeitende stempeln mit PIN am Tablet'],['self','Stempeln im Portal','Auch per Handy, nur im Hotel-WLAN'],['wishes','Wünsche und Urlaubsanträge','Mitarbeitende dürfen Anträge stellen'],['offline','Offline-Stempeln','Tablet speichert Zeiten bei Netzausfall']].map(([k,l,sub])=>({label:l,sub,toggle:()=>this.set({flags:{...s.flags,[k]:!s.flags[k]}}),tbg:s.flags[k]?'var(--color-accent)':'transparent',tfg:s.flags[k]?'var(--color-bg)':'var(--color-text)',tx:s.flags[k]?'22px':'2px'})),
+      blackouts:s.blackouts.map(b=>({...b,remove:()=>this.set({blackouts:s.blackouts.filter(x=>x.id!==b.id)})})),addBlackout:()=>this.set({blackouts:[...s.blackouts,{id:Date.now(),name:'Neue Sperrzeit',range:'1.–7. Jan. 2027'}]}),
+      auditFilters:[['all','Alle'],['Dienstplan','Dienstplan'],['Benutzer','Benutzer'],['Regeln','Regeln']].map(([k,l])=>({label:l,bg:s.aAuditF===k?'var(--color-text)':'transparent',fg:s.aAuditF===k?'var(--color-bg)':'var(--color-text)',pick:()=>this.set({aAuditF:k})})),
+      auditRows:s.audit.filter(a=>s.aAuditF==='all'||a.area===s.aAuditF).map(a=>({when:a.w,who:a.who,area:a.area,what:a.what})),exportAudit:()=>this.toast('Protokoll als CSV exportiert (Demo).'),
+      isVac:s.view==='vac',vHotelOpts:[['all','Alle Hotels'],['ffm','Frankfurt'],['ber','Berlin']].map(([k,l])=>({label:l,bg:s.vHotel===k?'var(--color-text)':'transparent',fg:s.vHotel===k?'var(--color-bg)':'var(--color-text)',pick:()=>this.set({vHotel:k})})),vRows,months:MOFF.map((o,i)=>({left:o/365*100,label:MLAB[i]})),tlRows,chartBg,wishes,wishCount:wishes.length,noWishes:wishes.length===0,vf,vh,vEmpOpts:EMPS.map(e=>({id:e.id,label:e.name+' · '+HOTELS[e.h]})),vStatusOpts:[['approved','Genehmigt'],['pending','Beantragt']].map(([k,l])=>({label:l,bg:vf.status===k?'var(--color-text)':'transparent',fg:vf.status===k?'var(--color-bg)':'var(--color-text)',pick:()=>this.set({vf:{...vf,status:k}})})),vp,addEntry,vSel,ddowns,noGroups:combos.length===0,closeDd:()=>this.set({openDd:null,ddQ:''}),wkStatus:off<0?'Vergangen · gesperrt':off===0?'Aktuelle Woche':'Kommende Woche',weekTitle:mon.getUTCDate()+'. '+MN[mon.getUTCMonth()]+' – '+sun.getUTCDate()+'. '+MN[sun.getUTCMonth()]+' '+sun.getUTCFullYear(),
+      weekVal:String(off),weekOpts,onWeek:e=>go(+e.target.value)(),prevWeek:go(off-1),nextWeek:go(off+1),thisWeek:go(0),
+      viewOpts:[['emp','Nach Mitarbeiter'],['shift','Nach Dienst']].map(([k,l])=>({label:l,bg:s.rview===k?'var(--color-text)':'transparent',fg:s.rview===k?'var(--color-bg)':'var(--color-text)',pick:()=>this.set({rview:k})})),
+      summary:[{value:dcount,label:'Änderungen',color:'var(--color-text)'},{value:warnCount,label:'Warnungen',color:warnCount?'var(--warn)':'var(--color-text)'},{value:underCount,label:'Unterbesetzt',color:underCount?'var(--warn)':'var(--color-text)'},{value:pendingCount,label:'Offene Anträge',color:'var(--color-text)'}],
+      draftCount:dcount,hasDrafts:dcount>0,noDrafts:dcount===0,publishLabel:diff.some(d=>d.type!=='new')?dcount+(dcount===1?' Änderung':' Änderungen')+' veröffentlichen':dcount+(dcount===1?' Entwurf':' Entwürfe')+' veröffentlichen',hasChanges:diff.length>0,changeCount:diff.length,notifyNote:diff.some(d=>d.type!=='new'),revertAll:()=>{this.setCells(off,diff.map(d=>[d.eid,d.day,SN[d.eid][d.day]]));this.toast('Änderungen verworfen.')},changes:diff.slice().sort((a,b)=>a.day-b.day).map(d=>{const e=EMPS.find(x=>x.id===d.eid),c=G[d.eid][d.day];return {name:e.name,day:fmtD(dd(d.day)),text:d.type==='new'?lab(c):d.type==='removed'?lab(d.from)+' → —':lab(d.from)+' → '+lab(c),type:({new:'Neu',changed:'Geändert',removed:'Entfernt'})[d.type],pick:()=>this.set({sel:d.eid+'-'+d.day,selCell:null,reason:'',saved:false})}}),
+      publish:()=>this.set({snaps:{...s.snaps,[off]:Object.fromEntries(Object.entries(G).map(([k,v])=>[k,this.visible(EMPS.find(x=>x.id===k))?[...v]:[...SN[k]]]))},published:true}),publishedNote:s.published,
+      hasToast:!!s.toast,toast:s.toast,trashOver:e=>{e.preventDefault();if(s.dropKey!=='trash')this.set({dropKey:'trash'})},trashDrop:this.trashDrop,trashBorder:s.dropKey==='trash'?'var(--color-accent)':'var(--color-divider)',trashBg:s.dropKey==='trash'?'var(--color-accent-100)':'transparent',
+      clearOpen:s.clearOpen,openClear:()=>clr.length?this.set({clearOpen:true}):this.toast('Nichts zu löschen.'),closeClear:()=>this.set({clearOpen:false}),clearInfo:{n:clr.length,pub:clr.filter(([id,i,c])=>SH[c]&&SN[id][i]===c).length},
+      doClear:()=>{this.setCells(off,clr.map(([id,i])=>[id,i,'.']));this.set({clearOpen:false,sel:null});this.toast('Plan geleert.')},copyPrev:this.copyPrev,noSel:!sel&&!s.selCell,hasCellSel:!!s.selCell,cs,
+      hasSel:!!sel,sel:sel||{},reason:s.reason,onReason:(e)=>this.set({reason:e.target.value,saved:false}),
+      saveDisabled:!!(sel&&sel.needsReason&&!s.reason.trim()),save:()=>this.set({saved:true}),savedNote:s.saved,
+      removeSel:()=>{if(!sel)return;const [eid,ix]=s.sel.split('-');this.setCells(off,[[eid,+ix,'.']])},
+      openFinderSel:()=>selCode&&this.set({finder:{code:selCode,day:selDay,from:'roster',exclude:selEmp,off,hotel:EMPS.find(x=>x.id===selEmp).h}}),
+      staffRows,st,resetPin:()=>this.set({pins:{...s.pins,[stE.id]:String(Math.floor(100000+Math.random()*900000))}}),
+      liveCols:[
+        {title:'Eingestempelt',count:s.kEmps.filter(x=>x.in).length,items:s.kEmps.filter(x=>x.in).map(x=>({name:x.name,right:x.id===1?'seit 05:58':x.id===3?'seit 05:52':x.id===2?'seit 06:14':x.id===4?'seit 21:56':'seit 06:14',sub:x.shift,flag:x.id===4?'Überstunden 14 Min.':x.id===2?'Verspätet 14 Min.':null}))},
+        {title:'Erwartet, nicht da',count:s.kEmps.filter(x=>!x.in&&x.late).length,items:s.kEmps.filter(x=>!x.in&&x.late).map(x=>({name:x.name,right:x.late+' Min. zu spät',sub:x.shift,action:'Vertretung finden',act:()=>this.set({finder:{code:'E',day:3,from:'live',exclude:'lena',off:0,hotel:'ffm'}})})),empty:s.kEmps.some(x=>!x.in&&x.late)?null:'Alle Erwarteten sind da.'},
+        {title:'Prüfung nötig',count:1,items:[{name:'Sven B.',right:'offen seit 15 h',sub:'Eingestempelt Mi 15:02, nie ausgestempelt',action:'Per Korrektur schließen',act:()=>this.set({view:'requests'})}]},
+        {title:'Nicht erschienen',count:0,items:[],empty:'Heute niemand.'}],
+      pendingCount,reqGroups,
+      kList:s.kStep==='list',kPin:s.kStep==='pin',kAction:s.kStep==='action',kDone:s.kStep==='done',
+      kEmps:s.kEmps.map(x=>({name:x.name,shift:x.shift,isIn:x.in,isOut:!x.in,status:x.in?'Eingestempelt':'Nicht da',pick:()=>this.set({kEmp:x,kStep:'pin',pin:'',pinError:false})})),
+      kEmp:ke||{},kBack:()=>this.set({kStep:'list',kEmp:null,pin:''}),
+      pinDots:[0,1,2,3,4,5].map(i=>({on:i<s.pin.length,off:i>=s.pin.length})),pinError:s.pinError,
+      keys:['1','2','3','4','5','6','7','8','9','C','0','B'].map(k=>({label:k==='C'?'Löschen':k==='B'?'⌫':k,press:press(k)})),
+      kActionLabel:ke&&ke.in?'Ausstempeln':'Einstempeln',kPunch,
+      kDoneTitle:s.kResult&&s.kResult.title,kDoneNote:s.kResult&&s.kResult.note,
+      portalMax:mob?'390px':'1200px',portalBorder:mob?'2px solid var(--color-text)':'0',
+      stats:[{label:'Heute',value:'Früh',sub:'06:00–14:00 · Frankfurt · eingestempelt 05:58'},{label:'Diese Woche',value:'15,5 h',sub:'gearbeitet · 32 h geplant · Soll 40 h'},{label:'Arbeitszeitkonto',value:'+12,5 h',sub:'Stand 30. Sep.'},{label:'Urlaub 2026',value:'18,5',sub:'Tage übrig · 3 beantragt · 8,5 genommen'}],
+      quick:[['leave','Urlaub beantragen','btn-primary'],['sick','Krank melden','btn-secondary'],['wish','Schicht- oder Freiwunsch','btn-secondary'],['corr','Stempelzeit korrigieren','btn-secondary'],['ask','Frage an die Leitung','btn-secondary']].map(([k,l,c])=>({label:l,cls:c,open:openForm(k)})),
+      nextShifts:[{date:'Fr 2.10.',name:'Früh',hotel:'Frankfurt',time:'06:00–14:00'},{date:'Mo 5.10.',name:'Früh',hotel:'Frankfurt',time:'06:00–14:00'},{date:'Di 6.10.',name:'Früh',hotel:'Frankfurt',time:'06:00–14:00'},{date:'Mi 7.10.',name:'Spät',hotel:'Frankfurt',time:'14:00–22:00'},{date:'Do 8.10.',name:'Spät',hotel:'Frankfurt',time:'14:00–22:00'}],
+      notes:[{title:'Deine Schicht am Fr, 2. Okt. wurde auf Früh geändert',when:'Heute 05:40',urgent:true},{title:'Dienstplan veröffentlicht bis 31. Okt.',when:'Gestern'},{title:'Anna hat geantwortet: „Warum wurde meine Pause abgezogen?“',when:'Mo, 28. Sep.'}],
+      loginForgot:s.loginForgot,toggleForgot:()=>this.set({loginForgot:!s.loginForgot}),doLogin:()=>this.set({view:'portal'}),
+      finderOpen,finder,closeFinder:()=>this.set({finder:null}),
+      formOpen:!!s.form,closeForm:()=>this.set({form:null,sent:false}),formTabs:seg(tabs,s.form,k=>this.set({form:k,sent:false})),sent:s.sent,sentTitle:s.form&&sentMap[s.form][0],sentNote:s.form&&sentMap[s.form][1],
+      tabLeave:s.form==='leave'&&!s.sent,tabSick:s.form==='sick'&&!s.sent,tabWish:s.form==='wish'&&!s.sent,tabCorr:s.form==='corr'&&!s.sent,tabAsk:s.form==='ask'&&!s.sent,
+      f,h,lp,
+      wishKinds:seg([['off','Frei haben'],['prefer','Schicht bevorzugen'],['avoid','Schicht vermeiden']],f.wKind,k=>setF({wKind:k})),wishNeedsShift:f.wKind!=='off',
+      prios:seg([[1,'1 · hoch'],[2,'2 · mittel'],[3,'3 · niedrig']],f.wPrio,k=>setF({wPrio:k})),
+      corrBlocked:!f.cReason.trim(),askBlocked:!f.qSubject.trim()||!f.qBody.trim(),
+      submitForm:()=>this.set({sent:true})
+    };
+  }
+}
+</script>
+
+
+<div id="__claude_design_branding"><style>#__claude_design_branding{position:fixed;right:16px;bottom:16px;z-index:2147483646;display:flex;align-items:center;gap:7px;height:30px;padding:0 5px 0 10px;border-radius:999px;font-family:"Anthropic Sans",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;font-size:12.5px;font-weight:400;line-height:1;letter-spacing:normal;text-transform:none;color:#141413;background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);box-shadow:0 0 0 .5px rgba(31,30,29,.14),0 2px 10px rgba(0,0,0,.09)}
+#__claude_design_branding *{box-sizing:border-box;margin:0}
+#__claude_design_branding a{color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+#__claude_design_branding a:hover span{text-decoration:underline}
+#__claude_design_branding svg{flex:none}
+#__claude_design_branding a svg{color:#D97757}
+#__claude_design_branding button{width:20px;height:20px;padding:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:currentColor;opacity:.55;border:0;background:none;cursor:pointer;flex:none;font:inherit;transition:opacity .14s}
+#__claude_design_branding button:hover{opacity:1;background:rgba(127,127,127,.22)}
+@media print{#__claude_design_branding{display:none}}</style><a href="https://claude.com/product/design" target="_blank" rel="noopener noreferrer"><svg width="14" height="14" viewBox="0 0 20 21" fill="none" aria-hidden="true"><path fill="currentColor" d="M9.99902 0C15.5258 0.000170936 19.999 4.50643 19.999 10.0547C19.999 11.7656 19.5863 12.9976 18.7861 13.8203C17.9924 14.6362 16.9465 14.9138 15.9854 15.0078C15.05 15.0993 14.0097 15.0262 13.2549 15.0186C12.8524 15.0145 12.5177 15.0267 12.2441 15.0703C11.9682 15.1144 11.8143 15.1813 11.7305 15.2432C11.4745 15.4322 11.3353 15.7121 11.2656 16.1602C11.2303 16.3875 11.2168 16.6362 11.209 16.9131C11.2017 17.1715 11.1986 17.4893 11.1807 17.7705C11.1469 18.2975 11.0495 19.0865 10.4199 19.5908C9.7846 20.0996 8.88652 20.1057 7.85449 19.877C7.36399 19.7682 6.88652 19.6232 6.42578 19.4453C2.66989 17.9949 0.000187748 14.3414 0 10.0547C0 4.50643 4.47223 0.000171048 9.99902 0ZM9.99902 1.60547C5.36781 1.60564 1.60547 5.38391 1.60547 10.0547C1.60566 13.6582 3.84823 16.7296 7.00391 17.9482C7.39027 18.0974 7.79085 18.2184 8.20215 18.3096C9.1375 18.5169 9.384 18.3633 9.41602 18.3379C9.4524 18.3087 9.54558 18.1915 9.5791 17.668C9.5947 17.4239 9.59473 17.1786 9.60352 16.8672C9.61179 16.5742 9.62831 16.2435 9.67969 15.9131C9.78359 15.2455 10.0474 14.4906 10.7764 13.9521C11.1479 13.6778 11.5842 13.5493 11.9912 13.4844C12.4007 13.4191 12.8434 13.4088 13.2705 13.4131C14.1753 13.4222 15.0071 13.4905 15.8291 13.4102C16.6257 13.3322 17.2249 13.1235 17.6357 12.7012C18.0401 12.2855 18.3935 11.5261 18.3936 10.0547C18.3936 5.38391 14.6302 1.60564 9.99902 1.60547ZM5.11621 9.86719C5.86386 9.91468 6.45486 10.5348 6.45508 11.2939C6.45506 12.0838 5.81519 12.7245 5.02539 12.7246C4.28481 12.7246 3.67573 12.1617 3.60254 11.4404L3.59473 11.2939L3.60156 11.1533C3.66942 10.4596 4.23282 9.91186 4.93359 9.86719H5.11621ZM14.9814 7.19141C15.729 7.23889 16.3199 7.85919 16.3203 8.61816C16.3203 9.40801 15.6804 10.0487 14.8906 10.0488C14.1501 10.0487 13.5409 9.48586 13.4678 8.76465L13.46 8.61816L13.4668 8.47754C13.5348 7.78403 14.0983 7.23618 14.7988 7.19141H14.9814ZM6.4541 4.93457C7.20161 4.9822 7.79275 5.60231 7.79297 6.36133C7.79288 7.151 7.15291 7.7917 6.36328 7.79199C5.62274 7.79199 5.01369 7.22903 4.94043 6.50781L4.93262 6.36133L4.93945 6.2207C5.00731 5.52698 5.5707 4.97922 6.27148 4.93457H6.4541ZM11.3867 3.59668C12.1343 3.64419 12.7253 4.26436 12.7256 5.02344C12.7256 5.81326 12.0857 6.45393 11.2959 6.4541C10.5553 6.4541 9.94622 5.89123 9.87305 5.16992L9.86523 5.02344L9.87207 4.88281C9.93996 4.18912 10.5033 3.64133 11.2041 3.59668H11.3867Z"></path></svg><span>Made with Claude Design</span></a><button type="button" aria-label="Dismiss" onclick="this.parentElement.remove()"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg></button></div></body></html>

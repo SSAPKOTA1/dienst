@@ -1,0 +1,377 @@
+{
+  "requiredBreak": [
+    {
+      "grossMinutes": 270,
+      "expected": 0
+    },
+    {
+      "grossMinutes": 360,
+      "expected": 0
+    },
+    {
+      "grossMinutes": 361,
+      "expected": 1
+    },
+    {
+      "grossMinutes": 380,
+      "expected": 20
+    },
+    {
+      "grossMinutes": 390,
+      "expected": 30
+    },
+    {
+      "grossMinutes": 391,
+      "expected": 30
+    },
+    {
+      "grossMinutes": 510,
+      "expected": 30
+    },
+    {
+      "grossMinutes": 570,
+      "expected": 30
+    },
+    {
+      "grossMinutes": 571,
+      "expected": 45
+    },
+    {
+      "grossMinutes": 600,
+      "expected": 45
+    },
+    {
+      "grossMinutes": 720,
+      "expected": 45
+    }
+  ],
+  "paidHours": [
+    {
+      "grossMinutes": 510,
+      "breakMinutes": 30,
+      "expected": 8
+    },
+    {
+      "grossMinutes": 600,
+      "breakMinutes": 45,
+      "expected": 9.25
+    },
+    {
+      "grossMinutes": 270,
+      "breakMinutes": 0,
+      "expected": 4.5
+    },
+    {
+      "grossMinutes": 380,
+      "breakMinutes": 20,
+      "expected": 6
+    }
+  ],
+  "grace": [
+    {
+      "planned": "2026-10-12T06:00:00+02:00",
+      "actual": "2026-10-12T06:15:59+02:00",
+      "variationMinutes": 15,
+      "withinGrace": true
+    },
+    {
+      "planned": "2026-10-12T06:00:00+02:00",
+      "actual": "2026-10-12T06:16:00+02:00",
+      "variationMinutes": 16,
+      "withinGrace": false
+    },
+    {
+      "planned": "2026-10-12T06:00:00+02:00",
+      "actual": "2026-10-12T05:44:01+02:00",
+      "variationMinutes": -15,
+      "withinGrace": true
+    },
+    {
+      "planned": "2026-10-12T06:00:00+02:00",
+      "actual": "2026-10-12T05:44:00+02:00",
+      "variationMinutes": -16,
+      "withinGrace": false
+    },
+    {
+      "planned": "2026-10-12T06:00:00+02:00",
+      "actual": "2026-10-12T05:45:00+02:00",
+      "variationMinutes": -15,
+      "withinGrace": true
+    }
+  ],
+  "vacationProration": [
+    {
+      "annualDays": 30,
+      "contractStart": "2026-01-15",
+      "year": 2026,
+      "expected": 30
+    },
+    {
+      "annualDays": 30,
+      "contractStart": "2026-07-01",
+      "year": 2026,
+      "expected": 30
+    },
+    {
+      "annualDays": 30,
+      "contractStart": "2026-07-02",
+      "year": 2026,
+      "expected": 13
+    },
+    {
+      "annualDays": 30,
+      "contractStart": "2026-11-01",
+      "year": 2026,
+      "expected": 5
+    },
+    {
+      "annualDays": 30,
+      "contractStart": "2026-11-15",
+      "year": 2026,
+      "expected": 3
+    },
+    {
+      "annualDays": 30,
+      "contractStart": "2026-12-01",
+      "year": 2026,
+      "expected": 3
+    },
+    {
+      "annualDays": 30,
+      "contractStart": "2026-12-31",
+      "year": 2026,
+      "expected": 0
+    },
+    {
+      "annualDays": 25,
+      "contractStart": "2026-10-01",
+      "year": 2026,
+      "expected": 6
+    },
+    {
+      "annualDays": 30,
+      "contractStart": "2025-03-01",
+      "year": 2026,
+      "expected": 30
+    }
+  ],
+  "restPeriod": [
+    {
+      "gapMinutes": 479,
+      "expected": "blocked"
+    },
+    {
+      "gapMinutes": 599,
+      "expected": "blocked"
+    },
+    {
+      "gapMinutes": 600,
+      "expected": "needs_reason"
+    },
+    {
+      "gapMinutes": 659,
+      "expected": "needs_reason"
+    },
+    {
+      "gapMinutes": 660,
+      "expected": "ok"
+    },
+    {
+      "gapMinutes": 720,
+      "expected": "ok"
+    }
+  ],
+  "dailyLimit": [
+    {
+      "workMinutes": 480,
+      "expected": "ok"
+    },
+    {
+      "workMinutes": 481,
+      "expected": "warn"
+    },
+    {
+      "workMinutes": 600,
+      "expected": "warn"
+    },
+    {
+      "workMinutes": 601,
+      "expected": "blocked"
+    }
+  ],
+  "dstDurations": [
+    {
+      "start": "2026-10-12T22:00:00+02:00",
+      "end": "2026-10-13T06:00:00+02:00",
+      "tz": "Europe/Berlin",
+      "expectedMinutes": 480
+    },
+    {
+      "start": "2026-10-24T22:00:00+02:00",
+      "end": "2026-10-25T06:00:00+01:00",
+      "tz": "Europe/Berlin",
+      "expectedMinutes": 540
+    },
+    {
+      "start": "2027-03-27T22:00:00+01:00",
+      "end": "2027-03-28T06:00:00+02:00",
+      "tz": "Europe/Berlin",
+      "expectedMinutes": 420
+    }
+  ],
+  "displayName": [
+    {
+      "firstName": "Maria",
+      "lastName": "Schmidt",
+      "expected": "Maria S."
+    },
+    {
+      "firstName": "Jan",
+      "lastName": "Kowalski",
+      "expected": "Jan K."
+    }
+  ],
+  "sickBackdate": [
+    {
+      "today": "2026-10-04",
+      "day": "2026-09-27",
+      "limitDays": 7,
+      "managerAllowed": true
+    },
+    {
+      "today": "2026-10-04",
+      "day": "2026-09-26",
+      "limitDays": 7,
+      "managerAllowed": false
+    },
+    {
+      "today": "2026-10-04",
+      "day": "2026-10-04",
+      "limitDays": 7,
+      "managerAllowed": true
+    }
+  ],
+  "openSlots": [
+    {
+      "required": 3,
+      "assigned": 2,
+      "expected": 1
+    },
+    {
+      "required": 3,
+      "assigned": 3,
+      "expected": 0
+    },
+    {
+      "required": 3,
+      "assigned": 4,
+      "expected": 0
+    },
+    {
+      "required": 0,
+      "assigned": 0,
+      "expected": 0
+    }
+  ],
+  "minorNightWindow": [
+    {
+      "age": 17,
+      "shiftStart": "18:00",
+      "shiftEnd": "21:00",
+      "expected": "blocked"
+    },
+    {
+      "age": 17,
+      "shiftStart": "08:00",
+      "shiftEnd": "16:00",
+      "expected": "ok"
+    },
+    {
+      "age": 18,
+      "shiftStart": "18:00",
+      "shiftEnd": "21:00",
+      "expected": "ok"
+    }
+  ],
+  "usernames": [
+    {
+      "first": "Jürgen",
+      "last": "Müller",
+      "taken": [],
+      "expected": "juergen.mueller"
+    },
+    {
+      "first": "Anna-Lena",
+      "last": "Meier",
+      "taken": [],
+      "expected": "annalena.meier"
+    },
+    {
+      "first": "Zoë",
+      "last": "O'Brien",
+      "taken": [],
+      "expected": "zoe.obrien"
+    },
+    {
+      "first": "Maria",
+      "last": "Schmidt",
+      "taken": [],
+      "expected": "maria.schmidt"
+    },
+    {
+      "first": "Maria",
+      "last": "Schmidt",
+      "taken": [
+        "maria.schmidt",
+        "maria.schmidt2"
+      ],
+      "expected": "maria.schmidt3"
+    },
+    {
+      "first": "Straße",
+      "last": "Groß",
+      "taken": [],
+      "expected": "strasse.gross"
+    }
+  ],
+  "timeAccount": [
+    {
+      "monthlyTarget": 173.33333333333334,
+      "startIso": "2026-01-01",
+      "asOfIso": "2026-04-01",
+      "approvedPaidHours": 530,
+      "creditHours": 0,
+      "opening": 0,
+      "expected": 10
+    },
+    {
+      "monthlyTarget": 173.33333333333334,
+      "startIso": "2026-01-01",
+      "asOfIso": "2026-04-16",
+      "approvedPaidHours": 600,
+      "creditHours": 8,
+      "opening": 0,
+      "expected": 1.33
+    },
+    {
+      "monthlyTarget": 173.33333333333334,
+      "startIso": "2026-01-01",
+      "asOfIso": "2026-04-01",
+      "approvedPaidHours": 530,
+      "creditHours": 0,
+      "unpaidDays": 1,
+      "dailyTarget": 8,
+      "opening": 0,
+      "expected": 18
+    },
+    {
+      "monthlyTarget": 173.33333333333334,
+      "startIso": "2026-01-01",
+      "asOfIso": "2026-04-01",
+      "approvedPaidHours": 530,
+      "creditHours": 0,
+      "opening": 5,
+      "expected": 15
+    }
+  ]
+}

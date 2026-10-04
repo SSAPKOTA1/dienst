@@ -1,0 +1,29 @@
+export const ERROR_STATUS = {
+  VALIDATION: 400,
+  UNAUTHENTICATED: 401,
+  DEVICE_INVALID: 401,
+  PIN_INVALID: 401,
+  FORBIDDEN_SCOPE: 403,
+  SELF_APPROVAL: 403,
+  NOT_FOUND: 404,
+  ALREADY_CLOCKED_IN: 409,
+  PUNCH_EXISTS: 409,
+  PERIOD_CLOSED: 409,
+  PENDING_APPROVALS: 409,
+  VERSION_CONFLICT: 409,
+  DUPLICATE_EMPLOYEE: 409,
+  CONFLICT: 409,
+  RULE_BLOCKED: 422,
+  REASON_REQUIRED: 422,
+  INSUFFICIENT_VACATION: 422,
+  VACATION_EXCEEDS: 422,
+  PIN_LOCKED: 423,
+  RATE_LIMITED: 429,
+  INTERNAL: 500,
+} as const;
+
+export type ErrorCode = keyof typeof ERROR_STATUS;
+
+export interface ApiErrorBody {
+  error: { code: ErrorCode; message: string; details: Record<string, unknown> };
+}

@@ -1,0 +1,293 @@
+{
+ "SH": {
+  "E": {
+   "n": "Früh",
+   "t": "06:00–14:00",
+   "s": "06–14",
+   "p": 7.5,
+   "d": "fd"
+  },
+  "L": {
+   "n": "Spät",
+   "t": "14:00–22:00",
+   "s": "14–22",
+   "p": 7.5,
+   "d": "fd"
+  },
+  "N": {
+   "n": "Nacht",
+   "t": "22:00–06:00",
+   "s": "22–06",
+   "p": 7.5,
+   "d": "fd"
+  },
+  "D": {
+   "n": "Tag",
+   "t": "08:00–16:30",
+   "s": "08–16:30",
+   "p": 8,
+   "d": "hk"
+  },
+  "B": {
+   "n": "Frühstück",
+   "t": "06:00–11:00",
+   "s": "06–11",
+   "p": 4.5,
+   "d": "bf"
+  }
+ },
+ "ABS": {
+  "U": "Urlaub",
+  "S": "Berufsschule",
+  "K": "Krank"
+ },
+ "DEPTS": [
+  {
+   "id": "fd",
+   "name": "Rezeption",
+   "min": 3,
+   "opts": [
+    "E",
+    "L",
+    "N",
+    "F"
+   ]
+  },
+  {
+   "id": "hk",
+   "name": "Housekeeping",
+   "min": 3,
+   "opts": [
+    "D",
+    "F"
+   ]
+  },
+  {
+   "id": "bf",
+   "name": "Frühstück",
+   "min": 1,
+   "opts": [
+    "B",
+    "F"
+   ]
+  }
+ ],
+ "HOTELS": {
+  "ffm": "Frankfurt",
+  "ber": "Berlin"
+ },
+ "EMPS": [
+  {
+   "id": "maria",
+   "name": "Maria Garcia",
+   "d": "fd",
+   "meta": "Vollzeit",
+   "t": 40,
+   "w": "EELLEFF",
+   "num": "P100",
+   "birth": "12.05.1994",
+   "vac": "18,5",
+   "acct": "+12,5 h",
+   "carry": "0",
+   "h": "ffm"
+  },
+  {
+   "id": "jon",
+   "name": "Jon Schmidt",
+   "d": "fd",
+   "meta": "Vollzeit",
+   "t": 40,
+   "w": "LLFNNFL",
+   "num": "P101",
+   "birth": "03.11.1991",
+   "vac": "22,0",
+   "acct": "−3,0 h",
+   "carry": "4",
+   "h": "ffm"
+  },
+  {
+   "id": "aylin",
+   "name": "Aylin Demir",
+   "d": "fd",
+   "meta": "Teilzeit",
+   "t": 30,
+   "w": "XXEEL..",
+   "floating": true,
+   "num": "P107",
+   "birth": "21.08.1998",
+   "vac": "12,0",
+   "acct": "+5,5 h",
+   "carry": "0",
+   "h": "ffm"
+  },
+  {
+   "id": "lena",
+   "name": "Lena Hofmann",
+   "d": "fd",
+   "meta": "Azubi · 17",
+   "t": 40,
+   "w": "SSEFLEF",
+   "minor": true,
+   "num": "P118",
+   "birth": "14.02.2009",
+   "vac": "24,0",
+   "acct": "+1,0 h",
+   "carry": "0",
+   "h": "ffm"
+  },
+  {
+   "id": "piotr",
+   "name": "Piotr Nowak",
+   "d": "hk",
+   "meta": "Vollzeit",
+   "t": 40,
+   "w": "DDDDDFF",
+   "num": "P102",
+   "birth": "30.01.1987",
+   "vac": "9,5",
+   "acct": "+20,0 h",
+   "carry": "0",
+   "h": "ffm"
+  },
+  {
+   "id": "fatima",
+   "name": "Fatima Ali",
+   "d": "hk",
+   "meta": "Vollzeit",
+   "t": 40,
+   "w": "DUUUUFF",
+   "num": "P103",
+   "birth": "09.09.1990",
+   "vac": "18,5",
+   "acct": "+2,0 h",
+   "carry": "2",
+   "h": "ffm"
+  },
+  {
+   "id": "sven",
+   "name": "Sven Becker",
+   "d": "hk",
+   "meta": "Minijob",
+   "t": 20,
+   "w": "F.D.DFF",
+   "num": "P110",
+   "birth": "17.04.2001",
+   "vac": "6,0",
+   "acct": "−1,5 h",
+   "carry": "0",
+   "h": "ffm"
+  },
+  {
+   "id": "elena",
+   "name": "Elena Rossi",
+   "d": "bf",
+   "meta": "Teilzeit",
+   "t": 20,
+   "w": "BBBFFBB",
+   "num": "P104",
+   "birth": "25.12.1985",
+   "vac": "15,0",
+   "acct": "+0,0 h",
+   "carry": "0",
+   "h": "ffm"
+  },
+  {
+   "id": "tom",
+   "name": "Tom Weber",
+   "d": "bf",
+   "meta": "Teilzeit",
+   "t": 30,
+   "w": "KKBBBFF",
+   "num": "P105",
+   "birth": "06.06.1993",
+   "vac": "11,5",
+   "acct": "+7,0 h",
+   "carry": "0",
+   "h": "ffm"
+  },
+  {
+   "id": "clara",
+   "name": "Clara Neumann",
+   "d": "fd",
+   "h": "ber",
+   "meta": "Vollzeit",
+   "t": 40,
+   "w": "EELLFFE",
+   "num": "B200",
+   "birth": "02.03.1992",
+   "vac": "20,0",
+   "acct": "+4,0 h",
+   "carry": "0"
+  },
+  {
+   "id": "omer",
+   "name": "Ömer Kaya",
+   "d": "fd",
+   "h": "ber",
+   "meta": "Vollzeit",
+   "t": 40,
+   "w": "LLEEFFL",
+   "num": "B201",
+   "birth": "11.07.1989",
+   "vac": "14,5",
+   "acct": "+1,5 h",
+   "carry": "0"
+  },
+  {
+   "id": "hannah",
+   "name": "Hannah Voigt",
+   "d": "fd",
+   "h": "ber",
+   "meta": "Teilzeit",
+   "t": 25,
+   "w": "FELFEFF",
+   "num": "B205",
+   "birth": "19.01.1996",
+   "vac": "17,0",
+   "acct": "−2,0 h",
+   "carry": "0"
+  },
+  {
+   "id": "dmitri",
+   "name": "Dmitri Volkov",
+   "d": "hk",
+   "h": "ber",
+   "meta": "Vollzeit",
+   "t": 40,
+   "w": "DDDDDFF",
+   "num": "B202",
+   "birth": "08.10.1984",
+   "vac": "10,0",
+   "acct": "+6,0 h",
+   "carry": "0"
+  },
+  {
+   "id": "sophie",
+   "name": "Sophie Lange",
+   "d": "hk",
+   "h": "ber",
+   "meta": "Teilzeit",
+   "t": 30,
+   "w": "DFDDFDF",
+   "num": "B206",
+   "birth": "23.05.1999",
+   "vac": "21,5",
+   "acct": "+0,5 h",
+   "carry": "0"
+  },
+  {
+   "id": "nina",
+   "name": "Nina Braun",
+   "d": "bf",
+   "h": "ber",
+   "meta": "Teilzeit",
+   "t": 20,
+   "w": "BBFBBFF",
+   "num": "B207",
+   "birth": "30.12.1995",
+   "vac": "13,0",
+   "acct": "+3,0 h",
+   "carry": "0"
+  }
+ ]
+}
