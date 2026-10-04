@@ -5,7 +5,7 @@ const root = 'apps/web/src';
 const en = JSON.parse(readFileSync(`${root}/i18n/en.json`, 'utf8'));
 const extra = readFileSync(`${root}/i18n/extra-en.ts`, 'utf8');
 const have = new Set(Object.keys(en));
-for (const m of extra.matchAll(/^\s*(?:'((?:[^'\\]|\\.)*)'|([A-Za-z_]\w*)):/gm))
+for (const m of extra.matchAll(/^\s*(?:'((?:[^'\\]|\\.)*)'|([\p{L}_][\p{L}\p{N}_]*)):/gmu))
   have.add((m[1] ?? m[2]).replace(/\\'/g, "'"));
 const used = new Map();
 const walk = (d) => {

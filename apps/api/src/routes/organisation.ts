@@ -35,32 +35,36 @@ export async function organisationRoutes(app: FastifyInstance) {
     pinLength: c.pin_length,
   });
 
-  r.post('/companies', { preValidation: requireRole(SA), schema: { body: companyBody } }, async (req, reply) => {
-    const p = getPrincipal(req);
-    const b = req.body;
-    const row = await tx(async (trx) => {
-      const c = await trx
-        .insertInto('company')
-        .values({
-          name: b.name,
-          grace_period_minutes: b.graceMinutes ?? 15,
-          sick_backdate_days: b.sickBackdateDays ?? 7,
-          pin_length: b.pinLength ?? 6,
-          created_by_id: p.superAdminId!,
-        })
-        .returningAll()
-        .executeTakeFirstOrThrow();
-      await audit(trx, actorOf(req), {
-        action: 'company_created',
-        entityType: 'company',
-        entityId: c.id,
-        companyId: c.id,
-        new: b,
+  r.post(
+    '/companies',
+    { preValidation: requireRole(SA), schema: { body: companyBody } },
+    async (req, reply) => {
+      const p = getPrincipal(req);
+      const b = req.body;
+      const row = await tx(async (trx) => {
+        const c = await trx
+          .insertInto('company')
+          .values({
+            name: b.name,
+            grace_period_minutes: b.graceMinutes ?? 15,
+            sick_backdate_days: b.sickBackdateDays ?? 7,
+            pin_length: b.pinLength ?? 6,
+            created_by_id: p.superAdminId!,
+          })
+          .returningAll()
+          .executeTakeFirstOrThrow();
+        await audit(trx, actorOf(req), {
+          action: 'company_created',
+          entityType: 'company',
+          entityId: c.id,
+          companyId: c.id,
+          new: b,
+        });
+        return c;
       });
-      return c;
-    });
-    return reply.status(201).send(companyOut(row));
-  });
+      return reply.status(201).send(companyOut(row));
+    },
+  );
 
   r.get('/companies', { preValidation: requireRole(SA, AD) }, async (req) => {
     const p = getPrincipal(req);
@@ -178,12 +182,16 @@ export async function organisationRoutes(app: FastifyInstance) {
     },
   );
 
-  r.get('/hotels/:id', { preValidation: requireRole(SA, AD, MG), schema: { params: idParam } }, async (req) => {
-    getPrincipal(req).scope.assertHotel(req.params.id);
-    const h = await db.selectFrom('hotel').selectAll().where('id', '=', req.params.id).executeTakeFirst();
-    if (!h) throw notFound('Hotel');
-    return hotelOut(h);
-  });
+  r.get(
+    '/hotels/:id',
+    { preValidation: requireRole(SA, AD, MG), schema: { params: idParam } },
+    async (req) => {
+      getPrincipal(req).scope.assertHotel(req.params.id);
+      const h = await db.selectFrom('hotel').selectAll().where('id', '=', req.params.id).executeTakeFirst();
+      if (!h) throw notFound('Hotel');
+      return hotelOut(h);
+    },
+  );
 
   r.put(
     '/hotels/:id',

@@ -123,3 +123,16 @@ export function countedDays(
 ): string[] {
   return eachDay(from, to).filter((d) => workingWeekdays.includes(isoWeekday(d)) && !holidays.has(d));
 }
+
+/** Required headcount for a shift on a date: date override, else weekday default, else 0 (SPEC 3, 4.9). */
+export function resolveRequired(
+  date: string,
+  weekdayDefaults: Record<number, number> | Map<number, number>,
+  overrides: Record<string, number> | Map<string, number>,
+): number {
+  const o = overrides instanceof Map ? overrides.get(date) : overrides[date];
+  if (o !== undefined) return o;
+  const wd = isoWeekday(date);
+  const d = weekdayDefaults instanceof Map ? weekdayDefaults.get(wd) : weekdayDefaults[wd];
+  return d ?? 0;
+}

@@ -25,3 +25,5 @@ One line per decision: what and why.
 - **Setup checklist "rules viewed"** is stored as an audit row (`rules_viewed`) per company instead of a new table.
 - **Extra endpoint** `GET /setup/overview` (KPIs, action needed, recent changes) feeds the admin overview; not in SPEC 5.9 but required by DESIGN 4.5.
 - **Employee create** accepts optional `openingBalanceHours`, `isFloater`, `phone`, `preferredLanguage` (additive to SPEC 5.4).
+- **Seed shift breaks follow SPEC 7** (30 min for shifts longer than 6 h 30, none for Frühstück 06-11), so Frühstück is 5 h paid, not the 4.5 h of the prototype's sample data.
+- **Staffing PUT** replaces all weekday defaults and date overrides of a shift; a weekday without a row means "no requirement". Seed requirements: Frankfurt Rezeption Früh/Spät/Nacht 1 each Mo-Fr (Sa-So Früh 1), Housekeeping Tag 3 (weekend 1), Frühstück 1; Berlin Rezeption Früh/Spät 1 each (weekend Früh 1), Housekeeping 2 (weekend 1), Frühstück 1. The per-department sums equal the prototype's "min." values (weekends halved as in the prototype).

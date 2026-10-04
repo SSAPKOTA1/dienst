@@ -16,7 +16,11 @@ beforeAll(async () => {
   org = await setupOrg(ctx);
   const r = await call(ctx, 'POST', '/employees', org.adminA.token, empBody(org, { email: 'perm@test.dev' }));
   empId = r.body.employeeId;
-  await ctx.db.updateTable('user_account').set({ password_hash: await hashSecret('Passw0rd!23'), status: 'active' }).where('id', '=', r.body.userId).execute();
+  await ctx.db
+    .updateTable('user_account')
+    .set({ password_hash: await hashSecret('Passw0rd!23'), status: 'active' })
+    .where('id', '=', r.body.userId)
+    .execute();
   empToken = await loginAs(ctx, 'perm@test.dev', 'employee', { employeeId: empId });
 });
 afterAll(async () => stopApp(ctx));
@@ -32,20 +36,45 @@ interface Row {
 const rows: Row[] = [
   { method: 'POST', url: () => '/companies', body: () => ({ name: 'N' }), allow: ['SA'] },
   { method: 'GET', url: () => '/companies', allow: ['SA', 'AD'] },
-  { method: 'POST', url: () => '/hotels', body: () => ({ companyId: org.companyA, name: 'Zed' }), allow: ['SA'] },
+  {
+    method: 'POST',
+    url: () => '/hotels',
+    body: () => ({ companyId: org.companyA, name: 'Zed' }),
+    allow: ['SA'],
+  },
   { method: 'GET', url: () => '/hotels', allow: ['SA', 'AD', 'MG'] },
   { method: 'GET', url: () => `/hotels/${org.hotelA1}/settings`, allow: ['SA', 'AD', 'MG'] },
-  { method: 'PUT', url: () => `/hotels/${org.hotelA1}/settings`, body: () => ({ employeeHoursVisibility: 'after_approval' }), allow: ['SA', 'AD'] },
+  {
+    method: 'PUT',
+    url: () => `/hotels/${org.hotelA1}/settings`,
+    body: () => ({ employeeHoursVisibility: 'after_approval' }),
+    allow: ['SA', 'AD'],
+  },
   { method: 'POST', url: () => '/admins', body: () => ({}), allow: ['SA'] },
   { method: 'GET', url: () => '/admins', allow: ['SA'] },
   { method: 'POST', url: () => '/managers', body: () => ({}), allow: ['SA', 'AD'] },
   { method: 'GET', url: () => '/managers', allow: ['SA', 'AD'] },
-  { method: 'POST', url: () => '/departments', body: () => ({ hotelId: org.hotelA1, name: 'Perm' }), allow: ['SA', 'AD'] },
+  {
+    method: 'POST',
+    url: () => '/departments',
+    body: () => ({ hotelId: org.hotelA1, name: 'Perm' }),
+    allow: ['SA', 'AD'],
+  },
   { method: 'GET', url: () => '/departments', allow: ['SA', 'AD', 'MG'] },
-  { method: 'POST', url: () => '/kiosk-devices', body: () => ({ hotelId: org.hotelA1, name: 'T' }), allow: ['SA', 'AD'] },
+  {
+    method: 'POST',
+    url: () => '/kiosk-devices',
+    body: () => ({ hotelId: org.hotelA1, name: 'T' }),
+    allow: ['SA', 'AD'],
+  },
   { method: 'GET', url: () => '/kiosk-devices', allow: ['SA', 'AD'] },
   { method: 'GET', url: () => `/holidays?hotelId=${org.hotelA1}&year=2026`, allow: ['SA', 'AD', 'MG', 'EM'] },
-  { method: 'POST', url: () => '/holidays', body: () => ({ scope: 'hotel', hotelId: org.hotelA1, date: '2026-05-05', name: 'x' }), allow: ['SA', 'AD'] },
+  {
+    method: 'POST',
+    url: () => '/holidays',
+    body: () => ({ scope: 'hotel', hotelId: org.hotelA1, date: '2026-05-05', name: 'x' }),
+    allow: ['SA', 'AD'],
+  },
   { method: 'POST', url: () => '/employees', body: () => ({}), allow: ['SA', 'AD'] },
   { method: 'GET', url: () => '/employees', allow: ['SA', 'AD', 'MG'] },
   { method: 'GET', url: () => `/employees/${empId}`, allow: ['SA', 'AD', 'MG'] },
@@ -62,7 +91,15 @@ const rows: Row[] = [
 ];
 
 const tokenFor = (r: Role): string | null =>
-  r === 'SA' ? org.saToken : r === 'AD' ? org.adminA.token : r === 'MG' ? org.mgrA1.token : r === 'EM' ? empToken : null;
+  r === 'SA'
+    ? org.saToken
+    : r === 'AD'
+      ? org.adminA.token
+      : r === 'MG'
+        ? org.mgrA1.token
+        : r === 'EM'
+          ? empToken
+          : null;
 
 describe('permission matrix', () => {
   for (const row of rows) {

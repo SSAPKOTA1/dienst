@@ -114,6 +114,49 @@ export async function runSeed(db: Db, now: Date): Promise<SeedResult> {
       deptRows[`${hk}:${d.id}`] = r.id;
     }
   }
+  // --- shift templates and required headcount (sums per department equal the prototype minimums)
+  const shiftRows: Record<string, number> = {};
+  const MIN: Record<string, Record<string, Record<string, [number, number]>>> = {
+    // [weekday (Mo-Fr), weekend]
+    ffm: { fd: { E: [1, 1], L: [1, 0], N: [1, 0] }, hk: { D: [3, 1] }, bf: { B: [1, 1] } },
+    ber: { fd: { E: [1, 1], L: [1, 0] }, hk: { D: [2, 1] }, bf: { B: [1, 1] } },
+  };
+  for (const hk of Object.keys(hotelRows)) {
+    for (const [dept, codes] of Object.entries(MIN[hk])) {
+      for (const [code, [wk, we]] of Object.entries(codes)) {
+        const t = sample.SH[code];
+        const [start, end] = t.t.split('–');
+        const gross =
+          (Number(end.slice(0, 2)) * 60 +
+            Number(end.slice(3)) -
+            (Number(start.slice(0, 2)) * 60 + Number(start.slice(3))) +
+            1440) %
+          1440;
+        const brk = gross > 390 ? 30 : 0; // SPEC 7: 30 min where the shift is longer than 6 h 30
+        const sh = await db
+          .insertInto('shift')
+          .values({
+            hotel_id: hotelRows[hk],
+            department_id: deptRows[`${hk}:${dept}`],
+            name: t.n,
+            start_time: start,
+            end_time: end,
+            break_duration_minutes: brk,
+          })
+          .returning('id')
+          .executeTakeFirstOrThrow();
+        shiftRows[`${hk}:${code}`] = sh.id;
+        for (let wd = 1; wd <= 7; wd++) {
+          const n = wd <= 5 ? wk : we;
+          if (n > 0)
+            await db
+              .insertInto('shift_staffing_requirement')
+              .values({ shift_id: sh.id, weekday: wd, required_headcount: n })
+              .execute();
+        }
+      }
+    }
+  }
   const mgUser = await user('manager@demo.test', null);
   const mg = await db
     .insertInto('manager')

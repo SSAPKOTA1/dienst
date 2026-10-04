@@ -15,3 +15,9 @@
 - Web: Mitarbeiter (list + detail), create stepper with one-time result panel and slip print, Einrichtung (Übersicht with checklist, Hotels/Abteilungen, Benutzer & Rollen, Unternehmen for SA).
 - Seed part 1: company, hotels, departments, users, 15 employees with fixed PINs, holidays 2026-27, kiosk device.
 - Tests: org (7), employees (16), permission matrix, auth (13) -> 183 tests green; lint/typecheck green.
+
+## M3 Shifts and staffing - done
+- API: shift CRUD (`/shifts`, scope per hotel, delete blocked when used), staffing defaults/overrides (`/shifts/:id/staffing`), `resolveRequired` in `packages/rules`, staffing loader service.
+- Web: Hotels tab shows shifts and minimum per department; "Schichten & Besetzung" dialog edits shifts, weekday headcount and date overrides.
+- Seed: 9 shift templates with required headcount matching the prototype minimums.
+- Tests: shifts (5) + rules resolveRequired; all 188+ tests green.

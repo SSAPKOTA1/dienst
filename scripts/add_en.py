@@ -3,7 +3,7 @@
 import re, sys, json
 p = 'apps/web/src/i18n/extra-en.ts'
 s = open(p, encoding='utf8').read()
-have = set(re.findall(r"^\s*(?:'((?:[^'\\]|\\.)*)'|([A-Za-z_]\w*)):", s, re.M))
+have = set(re.findall(r"^\s*(?:'((?:[^'\\]|\\.)*)'|([^\W\d]\w*)):", s, re.M))
 have = {(a or b).replace("\\'", "'") for a, b in have}
 add = []
 for line in sys.stdin:
