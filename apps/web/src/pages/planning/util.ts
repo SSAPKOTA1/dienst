@@ -139,6 +139,21 @@ export function violationText(v: Violation, t: TFunction): { title: string; msg:
       return { title: t('Vergangen · gesperrt'), msg: t('Zu weit in der Vergangenheit für Leitungen.') };
     case 'ABSENCE_OVERLAP':
       return { title: t('Abwesenheit'), msg: t('Es gibt bereits eine Abwesenheit in diesem Zeitraum.') };
+    case 'WISH_CONFLICT':
+      return {
+        title: t('Widerspricht Wunsch'),
+        msg:
+          d.kind === 'leave'
+            ? t('Es liegt ein Urlaubswunsch für diesen Tag vor.')
+            : t('Es liegt ein anderer Schichtwunsch für diesen Tag vor.'),
+      };
+    case 'BLACKOUT':
+      return { title: t('Sperrzeit'), msg: t('In diesem Zeitraum ist kein Urlaub vorgesehen.') };
+    case 'MAX_CONCURRENT':
+      return {
+        title: t('Abwesenheitslimit'),
+        msg: t('Zu viele Kolleginnen und Kollegen sind gleichzeitig abwesend.'),
+      };
     default:
       return { title: v.code, msg: v.message ?? '' };
   }

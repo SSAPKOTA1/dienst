@@ -3,11 +3,12 @@
  * Please do not edit it manually.
  */
 
-import type { ColumnType } from "kysely";
+import type { ColumnType } from 'kysely';
 
-export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
-  ? ColumnType<S, I | undefined, U>
-  : ColumnType<T, T | undefined, T>;
+export type Generated<T> =
+  T extends ColumnType<infer S, infer I, infer U>
+    ? ColumnType<S, I | undefined, U>
+    : ColumnType<T, T | undefined, T>;
 
 export type Int8 = ColumnType<string, bigint | number | string, bigint | number | string>;
 
@@ -26,6 +27,18 @@ export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 export type Numeric = ColumnType<number, number | string, number | string>;
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
+
+export interface AbsenceBlackout {
+  created_at: Generated<Timestamp | null>;
+  created_by_user_id: number;
+  department_id: number | null;
+  from_date: string;
+  hotel_id: number;
+  id: Generated<number>;
+  max_concurrent_absent: number | null;
+  reason: string | null;
+  to_date: string;
+}
 
 export interface AbsenceType {
   code: string;
@@ -159,6 +172,41 @@ export interface EmployeeDepartment {
 export interface EmployeeHotel {
   employee_id: number;
   hotel_id: number;
+}
+
+export interface EmployeeLeaveWish {
+  created_at: Generated<Timestamp | null>;
+  decided_at: Timestamp | null;
+  decided_by_user_id: number | null;
+  decision_note: string | null;
+  employee_id: number;
+  end_date: string;
+  hotel_id: number;
+  id: Generated<number>;
+  leave_days: Numeric;
+  priority: number;
+  reason: string | null;
+  requested_at: Generated<Timestamp | null>;
+  start_date: string;
+  status: Generated<string>;
+  updated_at: Generated<Timestamp | null>;
+}
+
+export interface EmployeeShiftWish {
+  created_at: Generated<Timestamp | null>;
+  date: string;
+  decided_at: Timestamp | null;
+  decided_by_user_id: number | null;
+  decision_note: string | null;
+  employee_id: number;
+  hotel_id: number;
+  id: Generated<number>;
+  priority: number;
+  reason: string | null;
+  requested_at: Generated<Timestamp | null>;
+  shift_id: number;
+  status: Generated<string>;
+  updated_at: Generated<Timestamp | null>;
 }
 
 export interface EmployeeVacationAllowance {
@@ -472,7 +520,19 @@ export interface UserAccount {
   username: string | null;
 }
 
+export interface VacationNotice {
+  acknowledged_at: Timestamp | null;
+  channel: string;
+  employee_id: number;
+  id: Generated<number>;
+  kind: string;
+  remaining_days: Numeric;
+  sent_at: Generated<Timestamp>;
+  year: number;
+}
+
 export interface DB {
+  absence_blackout: AbsenceBlackout;
   absence_type: AbsenceType;
   admin: Admin;
   admin_company: AdminCompany;
@@ -483,6 +543,8 @@ export interface DB {
   employee_contract: EmployeeContract;
   employee_department: EmployeeDepartment;
   employee_hotel: EmployeeHotel;
+  employee_leave_wish: EmployeeLeaveWish;
+  employee_shift_wish: EmployeeShiftWish;
   employee_vacation_allowance: EmployeeVacationAllowance;
   hotel: Hotel;
   import_job: ImportJob;
@@ -505,4 +567,5 @@ export interface DB {
   time_off: TimeOff;
   time_variation: TimeVariation;
   user_account: UserAccount;
+  vacation_notice: VacationNotice;
 }

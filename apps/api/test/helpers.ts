@@ -364,3 +364,28 @@ export async function planFixture(ctx: TestCtx): Promise<PlanFx> {
 export const plan = (fx: PlanFx, token: string, body: Record<string, unknown>) =>
   call(ctxHolder.ctx!, 'POST', '/schedule/entries', token, { hotelId: fx.hotelA1, ...body });
 export const ctxHolder: { ctx: TestCtx | null } = { ctx: null };
+
+/** Gives the fixture employees a password and returns one employee-role access token per key. */
+export async function employeeTokens(
+  ctx: TestCtx,
+  fx: PlanFx,
+  keys: string[],
+): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  for (const key of keys) {
+    const id = fx.emp[key]!;
+    const e = await ctx.db
+      .selectFrom('employee')
+      .select('user_id')
+      .where('employee_id', '=', id)
+      .executeTakeFirstOrThrow();
+    const email = `${key}@emp.test`;
+    await ctx.db
+      .updateTable('user_account')
+      .set({ email, password_hash: await hashSecret(TEST_PASSWORD), status: 'active' })
+      .where('id', '=', e.user_id)
+      .execute();
+    out[key] = await loginAs(ctx, email, 'employee', { employeeId: id });
+  }
+  return out;
+}

@@ -54,8 +54,11 @@ pnpm lint && pnpm typecheck
 4. One git commit per milestone: `M<n>: <title>`.
 5. `docs/DECISIONS.md` updated if you made a choice.
 
+## Backlog build (owner approved)
+After v1 (M0-M9) the backlog of SPEC section 10 is being built as M10-M13, specified in `docs/BACKLOG-SPEC.md`. Still excluded: biometrics, GPS, employee sick reporting, wage/hourly-rate fields.
+
 ## Do NOT
-- Build designed-but-v2 screens or backlog features (SPEC.md section 10; `design/DESIGN.md` marks them v2): the Urlaub planner, wishes, questions to management, blackout periods, month overview, vacation notices, time account ledger, shift swaps, open shifts, availability, qualifications, documents, social feed, payroll export, occupancy staffing, SSO, offline kiosk.
+- Build backlog features that `docs/BACKLOG-SPEC.md` does not list (the v1 "do not build" list below is superseded for those that it does) (SPEC.md section 10; `design/DESIGN.md` marks them v2): the Urlaub planner, wishes, questions to management, blackout periods, month overview, vacation notices, time account ledger, shift swaps, open shifts, availability, qualifications, documents, social feed, payroll export, occupancy staffing, SSO, offline kiosk.
 - Add wage or hourly-rate fields, an employee "Krank melden" action (planners mark sickness on the plan), biometrics, GPS, or any employee scoring/ranking.
 - Weaken a rule (e.g. turn a `blocked` result into a warning) to make a test pass.
 - Put secrets in the repo. Use `.env` (git-ignored) and commit `.env.example`.

@@ -10,6 +10,7 @@ import { localDate } from '../lib/time';
 import { computeTimeAccount } from '../services/timeAccount';
 import { ensureAllowance, remainingDays, vacationSummary } from '../services/vacation';
 import { assertNotClosed, vacationDays } from '../services/approvals';
+import { leaveLimitIssues } from '../services/leave';
 import { reverseAbsence } from '../services/planning/absence';
 import { hotelManagerUsers } from '../services/kiosk';
 import type { Db, Trx } from '../db';
@@ -335,6 +336,7 @@ export async function selfRoutes(app: FastifyInstance) {
     from: t.start_date,
     to: t.end_date,
     days: t.time_off_days,
+    halfDay: t.half_day,
     reason: t.reason,
     status: t.status,
     decisionNote: t.decision_note,
@@ -345,11 +347,18 @@ export async function selfRoutes(app: FastifyInstance) {
     '/me/time-off-requests',
     {
       preValidation: EM,
-      schema: { body: z.object({ from: isoDate, to: isoDate, reason: z.string().max(500).optional() }) },
+      schema: {
+        body: z.object({
+          from: isoDate,
+          to: isoDate,
+          reason: z.string().max(500).optional(),
+          halfDay: z.enum(['morning', 'afternoon']).optional(),
+        }),
+      },
     },
     async (req, reply) => {
       const p = getPrincipal(req);
-      const { from, to, reason } = req.body;
+      const { from, to, reason, halfDay } = req.body;
       const row = await tx(async (trx) => {
         const emp = await myEmployee(trx, p);
         if (to < from) throw new AppError('VALIDATION', 'to must not be before from');
@@ -357,6 +366,12 @@ export async function selfRoutes(app: FastifyInstance) {
         if (from < today) throw new AppError('VALIDATION', 'Requests cannot start in the past');
         const days = await vacationDays(trx, emp.employee_id, from, to);
         if (!days.length) throw new AppError('VALIDATION', 'The range contains no working days');
+        if (halfDay && from !== to) throw new AppError('VALIDATION', 'A half day is a single day');
+        const issues = await leaveLimitIssues(trx, emp.employee_id, from, to, days);
+        if (issues.length)
+          throw new AppError('RULE_BLOCKED', 'Vacation is not possible in this period', {
+            violations: issues.map((v) => ({ ...v, severity: 'block' })),
+          });
         const overlap = await trx
           .selectFrom('time_off')
           .select('id')
@@ -371,7 +386,7 @@ export async function selfRoutes(app: FastifyInstance) {
           });
         const perYear = new Map<number, number>();
         for (const d of days)
-          perYear.set(Number(d.slice(0, 4)), (perYear.get(Number(d.slice(0, 4))) ?? 0) + 1);
+          perYear.set(Number(d.slice(0, 4)), (perYear.get(Number(d.slice(0, 4))) ?? 0) + (halfDay ? 0.5 : 1));
         for (const [year, n] of perYear) {
           const rem = remainingDays(await ensureAllowance(trx, emp.employee_id, year));
           if (rem < n)
@@ -386,7 +401,8 @@ export async function selfRoutes(app: FastifyInstance) {
             employee_id: emp.employee_id,
             start_date: from,
             end_date: to,
-            time_off_days: days.length,
+            time_off_days: halfDay ? 0.5 : days.length,
+            half_day: halfDay ?? null,
             type: 'annual_leave',
             reason: reason ?? null,
             status: 'pending',
@@ -411,7 +427,7 @@ export async function selfRoutes(app: FastifyInstance) {
           entityId: t.id,
           hotelId: emp.primary_hotel_id,
           companyId: emp.company_id,
-          new: { from, to, days: days.length },
+          new: { from, to, days: halfDay ? 0.5 : days.length },
         });
         return t;
       });
@@ -422,19 +438,19 @@ export async function selfRoutes(app: FastifyInstance) {
   // day count and remaining allowance for the request dialog (the browser never counts days itself)
   r.get(
     '/me/time-off-requests/preview',
-    { preValidation: EM, schema: { querystring: range } },
+    {
+      preValidation: EM,
+      schema: { querystring: range.extend({ halfDay: z.enum(['morning', 'afternoon']).optional() }) },
+    },
     async (req) => {
       const emp = await myEmployee(db, getPrincipal(req));
       if (req.query.to < req.query.from) throw new AppError('VALIDATION', 'to must not be before from');
       const days = await vacationDays(db, emp.employee_id, req.query.from, req.query.to);
       const year = Number(req.query.from.slice(0, 4));
       const remaining = (await vacationSummary(db, emp.employee_id, year)).remaining;
-      return {
-        days: days.length,
-        remaining,
-        remainingAfter: remaining - days.length,
-        sufficient: remaining >= days.length,
-      };
+      const n = req.query.halfDay && days.length ? 0.5 : days.length;
+      const issues = await leaveLimitIssues(db, emp.employee_id, req.query.from, req.query.to, days);
+      return { days: n, remaining, remainingAfter: remaining - n, sufficient: remaining >= n, issues };
     },
   );
 

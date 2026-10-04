@@ -8,6 +8,7 @@ import { csvIds, idParam, isoDate } from '../lib/http';
 import { toCsv } from '../lib/csv';
 import { localDate } from '../lib/time';
 import { vacationSummary } from '../services/vacation';
+import { leaveLimitIssues } from '../services/leave';
 import {
   decideAbsence,
   decideCorrection,
@@ -112,6 +113,7 @@ export async function approvalRoutes(app: FastifyInstance) {
           't.reason',
           't.status',
           't.time_off_days',
+          't.half_day',
           't.decision_note',
           't.created_by_user_id',
           'e.user_id as emp_user_id',
@@ -144,7 +146,8 @@ export async function approvalRoutes(app: FastifyInstance) {
         const year = Number(t.start_date.slice(0, 4));
         const v = await vacationSummary(db, t.employee_id, year);
         // for a pending request nothing is booked yet; an approved one is already included in `used`
-        const remaining = t.status === 'approved' ? v.remaining + days.length : v.remaining;
+        const n = t.half_day ? 0.5 : days.length;
+        const remaining = t.status === 'approved' ? v.remaining + n : v.remaining;
         items.push({
           id: t.id,
           type: 'absence' as const,
@@ -153,12 +156,17 @@ export async function approvalRoutes(app: FastifyInstance) {
           displayName: t.display_name ?? '',
           from: t.start_date,
           to: t.end_date,
-          days: days.length,
+          days: n,
+          halfDay: t.half_day,
           reason: t.reason,
           status: t.status,
           decisionNote: t.decision_note,
           remaining,
-          remainingAfter: remaining - days.length,
+          remainingAfter: remaining - n,
+          conflicts:
+            t.status === 'pending'
+              ? await leaveLimitIssues(db, t.employee_id, t.start_date, t.end_date, days)
+              : [],
           understaffing: t.status === 'pending' ? await understaffingHint(db, t.employee_id, days) : [],
           createdAt: t.created_at?.toISOString() ?? null,
           flags: [] as string[],

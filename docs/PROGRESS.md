@@ -53,3 +53,7 @@
 - Web: `/staff/import` (template, dry run, confirm, error CSV, credentials PDF); kiosk search path fixed to use `punch-status`.
 - Tests: import (8), hardening (5), +5 matrix rows; e2e: full flow (plan by drag and drop -> publish -> tablet punch -> approve -> timesheet PDF), import, requests, portal, planning, kiosk.
 - README with setup, demo logins, commands and production notes.
+
+## M10 Leave (backlog) - done
+- Blackout periods and concurrent-absence caps as rules, half-day vacation, vacation planner (`/vacation`: overview table, year overview, manual entry, blackouts, wishes, notices), employee wishes with `WISH_CONFLICT` warnings, vacation notices and carryover jobs, month overview (`/month`), portal: half days, wishes, notices.
+- Tests: leave (8), rules leave (7), +20 matrix rows, e2e leave (2).

@@ -1,6 +1,7 @@
 // Planning rule checks (SPEC 4.3). Pure: callers load the data, nothing here reads a clock or a database.
 import { dailyLimitResult, restPeriodResult } from './basics';
 import { ageOn, overlapsNightWindow } from './minors';
+import { wishConflicts, type LeaveWishRule, type ShiftWishRule } from './leave';
 
 export type Severity = 'block' | 'needs_reason' | 'warn';
 
@@ -25,6 +26,7 @@ export interface CheckInput {
     id?: number | null;
     hotelId: number;
     departmentId: number | null;
+    shiftId?: number | null;
     startMs: number;
     endMs: number;
     breakMinutes: number;
@@ -42,6 +44,8 @@ export interface CheckInput {
   periodClosed: boolean;
   /** hotel-local today */
   today: string;
+  /** open or granted wishes of the employee (backlog); optional so the v1 vectors stay unchanged */
+  wishes?: { shift: ShiftWishRule[]; leave: LeaveWishRule[] };
   /** codes to skip, e.g. PAST_DAY when only warnings of existing entries are wanted */
   skip?: string[];
 }
@@ -149,6 +153,13 @@ export function checkEntry(i: CheckInput): Violation[] {
         }),
       );
   }
+  if (i.wishes)
+    for (const w of wishConflicts(
+      { localDate: e.localDate, shiftId: e.shiftId ?? null },
+      i.wishes.shift,
+      i.wishes.leave,
+    ))
+      add(w);
   return out;
 }
 

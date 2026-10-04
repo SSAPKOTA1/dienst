@@ -627,7 +627,8 @@ export async function decideAbsence(
   } else {
     const days = await vacationDays(trx, emp.employee_id, t.start_date, t.end_date);
     const perYear = new Map<number, number>();
-    for (const x of days) perYear.set(Number(x.slice(0, 4)), (perYear.get(Number(x.slice(0, 4))) ?? 0) + 1);
+    for (const x of days)
+      perYear.set(Number(x.slice(0, 4)), (perYear.get(Number(x.slice(0, 4))) ?? 0) + (t.half_day ? 0.5 : 1));
     for (const [year, n] of perYear) {
       const a = await ensureAllowance(trx, emp.employee_id, year);
       if (remainingDays(a) < n)
@@ -648,26 +649,29 @@ export async function decideAbsence(
         decided_by_user_id: p.userId,
         decided_at: now,
         decision_note: d.note ?? null,
-        time_off_days: days.length,
+        time_off_days: t.half_day ? 0.5 : days.length,
         updated_at: now,
       })
       .where('id', '=', id)
       .execute();
-    const cancelled = await trx
-      .updateTable('schedule')
-      .set((eb) => ({
-        status: 'cancelled',
-        cancel_reason: 'changed',
-        time_off_id: id,
-        version: eb('version', '+', 1),
-        updated_at: now,
-      }))
-      .where('employee_id', '=', emp.employee_id)
-      .where('status', '<>', 'cancelled')
-      .where('shift_date', '>=', t.start_date)
-      .where('shift_date', '<=', t.end_date)
-      .returning(['id', 'published_at'])
-      .execute();
+    // a half day leaves the entries of the day in place
+    const cancelled = t.half_day
+      ? []
+      : await trx
+          .updateTable('schedule')
+          .set((eb) => ({
+            status: 'cancelled',
+            cancel_reason: 'changed',
+            time_off_id: id,
+            version: eb('version', '+', 1),
+            updated_at: now,
+          }))
+          .where('employee_id', '=', emp.employee_id)
+          .where('status', '<>', 'cancelled')
+          .where('shift_date', '>=', t.start_date)
+          .where('shift_date', '<=', t.end_date)
+          .returning(['id', 'published_at'])
+          .execute();
     const pub = cancelled.filter((c) => c.published_at);
     if (pub.length)
       await notifyEmployee(trx, { id: emp.employee_id, userId: emp.user_id }, 'schedule_changed', {

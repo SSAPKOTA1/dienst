@@ -9,6 +9,7 @@ import { localDate } from '../../lib/time';
 import { resolveHolidays } from '../holidays';
 import { ensureAllowance, remainingDays } from '../vacation';
 import { PlanEnv } from './env';
+import { leaveLimitIssues } from '../leave';
 import { enforce, notifyEmployee, type Ctx } from './ops';
 import type { Principal } from '../../lib/scope';
 
@@ -17,6 +18,8 @@ export const absenceBody = z.object({
   from: isoDate,
   to: isoDate,
   type: z.enum(MENU_ABSENCE_TYPES),
+  /** single-day half day of annual leave (counts 0.5, does not cancel the day's entries) */
+  halfDay: z.enum(['morning', 'afternoon']).optional(),
   reason: z.string().max(500).optional(),
   certificateStatus: z.enum(['not_required', 'pending', 'received']).optional(),
   overrideReason: z.string().min(5).max(300).optional(),
@@ -147,7 +150,7 @@ export async function createAbsence(ctx: Ctx, input: AbsenceInput) {
     .where('approval_status', '<>', 'rejected')
     .limit(1)
     .executeTakeFirst();
-  if (punch)
+  if (punch && !input.halfDay)
     throw new AppError('PUNCH_EXISTS', 'A time record exists in this range', { punchRecordId: punch.id });
 
   // overlapping absences: free-day markers are replaced, everything else blocks
@@ -174,6 +177,12 @@ export async function createAbsence(ctx: Ctx, input: AbsenceInput) {
 
   const holidays = new Set((await resolveHolidays(trx, emp.primary_hotel_id, input.from, input.to)).keys());
   const counted = countedDays(input.from, input.to, contract.workingWeekdays, holidays);
+  if (input.halfDay) {
+    if (input.from !== input.to || input.type !== 'annual_leave')
+      throw new AppError('VALIDATION', 'A half day is a single day of annual leave');
+    if (!counted.length) throw new AppError('VALIDATION', 'The day is not a working day');
+  }
+  const dayCount = input.halfDay ? 0.5 : counted.length;
   const type = await trx
     .selectFrom('absence_type')
     .selectAll()
@@ -183,8 +192,21 @@ export async function createAbsence(ctx: Ctx, input: AbsenceInput) {
     throw new AppError('VALIDATION', 'The range contains no working days');
 
   // vacation allowance
-  const perYear = yearsOf(counted);
-  const violations = [];
+  const perYear = yearsOf(input.halfDay ? counted.map((d) => d) : counted);
+  if (input.halfDay) for (const k of perYear.keys()) perYear.set(k, 0.5);
+  const violations: Array<{
+    code: string;
+    severity: 'needs_reason';
+    message: string;
+    details: Record<string, unknown>;
+  }> = [];
+  if (input.type === 'annual_leave')
+    violations.push(
+      ...(await leaveLimitIssues(trx, emp.employee_id, input.from, input.to, counted)).map((x) => ({
+        ...x,
+        severity: 'needs_reason' as const,
+      })),
+    );
   const allowances = new Map<number, Awaited<ReturnType<typeof ensureAllowance>>>();
   if (type.counts_against_allowance) {
     for (const [year, days] of perYear) {
@@ -211,7 +233,8 @@ export async function createAbsence(ctx: Ctx, input: AbsenceInput) {
       employee_id: emp.employee_id,
       start_date: input.from,
       end_date: input.to,
-      time_off_days: counted.length,
+      time_off_days: dayCount,
+      half_day: input.halfDay ?? null,
       type: input.type,
       reason: input.reason ?? null,
       status: 'approved',
@@ -224,22 +247,24 @@ export async function createAbsence(ctx: Ctx, input: AbsenceInput) {
     .returningAll()
     .executeTakeFirstOrThrow();
 
-  // cancel overlapping schedule entries
-  const cancelled = await trx
-    .updateTable('schedule')
-    .set((eb) => ({
-      status: 'cancelled',
-      cancel_reason: input.type === 'sick_leave' ? 'sick' : 'changed',
-      time_off_id: row.id,
-      version: eb('version', '+', 1),
-      updated_at: ctx.now,
-    }))
-    .where('employee_id', '=', emp.employee_id)
-    .where('status', '<>', 'cancelled')
-    .where('shift_date', '>=', input.from)
-    .where('shift_date', '<=', input.to)
-    .returning(['id', 'hotel_id', 'shift_date', 'published_at'])
-    .execute();
+  // cancel overlapping schedule entries (a half day leaves the day's entries in place)
+  const cancelled = input.halfDay
+    ? []
+    : await trx
+        .updateTable('schedule')
+        .set((eb) => ({
+          status: 'cancelled',
+          cancel_reason: input.type === 'sick_leave' ? 'sick' : 'changed',
+          time_off_id: row.id,
+          version: eb('version', '+', 1),
+          updated_at: ctx.now,
+        }))
+        .where('employee_id', '=', emp.employee_id)
+        .where('status', '<>', 'cancelled')
+        .where('shift_date', '>=', input.from)
+        .where('shift_date', '<=', input.to)
+        .returning(['id', 'hotel_id', 'shift_date', 'published_at'])
+        .execute();
   const publishedCancelled = cancelled.filter((c) => c.published_at);
   if (publishedCancelled.length) {
     await notifyEmployee(trx, { id: emp.employee_id, userId: emp.user_id }, 'schedule_changed', {
@@ -270,7 +295,7 @@ export async function createAbsence(ctx: Ctx, input: AbsenceInput) {
       type: input.type,
       from: input.from,
       to: input.to,
-      days: counted.length,
+      days: dayCount,
       cancelledEntries: cancelled.length,
     },
     reason: backdateReason ?? input.overrideReason,
@@ -287,7 +312,7 @@ export async function createAbsence(ctx: Ctx, input: AbsenceInput) {
     });
   return {
     absenceId: row.id,
-    days: counted.length,
+    days: dayCount,
     cancelledEntries: cancelled.length,
     warnings: enforced.warnings,
   };
@@ -345,6 +370,7 @@ export async function reverseAbsence(
     end_date: string;
     counts_against_allowance: boolean;
     status: string;
+    half_day?: string | null;
   },
   emp: { employee_id: number; primary_hotel_id: number },
 ) {
@@ -365,7 +391,8 @@ export async function reverseAbsence(
       contract?.workingWeekdays ?? [1, 2, 3, 4, 5],
       holidays,
     );
-    for (const [year, days] of yearsOf(counted)) {
+    for (const [year, n] of yearsOf(counted)) {
+      const days = t.half_day ? 0.5 : n;
       const a = await ensureAllowance(trx, emp.employee_id, year);
       await trx
         .updateTable('employee_vacation_allowance')

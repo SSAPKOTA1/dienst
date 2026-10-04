@@ -9,6 +9,8 @@ import { Planning } from './pages/planning/Planning';
 import { Kiosk } from './pages/Kiosk';
 import { Live } from './pages/Live';
 import { Requests } from './pages/Requests';
+import { MonthOverview } from './pages/MonthOverview';
+import { VacationRoutes } from './pages/Vacation';
 import {
   PortalAccount,
   PortalAttendance,
@@ -66,6 +68,8 @@ export function App() {
           <Route element={<Guard roles={['superAdmin', 'admin', 'manager']} />}>
             <Route element={<PlannerShell />}>
               <Route path="/planning" element={<Planning />} />
+              <Route path="/month" element={<MonthOverview />} />
+              <Route path="/vacation/*" element={<VacationRoutes />} />
               <Route path="/live" element={<Live />} />
               <Route path="/requests" element={<Requests />} />
               <Route path="/staff" element={<Staff />} />

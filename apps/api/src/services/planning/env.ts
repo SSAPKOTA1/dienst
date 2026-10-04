@@ -5,7 +5,9 @@ import {
   displayName,
   mondayOf,
   workingMinutes,
+  type LeaveWishRule,
   type RuleOther,
+  type ShiftWishRule,
   type Violation,
 } from '@dienst/rules';
 import type { DbOrTrx } from '../../db';
@@ -90,6 +92,8 @@ export class PlanEnv {
   absenceRanges = new Map<number, Array<{ from: string; to: string }>>();
   closed: Array<{ companyId: number; hotelId: number | null; from: string; to: string }> = [];
   hotels = new Map<number, HotelInfo>();
+  shiftWishes = new Map<number, ShiftWishRule[]>();
+  leaveWishes = new Map<number, LeaveWishRule[]>();
 
   constructor(readonly now: Date) {}
 
@@ -191,6 +195,7 @@ export class PlanEnv {
         .select(['employee_id', 'start_date', 'end_date'])
         .where('employee_id', 'in', ids)
         .where('status', '=', 'approved')
+        .where('half_day', 'is', null) // a half day does not block the other half
         .where('end_date', '>=', from)
         .where('start_date', '<=', to)
         .execute();
@@ -199,6 +204,34 @@ export class PlanEnv {
         l.push({ from: a.start_date, to: a.end_date });
         env.absenceRanges.set(a.employee_id, l);
       }
+    }
+    if (ids.length) {
+      const sw = await db
+        .selectFrom('employee_shift_wish')
+        .select(['employee_id', 'date', 'shift_id', 'priority'])
+        .where('employee_id', 'in', ids)
+        .where('status', 'in', ['pending', 'granted'])
+        .where('date', '>=', from)
+        .where('date', '<=', to)
+        .execute();
+      for (const w of sw)
+        env.shiftWishes.set(w.employee_id, [
+          ...(env.shiftWishes.get(w.employee_id) ?? []),
+          { date: w.date, shiftId: w.shift_id, priority: w.priority },
+        ]);
+      const lw = await db
+        .selectFrom('employee_leave_wish')
+        .select(['employee_id', 'start_date', 'end_date', 'priority'])
+        .where('employee_id', 'in', ids)
+        .where('status', 'in', ['pending', 'granted'])
+        .where('end_date', '>=', from)
+        .where('start_date', '<=', to)
+        .execute();
+      for (const w of lw)
+        env.leaveWishes.set(w.employee_id, [
+          ...(env.leaveWishes.get(w.employee_id) ?? []),
+          { from: w.start_date, to: w.end_date, priority: w.priority },
+        ]);
     }
     const periods = await db
       .selectFrom('payroll_period')
@@ -300,6 +333,7 @@ export class PlanEnv {
         id: s.entryId ?? null,
         hotelId: s.hotelId,
         departmentId: s.departmentId,
+        shiftId: s.shiftId,
         startMs: s.startMs,
         endMs: s.endMs,
         breakMinutes: s.breakMinutes,
@@ -317,6 +351,10 @@ export class PlanEnv {
       absenceOnDay: this.absentOn(s.employeeId, local.localDate),
       periodClosed: this.isClosed(s.hotelId, local.localDate),
       today: localDate(this.now, hotel.tz),
+      wishes: {
+        shift: this.shiftWishes.get(s.employeeId) ?? [],
+        leave: this.leaveWishes.get(s.employeeId) ?? [],
+      },
       skip,
     });
   }
