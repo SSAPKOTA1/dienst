@@ -88,6 +88,18 @@ const rows: Row[] = [
   { method: 'GET', url: () => '/setup/status', allow: ['SA', 'AD'] },
   { method: 'GET', url: () => '/setup/overview', allow: ['SA', 'AD'] },
   { method: 'GET', url: () => '/me', allow: ['SA', 'AD', 'MG', 'EM'] },
+  { method: 'GET', url: () => `/live?hotelIds=${org.hotelA1}`, allow: ['SA', 'AD', 'MG'] },
+  {
+    method: 'POST',
+    url: () => '/live/close-open',
+    body: () => ({
+      punchRecordId: 999999,
+      outAt: '2026-10-04T08:00:00Z',
+      breakMinutes: 0,
+      reason: 'vergessen',
+    }),
+    allow: ['SA', 'AD', 'MG'],
+  },
   { method: 'GET', url: () => '/shifts', allow: ['SA', 'AD', 'MG'] },
   {
     method: 'POST',

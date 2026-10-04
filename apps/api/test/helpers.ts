@@ -308,6 +308,7 @@ export interface PlanFx extends Org {
   hk: number; // Housekeeping A1 08:00-16:30
   early2: number; // Rezeption A2 06:00-14:00
   emp: Record<string, number>;
+  pin: Record<string, string>;
 }
 
 export async function planFixture(ctx: TestCtx): Promise<PlanFx> {
@@ -344,8 +345,10 @@ export async function planFixture(ctx: TestCtx): Promise<PlanFx> {
       empBody(org, { firstName: key, lastName: 'Test', ...over }),
     );
     if (r.status !== 201) throw new Error(`employee ${key}: ${JSON.stringify(r.body)}`);
+    pins[key.toLowerCase()] = r.body.pin;
     return r.body.employeeId as number;
   };
+  const pins: Record<string, string> = {};
   const emp: Record<string, number> = {
     maria: await mk('Maria'),
     jon: await mk('Jon'),
@@ -354,7 +357,7 @@ export async function planFixture(ctx: TestCtx): Promise<PlanFx> {
     piotr: await mk('Piotr', { primaryDepartmentId: org.deptA1b }), // housekeeping only
     cap: await mk('Cap', { monthlyHoursCap: 20, workingModel: 'hourly', targetHoursPerWeek: 10 }),
   };
-  return { ...org, early, late, night, hk, early2, emp };
+  return { ...org, early, late, night, hk, early2, emp, pin: pins };
 }
 
 export const plan = (fx: PlanFx, token: string, body: Record<string, unknown>) =>

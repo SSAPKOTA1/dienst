@@ -33,3 +33,16 @@ export async function verifyToken<T extends Record<string, unknown> = Record<str
     return null;
   }
 }
+
+/** Short-lived signed payload (kiosk employeeRef and confirmToken). */
+export async function signPayload(
+  secret: string,
+  payload: Record<string, unknown>,
+  ttl: string,
+): Promise<string> {
+  return new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(ttl)
+    .sign(key(secret));
+}

@@ -32,3 +32,8 @@
 - `/planning`: employee and shift views, Hotels/Abteilungen multi-selects with counts and search, week navigator, counters, changes panel with revert, copy last week, clear plan dialog, publish, palette + trash, dnd-kit drag and drop with live validation, + menu (templates/absences or searchable employee list with reasons), side panel (edit times, move, substitute finder, reason field, revert, absence removal), reason/emergency dialogs, version-conflict banner, locked past days, print stylesheet.
 - Compared screen by screen with `design/prototype.html` via screenshots (employee view, shift view, side panel).
 - E2E (Playwright): keyboard path through the + menu, drag template/move/trash, plan -> publish -> remove -> revert: 3 passed.
+
+## M6 Kiosk and live - done
+- API: kiosk auth by device token (rate limited per device), roster, search, punch-in (grace, unplanned, idempotent), reason, two-step punch-out with break confirmation, heartbeat, PIN lock, auto-checkout job, `/live` groups and `/live/close-open`.
+- Web: `/kiosk` (name cards, search, PIN pad, break screen, results, 30 s idle reset, heartbeat, device-not-registered screen) and `/live` board with "Per Korrektur schließen".
+- Tests: kiosk (9 integration tests incl. fake-clock auto-checkout), e2e kiosk flow (5) and planning (3); full suite 344 API tests green.

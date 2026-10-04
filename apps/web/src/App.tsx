@@ -6,6 +6,8 @@ import { PlannerShell } from './components/Shell';
 import { Login } from './pages/Login';
 import { AcceptInvitation, ForgotPassword } from './pages/AccountPages';
 import { Planning } from './pages/planning/Planning';
+import { Kiosk } from './pages/Kiosk';
+import { Live } from './pages/Live';
 import { Staff } from './pages/Staff';
 import { StaffNew } from './pages/StaffNew';
 import {
@@ -49,10 +51,11 @@ export function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/accept-invitation" element={<AcceptInvitation />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/kiosk" element={<Kiosk />} />
           <Route element={<Guard roles={['superAdmin', 'admin', 'manager']} />}>
             <Route element={<PlannerShell />}>
               <Route path="/planning" element={<Planning />} />
-              <Route path="/live" element={<Placeholder title="Live" />} />
+              <Route path="/live" element={<Live />} />
               <Route path="/requests" element={<Placeholder title="Anträge" />} />
               <Route path="/staff" element={<Staff />} />
               <Route path="/staff/new" element={<StaffNew />} />

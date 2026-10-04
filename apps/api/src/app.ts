@@ -17,6 +17,9 @@ import { employeeRoutes } from './routes/employees';
 import { setupRoutes } from './routes/setup';
 import { shiftRoutes } from './routes/shifts';
 import { scheduleRoutes } from './routes/schedule';
+import { kioskRoutes } from './routes/kiosk';
+import { liveRoutes } from './routes/live';
+import { runAutoCheckout } from './jobs/autoCheckout';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -32,6 +35,8 @@ export interface AppOptions {
   clock?: () => Date;
   logger?: boolean | object;
   db?: Db;
+  /** run the auto-checkout job every minute (the server enables it; tests call runAutoCheckout directly) */
+  autoCheckout?: boolean;
 }
 
 export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> {
@@ -75,6 +80,17 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       app.log,
     ),
   );
+
+  if (opts.autoCheckout) {
+    const timer = setInterval(
+      () =>
+        void runAutoCheckout(db, app.clock()).catch((e) =>
+          app.log.error({ err: (e as Error).message }, 'auto-checkout failed'),
+        ),
+      60_000,
+    );
+    app.addHook('onClose', async () => clearInterval(timer));
+  }
 
   await app.register(helmet);
   await app.register(rateLimit, { global: false });
@@ -146,6 +162,8 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       await api.register(setupRoutes);
       await api.register(shiftRoutes);
       await api.register(scheduleRoutes);
+      await api.register(kioskRoutes);
+      await api.register(liveRoutes);
       api.get('/health', async () => {
         await sql`select 1`.execute(db);
         return { status: 'ok', time: app.clock().toISOString() };
