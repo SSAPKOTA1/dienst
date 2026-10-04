@@ -15,7 +15,16 @@ import type {
   Sel,
   ShiftTpl,
 } from './types';
-import { ABSENCE_LABEL, DOW, dayNum, dowOf, rangeLabel, violationText, addDaysIso } from './util';
+import {
+  ABSENCE_LABEL,
+  EXTRA_ABSENCES,
+  DOW,
+  dayNum,
+  dowOf,
+  rangeLabel,
+  violationText,
+  addDaysIso,
+} from './util';
 
 export interface PlanCtx {
   data: GridData;
@@ -441,6 +450,16 @@ function CellMenu({ target, onClose }: { target: MenuTarget; onClose: () => void
           )}
         </button>
       ))}
+      {!past && (
+        <>
+          <div className="sec">{t('Mehr')}</div>
+          {EXTRA_ABSENCES.map((a) => (
+            <button key={a} type="button" onClick={() => pickAbsence(a)} data-testid={`abs-${a}`}>
+              {t(ABSENCE_LABEL[a] ?? a)}
+            </button>
+          ))}
+        </>
+      )}
     </>
   );
   return createPortal(

@@ -1,5 +1,7 @@
 // Planning rule checks (SPEC 4.3). Pure: callers load the data, nothing here reads a clock or a database.
-import { dailyLimitResult, restPeriodResult } from './basics';
+import { isoWeekday } from './basics';
+import { DEFAULT_LIMITS, type RuleLimits } from './profile';
+import { isNightWork, sundaysInYear } from './hours';
 import { ageOn, overlapsNightWindow } from './minors';
 import { wishConflicts, type LeaveWishRule, type ShiftWishRule } from './leave';
 
@@ -46,6 +48,15 @@ export interface CheckInput {
   today: string;
   /** open or granted wishes of the employee (backlog); optional so the v1 vectors stay unchanged */
   wishes?: { shift: ShiftWishRule[]; leave: LeaveWishRule[] };
+  /** limits of the company / hotel rule profile (stricter than the statutory defaults only) */
+  limits?: Partial<RuleLimits>;
+  /** Sunday and night statistics of the employee from all other entries (backlog) */
+  calendar?: {
+    /** distinct local dates of other entries that start on a Sunday in the same calendar year */
+    sundayDates: string[];
+    /** distinct local dates of other night entries in the 12 months before the entry */
+    nightDates: string[];
+  };
   /** codes to skip, e.g. PAST_DAY when only warnings of existing entries are wanted */
   skip?: string[];
 }
@@ -93,17 +104,17 @@ export function checkEntry(i: CheckInput): Violation[] {
   if (!i.contractActive || !i.employee.active)
     add(v('CONTRACT_INACTIVE', 'block', 'No active contract on this date', { date: e.localDate }));
 
+  const lim = { ...DEFAULT_LIMITS, ...(i.limits ?? {}) };
   const minor = ageOn(i.employee.dateOfBirth, e.localDate) < 18;
 
   // --- daily working time (all entries of the same local start date)
   const sameDay = i.others.filter((o) => o.localDate === e.localDate);
   const dayMin = workingMinutes(e) + sameDay.reduce((a, o) => a + workingMinutes(o), 0);
-  const dl = dailyLimitResult(dayMin);
-  if (dl === 'blocked')
+  if (dayMin > lim.dailyMaxMinutes)
     add(v('DAILY_LIMIT', 'block', 'More than 10 hours of work on this day', { workMinutes: dayMin }));
-  else if (dl === 'warn')
+  else if (dayMin > lim.dailyWarnMinutes)
     add(v('DAILY_OVER_8H', 'warn', 'More than 8 hours of work on this day', { workMinutes: dayMin }));
-  if (minor && dayMin > 480)
+  if (minor && dayMin > lim.minorDailyMaxMinutes)
     add(v('MINOR_DAILY', 'block', 'Minors may work at most 8 hours per day', { workMinutes: dayMin }));
   if (minor && overlapsNightWindow(e.startLocalMin, e.endLocalMin))
     add(v('MINOR_NIGHT', 'block', 'Minors may not work between 20:00 and 06:00', { date: e.localDate }));
@@ -118,10 +129,9 @@ export function checkEntry(i: CheckInput): Violation[] {
   ];
   for (const [side, n, gap] of sides) {
     if (!n || gap == null) continue;
-    const r = restPeriodResult(gap);
-    if (r === 'blocked')
+    if (gap < lim.restBlockMinutes)
       add(v('REST_PERIOD', 'block', 'Rest period below 10 hours', { gapMinutes: gap, side, entryId: n.id }));
-    else if (r === 'needs_reason')
+    else if (gap < lim.restWarnMinutes)
       add(
         v('REST_PERIOD', 'needs_reason', 'Rest period below 11 hours', {
           gapMinutes: gap,
@@ -129,7 +139,7 @@ export function checkEntry(i: CheckInput): Violation[] {
           entryId: n.id,
         }),
       );
-    if (minor && gap < 720)
+    if (minor && gap < lim.minorRestMinutes)
       add(
         v('MINOR_REST', 'block', 'Minors need a rest period of 12 hours', {
           gapMinutes: gap,
@@ -152,6 +162,33 @@ export function checkEntry(i: CheckInput): Violation[] {
           cap: i.monthlyHoursCap,
         }),
       );
+  }
+  if (i.calendar) {
+    const year = Number(e.localDate.slice(0, 4));
+    if (isoWeekday(e.localDate) === 7) {
+      const worked = new Set([
+        ...i.calendar.sundayDates.filter((d) => d.startsWith(String(year))),
+        e.localDate,
+      ]).size;
+      const free = sundaysInYear(year) - worked;
+      if (free < lim.sundaysFreeMin)
+        add(
+          v('SUNDAY_LIMIT', 'warn', 'Fewer than 15 Sundays off in this year', {
+            freeSundays: free,
+            required: lim.sundaysFreeMin,
+          }),
+        );
+    }
+    if (isNightWork(e.startLocalMin, e.endLocalMin)) {
+      const nights = new Set([...i.calendar.nightDates, e.localDate]).size;
+      if (nights >= lim.nightWorkerNights)
+        add(
+          v('NIGHT_WORKER', 'warn', 'The employee counts as night worker', {
+            nights,
+            from: lim.nightWorkerNights,
+          }),
+        );
+    }
   }
   if (i.wishes)
     for (const w of wishConflicts(

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { api, download, useGet, useSend } from '../lib/api';
 import { fdate, fdatetime } from '../lib/format';
 import { Dialog, ErrorNote, Field, useToast } from '../components/ui';
+import { FeatureToggles, HourCategories, PayrollExport, RuleLimitsEditor } from './AdminRulesEditor';
 
 const wrap: React.CSSProperties = {
   padding: 'var(--space-4)',
@@ -222,8 +223,11 @@ export function AdminRules() {
     <div style={wrap}>
       <h2 style={{ margin: 0, fontSize: 20 }}>{t('Regeln')}</h2>
       <div style={{ fontSize: 13 }}>
-        {t('Die eingebauten Regeln gelten für alle Hotels. Sie sind in dieser Version nicht veränderbar.')}
+        {t('Die eingebauten Regeln gelten für alle Hotels. Die Grenzen unten dürfen nur verschärft werden.')}
       </div>
+      <RuleLimitsEditor />
+      <HourCategories />
+      <FeatureToggles />
       <section aria-label={t('Planungsregeln')} style={{ border: '2px solid var(--color-text)' }}>
         <table className="table">
           <thead>
@@ -428,6 +432,7 @@ export function ClosePeriods() {
           )}
         </div>
       ))}
+      <PayrollExport />
       {dlg && (
         <CloseDialog
           companies={companies.data?.items ?? []}

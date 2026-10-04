@@ -7,6 +7,7 @@ import { useAuth } from '../lib/auth';
 import { fdate, fnum, fsigned, ftime } from '../lib/format';
 import { Dialog, ErrorNote, Field, useToast } from '../components/ui';
 import { AccountMenu } from '../components/Shell';
+import { LedgerTable } from '../components/Ledger';
 import { LangSwitch } from '../components/LangSwitch';
 import { addDaysIso, mondayOfIso, todayIso, weekRangeLabel } from './planning/util';
 
@@ -833,6 +834,11 @@ export function PortalAccount() {
         {acc.data?.asOf && (
           <div style={{ ...line, fontSize: 12, borderBottom: 0 }}>
             {t('Stand')} {fdate(acc.data.asOf)}
+          </div>
+        )}
+        {acc.data?.balanceHours != null && (
+          <div style={{ padding: '0 var(--space-3) var(--space-3)' }}>
+            <LedgerTable path="/me/time-account/ledger" />
           </div>
         )}
       </section>

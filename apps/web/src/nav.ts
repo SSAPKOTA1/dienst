@@ -21,8 +21,16 @@ export const PLANNER_NAV: NavSection[] = [
     items: [
       { path: '/live', label: 'Live' },
       { path: '/requests', label: 'Anträge' },
+      { path: '/compliance', label: 'Compliance' },
     ],
   },
-  { key: 'team', label: 'Team', items: [{ path: '/staff', label: 'Mitarbeiter' }] },
+  {
+    key: 'team',
+    label: 'Team',
+    items: [
+      { path: '/staff', label: 'Mitarbeiter' },
+      { path: '/analytics', label: 'Auswertung' },
+    ],
+  },
   { key: 'admin', label: 'Admin', items: [{ path: '/admin/overview', label: 'Einrichtung' }] },
 ];

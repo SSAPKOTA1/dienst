@@ -142,14 +142,14 @@ describe('vacation and day counting', () => {
     expect((await allowance(fx.emp.jon)).used_days).toBe(5);
   });
 
-  it('rejects types outside the + menu, empty ranges and overlapping absences; free days are replaced', async () => {
+  it('rejects unknown types, empty ranges and overlapping absences; free days are replaced', async () => {
     expect(
       (
         await absence(fx.adminA.token, {
           employeeId: fx.emp.tom,
           from: '2026-11-16',
           to: '2026-11-16',
-          type: 'maternity_leave',
+          type: 'sabbatical',
         })
       ).status,
     ).toBe(400);

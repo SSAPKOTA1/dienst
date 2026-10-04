@@ -62,7 +62,24 @@ export const ABSENCE_LABEL: Record<string, string> = {
   off_day: 'Frei',
   unpaid_leave: 'Unbezahlt frei',
   absent: 'Abwesend',
+  comp_time: 'Zeitausgleich',
+  special_leave: 'Sonderurlaub',
+  child_sick: 'Kind krank',
+  training: 'Fortbildung',
+  parental_leave: 'Elternzeit',
+  maternity_leave: 'Mutterschutz',
+  rest_day: 'Ersatzruhetag',
 };
+/** under "Mehr" in the + menu */
+export const EXTRA_ABSENCES = [
+  'comp_time',
+  'special_leave',
+  'child_sick',
+  'training',
+  'parental_leave',
+  'maternity_leave',
+  'rest_day',
+];
 
 const MINOR_CODES = new Set(['MINOR_REST', 'MINOR_NIGHT', 'MINOR_DAILY']);
 
@@ -146,6 +163,21 @@ export function violationText(v: Violation, t: TFunction): { title: string; msg:
           d.kind === 'leave'
             ? t('Es liegt ein Urlaubswunsch für diesen Tag vor.')
             : t('Es liegt ein anderer Schichtwunsch für diesen Tag vor.'),
+      };
+    case 'SUNDAY_LIMIT':
+      return {
+        title: t('Sonntage'),
+        msg: `${t('Nur')} ${d.freeSundays} ${t('freie Sonntage im Jahr')} · ${t('Mindestens')} ${d.required}`,
+      };
+    case 'NIGHT_WORKER':
+      return {
+        title: t('Nachtarbeit'),
+        msg: `${d.nights} ${t('Nächte in 12 Monaten')} · ${t('gilt als Nachtarbeitnehmer')}`,
+      };
+    case 'COMP_TIME_EXCEEDS':
+      return {
+        title: t('Zeitkonto'),
+        msg: `${t('Guthaben')} ${fnum(d.balanceHours)} h · ${t('danach')} ${fnum(d.afterHours)} h`,
       };
     case 'BLACKOUT':
       return { title: t('Sperrzeit'), msg: t('In diesem Zeitraum ist kein Urlaub vorgesehen.') };

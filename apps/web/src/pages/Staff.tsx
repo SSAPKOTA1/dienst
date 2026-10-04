@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { download, useGet, useSend } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { fdate, fnum, fsigned, WEEKDAYS } from '../lib/format';
+import { LedgerTable } from '../components/Ledger';
 import { ErrorNote, Kicker, Label, PageHead, useToast } from '../components/ui';
 
 const EMPLOYMENT: Record<string, string> = {
@@ -248,6 +249,15 @@ function StaffDetail({ id }: { id: number }) {
                 );
               })}
             </div>
+          </div>
+        </>
+      )}
+      {!reduced && e.timeAccount != null && (
+        <>
+          <hr className="hr" style={{ margin: 0 }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <Label>{t('Arbeitszeitkonto')}</Label>
+            <LedgerTable path={`/employees/${id}/time-account/ledger`} canEdit={admin} employeeId={id} />
           </div>
         </>
       )}

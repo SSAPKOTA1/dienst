@@ -10,6 +10,7 @@ import { resolveHolidays } from '../holidays';
 import { ensureAllowance, remainingDays } from '../vacation';
 import { PlanEnv } from './env';
 import { leaveLimitIssues } from '../leave';
+import { buildLedger } from '../timeAccount';
 import { enforce, notifyEmployee, type Ctx } from './ops';
 import type { Principal } from '../../lib/scope';
 
@@ -218,6 +219,24 @@ export async function createAbsence(ctx: Ctx, input: AbsenceInput) {
           severity: 'needs_reason' as const,
           message: 'Planned vacation exceeds the remaining allowance',
           details: { year, remaining: remainingDays(a), days },
+        });
+    }
+  }
+  if (type.salary_only) {
+    const ledger = await buildLedger(trx, emp.employee_id, today);
+    if (!ledger)
+      throw new AppError('VALIDATION', 'This absence type is only for employees with a time account');
+    if (input.type === 'comp_time') {
+      const weekly =
+        contract.weeklyTarget ?? (contract.monthlyTarget != null ? (contract.monthlyTarget * 12) / 52 : 0);
+      const daily = contract.dailyTarget ?? weekly / Math.max(1, contract.workingWeekdays.length);
+      const after = Math.round((ledger.balanceHours - daily * counted.length) * 100) / 100;
+      if (after < 0)
+        violations.push({
+          code: 'COMP_TIME_EXCEEDS',
+          severity: 'needs_reason',
+          message: 'The time account would become negative',
+          details: { balanceHours: ledger.balanceHours, afterHours: after },
         });
     }
   }

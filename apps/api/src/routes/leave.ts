@@ -9,6 +9,7 @@ import { localDate } from '../lib/time';
 import { vacationDays } from '../services/approvals';
 import { notifyEmployee } from '../services/planning/ops';
 import { remainingDays } from '../services/vacation';
+import { requireFeature } from '../services/features';
 import { carryOver, sendNotices } from '../services/vacationJobs';
 import type { Db, Trx } from '../db';
 import type { Principal } from '../lib/scope';
@@ -347,10 +348,12 @@ export async function leaveRoutes(app: FastifyInstance) {
     decisionNote: w.decision_note,
   });
 
+  const wishFeature = requireFeature(db, 'wishes');
   r.post(
     '/me/shift-wishes',
     {
       preValidation: EM,
+      preHandler: wishFeature,
       schema: {
         body: z.object({
           date: isoDate,
@@ -432,6 +435,7 @@ export async function leaveRoutes(app: FastifyInstance) {
     '/me/leave-wishes',
     {
       preValidation: EM,
+      preHandler: wishFeature,
       schema: {
         body: z.object({ from: isoDate, to: isoDate, priority, reason: z.string().max(300).optional() }),
       },

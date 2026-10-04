@@ -308,6 +308,37 @@ const rows: Row[] = [
   { method: 'GET', url: () => '/vacation/notices?year=2027', allow: ['SA', 'AD', 'MG'] },
   { method: 'GET', url: () => '/me/vacation-notices', allow: ['EM'] },
   { method: 'PUT', url: () => '/me/vacation-notices/999999/ack', allow: ['EM'] },
+  { method: 'GET', url: () => `/employees/${empId}/time-account/ledger`, allow: ['SA', 'AD', 'MG'] },
+  { method: 'GET', url: () => '/me/time-account/ledger', allow: ['EM'] },
+  {
+    method: 'POST',
+    url: () => `/employees/${empId}/time-account/entries`,
+    body: () => ({}),
+    allow: ['SA', 'AD'],
+  },
+  { method: 'GET', url: () => '/hour-categories', allow: ['SA', 'AD', 'MG'] },
+  { method: 'POST', url: () => '/hour-categories', body: () => ({}), allow: ['SA', 'AD'] },
+  { method: 'PUT', url: () => '/hour-categories/999999', body: () => ({}), allow: ['SA', 'AD'] },
+  { method: 'DELETE', url: () => '/hour-categories/999999', allow: ['SA', 'AD'] },
+  { method: 'GET', url: () => `/payroll/export?month=2026-09&hotelIds=${org.hotelA1}`, allow: ['SA', 'AD'] },
+  {
+    method: 'GET',
+    url: () => `/compliance/rest-compensation?from=2026-10-01&to=2026-10-31`,
+    allow: ['SA', 'AD', 'MG'],
+  },
+  {
+    method: 'GET',
+    url: () => `/compliance/replacement-rest?from=2026-10-01&to=2026-10-31`,
+    allow: ['SA', 'AD', 'MG'],
+  },
+  { method: 'GET', url: () => `/compliance/sundays-nights?year=2026`, allow: ['SA', 'AD', 'MG'] },
+  { method: 'GET', url: () => '/settings/rules', allow: ['SA', 'AD', 'MG'] },
+  { method: 'PUT', url: () => '/settings/rules', body: () => ({}), allow: ['SA', 'AD'] },
+  { method: 'DELETE', url: () => '/settings/rules', allow: ['SA', 'AD'] },
+  { method: 'GET', url: () => '/settings/features', allow: ['SA', 'AD', 'MG'] },
+  { method: 'PUT', url: () => '/settings/features', body: () => ({}), allow: ['SA', 'AD'] },
+  { method: 'GET', url: () => '/me/features', allow: ['SA', 'AD', 'MG', 'EM'] },
+  { method: 'GET', url: () => '/analytics/summary?from=2026-10-01&to=2026-10-31', allow: ['SA', 'AD', 'MG'] },
 ];
 
 const tokenFor = (r: Role): string | null =>

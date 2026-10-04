@@ -57,3 +57,7 @@
 ## M10 Leave (backlog) - done
 - Blackout periods and concurrent-absence caps as rules, half-day vacation, vacation planner (`/vacation`: overview table, year overview, manual entry, blackouts, wishes, notices), employee wishes with `WISH_CONFLICT` warnings, vacation notices and carryover jobs, month overview (`/month`), portal: half days, wishes, notices.
 - Tests: leave (8), rules leave (7), +20 matrix rows, e2e leave (2).
+
+## M11 Hours (backlog) - done
+- Ledger and comp time, hour categories, payroll export (hours only), rule profiles (stricter only) with Sunday/night/rest-compensation/replacement-rest compliance, feature toggles, analytics; UI: Compliance, Auswertung, editable Regeln, ledger, payroll export.
+- Tests: hours (9), rules hours (12), +18 matrix rows, e2e hours (2).

@@ -6,6 +6,9 @@ import {
   mondayOf,
   workingMinutes,
   type LeaveWishRule,
+  type RuleLimits,
+  isNightWork,
+  isoWeekday,
   type RuleOther,
   type ShiftWishRule,
   type Violation,
@@ -94,6 +97,10 @@ export class PlanEnv {
   hotels = new Map<number, HotelInfo>();
   shiftWishes = new Map<number, ShiftWishRule[]>();
   leaveWishes = new Map<number, LeaveWishRule[]>();
+  /** limits of the rule profile per hotel (hotel profile, else company profile, else statutory defaults) */
+  limits = new Map<number, Partial<RuleLimits>>();
+  /** compact year history per employee for the Sunday and night statistics */
+  calendar = new Map<number, Array<{ id: number; date: string; sunday: boolean; night: boolean }>>();
 
   constructor(readonly now: Date) {}
 
@@ -233,6 +240,40 @@ export class PlanEnv {
           { from: w.start_date, to: w.end_date, priority: w.priority },
         ]);
     }
+    const profiles = await db
+      .selectFrom('hotel as h')
+      .innerJoin('company as c', 'c.id', 'h.company_id')
+      .leftJoin('rule_profile as hp', 'hp.id', 'h.rule_profile_id')
+      .leftJoin('rule_profile as cp', 'cp.id', 'c.rule_profile_id')
+      .select(['h.id', 'hp.rules as hotel_rules', 'cp.rules as company_rules'])
+      .execute();
+    for (const p of profiles) {
+      const r = (p.hotel_rules ?? p.company_rules) as Partial<RuleLimits> | null;
+      if (r) env.limits.set(p.id, r);
+    }
+    if (ids.length) {
+      const yearFrom = addDays(opts.from, -366);
+      const yearTo = addDays(opts.to, 366);
+      const hist = await db
+        .selectFrom('schedule')
+        .select(['id', 'employee_id', 'hotel_id', 'shift_date', 'planned_start', 'planned_end'])
+        .where('employee_id', 'in', ids)
+        .where('status', '<>', 'cancelled')
+        .where('shift_date', '>=', yearFrom)
+        .where('shift_date', '<=', yearTo)
+        .execute();
+      for (const h of hist) {
+        const l = env.slotLocal(h.hotel_id, h.planned_start.getTime(), h.planned_end.getTime());
+        const list = env.calendar.get(h.employee_id) ?? [];
+        list.push({
+          id: h.id,
+          date: h.shift_date,
+          sunday: isoWeekday(h.shift_date) === 7,
+          night: isNightWork(l.startLocalMin, l.endLocalMin),
+        });
+        env.calendar.set(h.employee_id, list);
+      }
+    }
     const periods = await db
       .selectFrom('payroll_period')
       .selectAll()
@@ -351,6 +392,22 @@ export class PlanEnv {
       absenceOnDay: this.absentOn(s.employeeId, local.localDate),
       periodClosed: this.isClosed(s.hotelId, local.localDate),
       today: localDate(this.now, hotel.tz),
+      limits: this.limits.get(s.hotelId),
+      calendar: {
+        sundayDates: (this.calendar.get(s.employeeId) ?? [])
+          .filter((c) => c.sunday && !ignore.has(c.id) && c.date !== local.localDate)
+          .map((c) => c.date),
+        nightDates: (this.calendar.get(s.employeeId) ?? [])
+          .filter(
+            (c) =>
+              c.night &&
+              !ignore.has(c.id) &&
+              c.date !== local.localDate &&
+              c.date < local.localDate &&
+              c.date >= addDays(local.localDate, -365),
+          )
+          .map((c) => c.date),
+      },
       wishes: {
         shift: this.shiftWishes.get(s.employeeId) ?? [],
         leave: this.leaveWishes.get(s.employeeId) ?? [],

@@ -68,6 +68,17 @@ export interface AdminCompany {
   company_id: number;
 }
 
+export interface ArbeitszeitkontoEntry {
+  created_at: Generated<Timestamp | null>;
+  created_by_user_id: number;
+  employee_id: number;
+  entry_date: string;
+  entry_type: string;
+  hours: Numeric;
+  id: Generated<number>;
+  note: string;
+}
+
 export interface AuditLog {
   action: string;
   actor_id: number | null;
@@ -96,10 +107,19 @@ export interface Company {
   name: string;
   pin_length: Generated<number>;
   retention_months: Generated<number>;
+  rule_profile_id: number | null;
   schedule_change_notice_days: Generated<number>;
   sick_backdate_days: Generated<number>;
   swap_approval: Generated<string>;
   team_absence_visibility: Generated<string>;
+}
+
+export interface CompanyFeature {
+  company_id: number;
+  enabled: boolean;
+  feature: string;
+  updated_at: Generated<Timestamp | null>;
+  updated_by_user_id: number | null;
 }
 
 export interface Department {
@@ -236,8 +256,18 @@ export interface Hotel {
   id: Generated<number>;
   kiosk_identification: Generated<string>;
   name: string;
+  rule_profile_id: number | null;
   timezone: Generated<string>;
   web_punch_allowed_cidrs: string[] | null;
+}
+
+export interface HourCategory {
+  active: Generated<boolean>;
+  code: string;
+  company_id: number | null;
+  id: Generated<number>;
+  name: string;
+  rule: Json;
 }
 
 export interface ImportJob {
@@ -359,6 +389,12 @@ export interface PunchRecord {
   updated_at: Generated<Timestamp | null>;
 }
 
+export interface PunchRecordCategoryMinutes {
+  category_code: string;
+  minutes: number;
+  punch_record_id: number;
+}
+
 export interface PunchRecordHistory {
   change_type: string;
   changed_by_role: string | null;
@@ -380,6 +416,16 @@ export interface RefreshToken {
   revoked_at: Timestamp | null;
   token_hash: string;
   user_id: number;
+}
+
+export interface RuleProfile {
+  company_id: number | null;
+  created_at: Generated<Timestamp | null>;
+  id: Generated<number>;
+  kind: string;
+  name: string;
+  rules: Json;
+  valid_from: Generated<string>;
 }
 
 export interface Schedule {
@@ -536,8 +582,10 @@ export interface DB {
   absence_type: AbsenceType;
   admin: Admin;
   admin_company: AdminCompany;
+  arbeitszeitkonto_entry: ArbeitszeitkontoEntry;
   audit_log: AuditLog;
   company: Company;
+  company_feature: CompanyFeature;
   department: Department;
   employee: Employee;
   employee_contract: EmployeeContract;
@@ -547,6 +595,7 @@ export interface DB {
   employee_shift_wish: EmployeeShiftWish;
   employee_vacation_allowance: EmployeeVacationAllowance;
   hotel: Hotel;
+  hour_category: HourCategory;
   import_job: ImportJob;
   kiosk_device: KioskDevice;
   manager: Manager;
@@ -555,8 +604,10 @@ export interface DB {
   payroll_period: PayrollPeriod;
   public_holiday: PublicHoliday;
   punch_record: PunchRecord;
+  punch_record_category_minutes: PunchRecordCategoryMinutes;
   punch_record_history: PunchRecordHistory;
   refresh_token: RefreshToken;
+  rule_profile: RuleProfile;
   schedule: Schedule;
   schedule_snapshot: ScheduleSnapshot;
   schema_migrations: SchemaMigrations;

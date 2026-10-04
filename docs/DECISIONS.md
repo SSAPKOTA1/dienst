@@ -72,3 +72,11 @@ One line per decision: what and why.
 - **Half day**: only annual leave on one day; allowance moves by 0.5; a half day never cancels entries (`PlanEnv` ignores half-day absences for `ABSENCE_CONFLICT`).
 - **Wishes** only warn (`WISH_CONFLICT`); declined and withdrawn wishes no longer warn. Granting is a status, not a schedule entry.
 - **Carryover** sets (not adds) the next year's carried days from the unused remainder (statutory days first) and is idempotent; expiry is a job on 1 April that only touches employees with a notice for the previous year, because without proof of information the days do not expire.
+- **Migration 006**: manual ledger lines (`arbeitszeitkonto_entry`, only `correction` and `payout`), `hour_category`, `punch_record_category_minutes` (reserved for a period-close snapshot; the export computes live), `rule_profile` (+ `company.rule_profile_id`, `hotel.rule_profile_id`), `company_feature`. The cached `arbeitszeitkonto` table is not created: the balance is always derived.
+- **Ledger granularity is monthly** because the v1 target is pro-rated per calendar month; a daily ledger would not reproduce the reference balance. Line sums may differ from the balance by rounding (< 0.05 h).
+- **System hour categories are code, not rows** so a database reset cannot remove them; company rows override by code.
+- **Break minutes are deducted from category minutes only when `break_segments` were recorded**; otherwise categories use the paid window as is.
+- **Rule profiles can only tighten** the statutory limits (also for collective agreements) because the engine must never allow less protection than the law; the daily and rest rules read the profile, minors keep their stricter floor.
+- **Rest compensation and replacement rest days are computed from the planned schedule** and reported, not blocked; the 10 h rest block and the emergency override of v1 stay as they are.
+- **`openSlots` in analytics** sums required headcount minus assigned entries per shift and day over at most 62 days.
+- **Absence "More" menu**: all seven extra types are accepted by `POST /schedule/absence`; `comp_time` additionally requires a time account.

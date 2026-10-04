@@ -25,6 +25,7 @@ import { selfRoutes } from './routes/self';
 import { exportRoutes } from './routes/exports';
 import { importRoutes } from './routes/imports';
 import { leaveRoutes } from './routes/leave';
+import { hoursRoutes } from './routes/hours';
 import { runAutoCheckout, wipeExpiredCredentials } from './jobs/autoCheckout';
 import { runVacationJobs } from './services/vacationJobs';
 import { runDailyOnce } from './jobs/daily';
@@ -180,6 +181,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       await api.register(exportRoutes);
       await api.register(importRoutes);
       await api.register(leaveRoutes);
+      await api.register(hoursRoutes);
       api.get('/health', { config: { rateLimit: false } }, async () => {
         await sql`select 1`.execute(db);
         return { status: 'ok', time: app.clock().toISOString() };

@@ -10,6 +10,8 @@ import { Kiosk } from './pages/Kiosk';
 import { Live } from './pages/Live';
 import { Requests } from './pages/Requests';
 import { MonthOverview } from './pages/MonthOverview';
+import { Compliance } from './pages/Compliance';
+import { Analytics } from './pages/Analytics';
 import { VacationRoutes } from './pages/Vacation';
 import {
   PortalAccount,
@@ -71,6 +73,8 @@ export function App() {
               <Route path="/month" element={<MonthOverview />} />
               <Route path="/vacation/*" element={<VacationRoutes />} />
               <Route path="/live" element={<Live />} />
+              <Route path="/compliance" element={<Compliance />} />
+              <Route path="/analytics" element={<Analytics />} />
               <Route path="/requests" element={<Requests />} />
               <Route path="/staff" element={<Staff />} />
               <Route path="/staff/new" element={<StaffNew />} />
