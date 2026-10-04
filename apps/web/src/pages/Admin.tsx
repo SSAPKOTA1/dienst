@@ -1025,7 +1025,8 @@ function ShiftEditor({
         <Field label={t('Beginn')}>
           <input
             className="input"
-            type="time"
+            placeholder="HH:mm"
+            maxLength={5}
             aria-label={t('Beginn')}
             value={f.startTime}
             onChange={(e) => setF({ ...f, startTime: e.target.value })}
@@ -1034,7 +1035,8 @@ function ShiftEditor({
         <Field label={t('Ende')}>
           <input
             className="input"
-            type="time"
+            placeholder="HH:mm"
+            maxLength={5}
             aria-label={t('Ende')}
             value={f.endTime}
             onChange={(e) => setF({ ...f, endTime: e.target.value })}
