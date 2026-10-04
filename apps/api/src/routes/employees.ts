@@ -6,7 +6,7 @@ import { addDays, isMinor } from '@dienst/rules';
 import { AppError, notFound } from '../lib/errors';
 import { actorOf, getPrincipal, requireRole } from '../lib/auth';
 import { audit } from '../lib/audit';
-import { generatePin, hashSecret, randomToken } from '../lib/security';
+import { generatePin, hashSecret } from '../lib/security';
 import { csvIds, idParam, isoDate, pageQuery, paged } from '../lib/http';
 import { issueInvitation, sendInvitationMail } from '../services/accounts';
 import {
@@ -17,6 +17,7 @@ import {
   weeklyTarget,
 } from '../services/employees';
 import { vacationSummary } from '../services/vacation';
+import { deactivateEmployee } from '../services/offboarding';
 import { computeTimeAccount } from '../services/timeAccount';
 import { localDate } from '../lib/time';
 import type { Db, DbOrTrx, Trx } from '../db';
@@ -648,64 +649,7 @@ export async function employeeRoutes(app: FastifyInstance) {
       const p = getPrincipal(req);
       return tx(async (trx) => {
         const { e } = await employeeView(trx, p, req.params.id);
-        // the PIN stops working immediately: replace it with a hash of a random value nobody knows
-        await trx
-          .updateTable('employee')
-          .set({ status: 'inactive', pin_hash: await hashSecret(randomToken()), updated_at: app.clock() })
-          .where('employee_id', '=', e.employee_id)
-          .execute();
-        await trx
-          .updateTable('refresh_token')
-          .set({ revoked_at: app.clock() })
-          .where('user_id', '=', e.user_id)
-          .where('active_employee_id', '=', e.employee_id)
-          .where('revoked_at', 'is', null)
-          .execute();
-        const otherEmp = await trx
-          .selectFrom('employee')
-          .select('employee_id')
-          .where('user_id', '=', e.user_id)
-          .where('status', '=', 'active')
-          .executeTakeFirst();
-        const staff =
-          (await trx
-            .selectFrom('super_admin')
-            .select('user_id')
-            .where('user_id', '=', e.user_id)
-            .executeTakeFirst()) ||
-          (await trx
-            .selectFrom('admin')
-            .select('user_id')
-            .where('user_id', '=', e.user_id)
-            .executeTakeFirst()) ||
-          (await trx
-            .selectFrom('manager')
-            .select('user_id')
-            .where('user_id', '=', e.user_id)
-            .executeTakeFirst());
-        let accountDisabled = false;
-        if (!otherEmp && !staff) {
-          await trx
-            .updateTable('user_account')
-            .set({ status: 'disabled', updated_at: app.clock() })
-            .where('id', '=', e.user_id)
-            .execute();
-          await trx
-            .updateTable('refresh_token')
-            .set({ revoked_at: app.clock() })
-            .where('user_id', '=', e.user_id)
-            .where('revoked_at', 'is', null)
-            .execute();
-          accountDisabled = true;
-        }
-        await audit(trx, actorOf(req), {
-          action: 'employee_deactivated',
-          entityType: 'employee',
-          entityId: e.employee_id,
-          companyId: e.company_id,
-          hotelId: e.primary_hotel_id,
-          new: { accountDisabled },
-        });
+        const { accountDisabled } = await deactivateEmployee(trx, e.employee_id, app.clock(), actorOf(req));
         return { status: 'inactive', accountDisabled };
       });
     },

@@ -4,6 +4,7 @@ import { fromZonedTime } from 'date-fns-tz';
 import { useGet, useSend } from '../lib/api';
 import { fdate, fnum, ftime } from '../lib/format';
 import { Dialog, ErrorNote, Field, PageHead, useToast } from '../components/ui';
+import { ClaimSection, QuestionSection, SwapSection } from './RequestsMore';
 
 const TZ = 'Europe/Berlin';
 
@@ -506,6 +507,10 @@ export function Requests() {
           </div>
         ))}
       </section>
+
+      <SwapSection hotelId={hotelId} />
+      <ClaimSection hotelId={hotelId} />
+      <QuestionSection hotelId={hotelId} />
 
       {adjust && <AdjustDialog item={adjust} onClose={() => setAdjust(null)} />}
       {reject && (

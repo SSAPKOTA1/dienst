@@ -957,7 +957,9 @@ function ShiftEditor({
     startTime: shift?.startTime ?? '06:00',
     endTime: shift?.endTime ?? '14:00',
     breakMinutes: String(shift?.breakMinutes ?? 30),
+    requiredQualificationId: String(shift?.requiredQualificationId ?? ''),
   });
+  const quals = useGet('/qualifications');
   const [wd, setWd] = useState<Record<string, string>>(
     Object.fromEntries(
       WD.map((_, i) => [String(i + 1), String(shift?.weekdayDefaults?.[String(i + 1)] ?? '')]),
@@ -975,6 +977,7 @@ function ShiftEditor({
         startTime: f.startTime,
         endTime: f.endTime,
         breakMinutes: Number(f.breakMinutes) || 0,
+        requiredQualificationId: f.requiredQualificationId ? Number(f.requiredQualificationId) : null,
       };
       const saved = shift
         ? await api(`/shifts/${shift.id}`, { method: 'PUT', body: base })
@@ -1055,6 +1058,23 @@ function ShiftEditor({
           />
         </Field>
       </div>
+      {(quals.data?.items ?? []).length > 0 && (
+        <Field label={t('Erforderliche Qualifikation')} htmlFor="sh-qual">
+          <select
+            id="sh-qual"
+            className="input"
+            value={f.requiredQualificationId}
+            onChange={(e) => setF({ ...f, requiredQualificationId: e.target.value })}
+          >
+            <option value="">{t('Keine')}</option>
+            {quals.data.items.map((q: any) => (
+              <option key={q.id} value={q.id}>
+                {q.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
       <div>
         <div style={{ fontSize: 12, marginBottom: 4 }}>{t('Mindestbesetzung pro Wochentag')}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4 }}>

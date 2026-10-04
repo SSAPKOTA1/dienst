@@ -50,3 +50,16 @@ export function decryptSecret(buf: Buffer, keyHex: string): string {
   d.setAuthTag(buf.subarray(12, 28));
   return Buffer.concat([d.update(buf.subarray(28)), d.final()]).toString('utf8');
 }
+
+/** AES-256-GCM for binary data (documents): iv(12) | tag(16) | ciphertext. */
+export function encryptBytes(plain: Buffer, keyHex: string): Buffer {
+  const iv = randomBytes(12);
+  const c = createCipheriv('aes-256-gcm', Buffer.from(keyHex, 'hex'), iv);
+  const enc = Buffer.concat([c.update(plain), c.final()]);
+  return Buffer.concat([iv, c.getAuthTag(), enc]);
+}
+export function decryptBytes(buf: Buffer, keyHex: string): Buffer {
+  const d = createDecipheriv('aes-256-gcm', Buffer.from(keyHex, 'hex'), buf.subarray(0, 12));
+  d.setAuthTag(buf.subarray(12, 28));
+  return Buffer.concat([d.update(buf.subarray(28)), d.final()]);
+}

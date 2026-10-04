@@ -46,3 +46,12 @@ export async function drag(page: Page, from: ReturnType<Page['locator']>, to: Re
   await page.waitForTimeout(600); // let the dry-run validation colour the target
   await page.mouse.up();
 }
+
+/** Access token for API calls from a test (users with one role get the token right away). */
+export async function apiToken(request: import('@playwright/test').APIRequestContext, loginName: string, role: string, employeeId?: number) {
+  const r = await request.post('http://localhost:3000/api/v1/auth/login', { data: { login: loginName, password: PASSWORD } });
+  const b = await r.json();
+  if (b.accessToken) return b.accessToken as string;
+  const s = await request.post('http://localhost:3000/api/v1/auth/select-role', { headers: { authorization: `Bearer ${b.preToken}` }, data: { role, employeeId } });
+  return (await s.json()).accessToken as string;
+}

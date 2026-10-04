@@ -80,3 +80,13 @@ One line per decision: what and why.
 - **Rest compensation and replacement rest days are computed from the planned schedule** and reported, not blocked; the 10 h rest block and the emergency override of v1 stay as they are.
 - **`openSlots` in analytics** sums required headcount minus assigned entries per shift and day over at most 62 days.
 - **Absence "More" menu**: all seven extra types are accepted by `POST /schedule/absence`; `comp_time` additionally requires a time account.
+- **Migration 007**: swaps, open shifts, qualifications (+ `shift.required_qualification_id`), availability, documents (`content_enc`, `mime`, `file_name`, `size_bytes` added to the reference table), announcements, questions, feed, calendar feed, `employee.terminated_at/termination_reason`.
+- **Planning operations are shared** (`services/planning/run.ts`): swaps, open-shift approvals and the auto-approval run the same `update`, `swap` and `create` operations as the planner UI, so every rule check, notification and audit row stays identical. The auto-approval uses a company-wide system planner identity and is never exposed to clients.
+- **Swap eligibility**: blocking violations refuse a request; `needs_reason` and warnings go to the approving planner, who can approve with an override reason.
+- **Open shift approval creates a draft entry** (the planner publishes as usual) and notifies the employee at once.
+- **Manager scope by department (`manager_department`) is not built**: it would change the one scope layer and every query; managers keep hotel scope.
+- **Employee documents** are limited to the six non-health types; a diagnosis or sick note type is deliberately not offered. Files are identified by their content, not the file name.
+- **Feed and announcements are plain text**; there is no HTML or link rendering, so nothing can inject markup.
+- **Offboarding does not anonymise** employee data: retention (`company.retention_months`) and anonymisation jobs remain a policy decision; the exit statement and the deactivation are built.
+- **Calendar feed**: the ICS shows shifts and "Abwesend" days only (never types or reasons) and refuses inactive employees or a disabled feature.
+- **Notification reminders** (qualification, document, contract end) use a payload key per subject and threshold so a repeat run never duplicates them.

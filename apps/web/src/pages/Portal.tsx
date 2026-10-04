@@ -8,6 +8,7 @@ import { fdate, fnum, fsigned, ftime } from '../lib/format';
 import { Dialog, ErrorNote, Field, useToast } from '../components/ui';
 import { AccountMenu } from '../components/Shell';
 import { LedgerTable } from '../components/Ledger';
+import { PortalExtras } from './PortalExtras';
 import { LangSwitch } from '../components/LangSwitch';
 import { addDaysIso, mondayOfIso, todayIso, weekRangeLabel } from './planning/util';
 
@@ -17,6 +18,7 @@ const TABS = [
   ['/me/schedule', 'Dienstplan', false],
   ['/me/attendance', 'Zeiten', false],
   ['/me/vacation', 'Urlaub', false],
+  ['/me/team', 'Team', false],
   ['/me/account', 'Konto', false],
 ] as const;
 
@@ -55,7 +57,7 @@ export function PortalShell() {
           left: 0,
           right: 0,
           display: 'grid',
-          gridTemplateColumns: 'repeat(5,1fr)',
+          gridTemplateColumns: 'repeat(6,1fr)',
           background: 'var(--color-bg)',
           borderTop: '2px solid var(--color-text)',
           zIndex: 10,
@@ -136,6 +138,22 @@ const NOTE_TEXT = (n: any, t: (s: string) => string): string => {
           : `${t('Deine Zeit wurde')} ${verdict}`;
     case 'auto_checkout':
       return t('Du wurdest automatisch ausgestempelt');
+    case 'swap_offered':
+      return t('Dir wurde eine Schicht zum Tausch angeboten');
+    case 'swap_accepted':
+      return t('Dein Tauschangebot wurde angenommen');
+    case 'swap_declined':
+      return t('Dein Tauschangebot wurde abgelehnt');
+    case 'swap_decision':
+      return `${t('Dein Schichttausch wurde')} ${p.decision === 'approved' ? t('genehmigt') : t('abgelehnt')}`;
+    case 'swap_expired':
+      return t('Dein Tauschangebot ist abgelaufen');
+    case 'open_shift_decision':
+      return `${t('Deine Bewerbung auf eine offene Schicht wurde')} ${p.decision === 'approved' ? t('angenommen') : t('abgelehnt')}`;
+    case 'announcement':
+      return `${t('Neue Mitteilung')}: ${p.title ?? ''}`;
+    case 'question_answered':
+      return t('Die Leitung hat deine Frage beantwortet');
     case 'wish_decision':
       return `${t('Dein Wunsch wurde')} ${p.decision === 'granted' ? t('erfüllt') : t('abgelehnt')}`;
     case 'vacation_notice':
@@ -249,6 +267,7 @@ export function PortalSchedule() {
   const [week, setWeek] = useState(() => mondayOfIso(todayIso()));
   const to = addDaysIso(week, 6);
   const s = useGet('/me/schedule', { from: week, to });
+  const [swap, setSwap] = useState<any | null>(null);
   const days = Array.from({ length: 7 }, (_, i) => addDaysIso(week, i));
   const today = todayIso();
   return (
@@ -296,6 +315,11 @@ export function PortalSchedule() {
                     <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>
                       {e.shiftName ?? ''} · {e.hotelName} · {fnum(e.hours)} h
                     </span>
+                    {new Date(e.start) > new Date() && (
+                      <button className="btn btn-ghost" data-testid="swap-btn" onClick={() => setSwap(e)}>
+                        {t('Tauschen')}
+                      </button>
+                    )}
                   </div>
                 ))}
                 {abs.map((a: any) => (
@@ -312,7 +336,131 @@ export function PortalSchedule() {
           );
         })}
       </section>
+      {swap && (
+        <SwapDialog
+          entry={swap}
+          onClose={() => setSwap(null)}
+          onDone={() => {
+            setSwap(null);
+            void s.refetch();
+          }}
+        />
+      )}
     </main>
+  );
+}
+
+function SwapDialog({ entry, onClose, onDone }: { entry: any; onClose: () => void; onDone: () => void }) {
+  const { t } = useTranslation();
+  const toast = useToast();
+  const [mode, setMode] = useState<'anyone' | 'colleague'>('anyone');
+  const [colleague, setColleague] = useState('');
+  const [theirs, setTheirs] = useState('');
+  const [reason, setReason] = useState('');
+  const colleagues = useGet('/me/colleagues');
+  const shifts = useGet(colleague ? `/me/colleagues/${colleague}/shifts` : null);
+  const send = useSend<any>('POST', '/me/swap-requests');
+  return (
+    <Dialog
+      title={t('Schicht tauschen oder abgeben')}
+      onClose={onClose}
+      actions={
+        <>
+          <button
+            className="btn btn-primary"
+            disabled={send.isPending || (mode === 'colleague' && !colleague)}
+            data-testid="swap-send"
+            onClick={() =>
+              send.mutate(
+                {
+                  scheduleId: entry.id,
+                  reason: reason || undefined,
+                  ...(mode === 'colleague'
+                    ? {
+                        counterpartEmployeeId: Number(colleague),
+                        counterpartScheduleId: theirs ? Number(theirs) : undefined,
+                      }
+                    : {}),
+                },
+                {
+                  onSuccess: () => {
+                    toast(t('Anfrage gesendet'));
+                    onDone();
+                  },
+                },
+              )
+            }
+          >
+            {t('Anfrage senden')}
+          </button>
+          <button className="btn btn-secondary" onClick={onClose}>
+            {t('Abbrechen')}
+          </button>
+        </>
+      }
+    >
+      <p style={{ margin: 0, fontSize: 13 }}>
+        {dayLabel(entry.date)} {ftime(entry.start, TZ)}–{ftime(entry.end, TZ)} {entry.shiftName ?? ''}
+      </p>
+      <Field label={t('An wen?')} htmlFor="sw-mode">
+        <select id="sw-mode" className="input" value={mode} onChange={(e) => setMode(e.target.value as any)}>
+          <option value="anyone">{t('An alle geeigneten Kolleginnen und Kollegen')}</option>
+          <option value="colleague">{t('An eine bestimmte Person')}</option>
+        </select>
+      </Field>
+      {mode === 'colleague' && (
+        <>
+          <Field label={t('Person')} htmlFor="sw-col">
+            <select
+              id="sw-col"
+              className="input"
+              value={colleague}
+              onChange={(e) => {
+                setColleague(e.target.value);
+                setTheirs('');
+              }}
+            >
+              <option value="">–</option>
+              {(colleagues.data?.items ?? []).map((c: any) => (
+                <option key={c.employeeId} value={c.employeeId}>
+                  {c.displayName} · {c.departmentName}
+                </option>
+              ))}
+            </select>
+          </Field>
+          {colleague && (
+            <Field label={t('Dafür deren Schicht übernehmen (optional)')} htmlFor="sw-theirs">
+              <select
+                id="sw-theirs"
+                className="input"
+                value={theirs}
+                onChange={(e) => setTheirs(e.target.value)}
+              >
+                <option value="">{t('Keine, nur abgeben')}</option>
+                {(shifts.data?.items ?? []).map((x: any) => (
+                  <option key={x.id} value={x.id}>
+                    {dayLabel(x.date)} {ftime(x.start, TZ)}–{ftime(x.end, TZ)} {x.shiftName ?? ''}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
+        </>
+      )}
+      <Field label={t('Grund (optional)')} htmlFor="sw-reason">
+        <input
+          id="sw-reason"
+          className="input"
+          maxLength={300}
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+        />
+      </Field>
+      <p style={{ margin: 0, fontSize: 12 }}>
+        {t('Die Leitung muss den Tausch freigeben, falls dies nicht automatisch geschieht.')}
+      </p>
+      <ErrorNote error={send.error} />
+    </Dialog>
   );
 }
 const ABS: Record<string, string> = {
@@ -864,6 +1012,7 @@ export function PortalAccount() {
           {t('Es werden nur freigegebene Zeiten ausgewiesen.')}
         </div>
       </section>
+      <PortalExtras />
       <section style={card}>
         <h2 style={cardHead}>{t('Profil')}</h2>
         <div style={line}>{me?.displayName}</div>

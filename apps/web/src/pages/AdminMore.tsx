@@ -3,7 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { api, download, useGet, useSend } from '../lib/api';
 import { fdate, fdatetime } from '../lib/format';
 import { Dialog, ErrorNote, Field, useToast } from '../components/ui';
-import { FeatureToggles, HourCategories, PayrollExport, RuleLimitsEditor } from './AdminRulesEditor';
+import {
+  FeatureToggles,
+  HourCategories,
+  PayrollExport,
+  QualificationManager,
+  RuleLimitsEditor,
+  TeamVisibility,
+} from './AdminRulesEditor';
 
 const wrap: React.CSSProperties = {
   padding: 'var(--space-4)',
@@ -228,6 +235,8 @@ export function AdminRules() {
       <RuleLimitsEditor />
       <HourCategories />
       <FeatureToggles />
+      <TeamVisibility />
+      <QualificationManager />
       <section aria-label={t('Planungsregeln')} style={{ border: '2px solid var(--color-text)' }}>
         <table className="table">
           <thead>

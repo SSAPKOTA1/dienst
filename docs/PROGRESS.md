@@ -61,3 +61,7 @@
 ## M11 Hours (backlog) - done
 - Ledger and comp time, hour categories, payroll export (hours only), rule profiles (stricter only) with Sunday/night/rest-compensation/replacement-rest compliance, feature toggles, analytics; UI: Compliance, Auswertung, editable Regeln, ledger, payroll export.
 - Tests: hours (9), rules hours (12), +18 matrix rows, e2e hours (2).
+
+## M12 Collaboration (backlog) - done
+- Swaps and giveaways with rule checks and auto-approval option, open shifts, availability and qualification rules, encrypted documents, offboarding with exit statement, announcements with read confirmation, questions to management, hotel feed, ICS subscription, team absences; portal tab Team and planner pages.
+- Tests: swaps (8), people (7), comms (6), rules +; matrix rows; e2e collab (4).

@@ -179,7 +179,7 @@ export async function approvalRoutes(app: FastifyInstance) {
   r.get('/approvals/count', { preValidation: planners }, async (req) => {
     const p = getPrincipal(req);
     const hotelIds = p.scope.hotelIds;
-    if (!hotelIds.length) return { total: 0, workedTime: 0, corrections: 0, absences: 0 };
+    if (!hotelIds.length) return { total: 0, workedTime: 0, corrections: 0, absences: 0, questions: 0 };
     const w = await db
       .selectFrom('punch_record')
       .select((eb) => eb.fn.countAll<string>().as('n'))
@@ -202,10 +202,23 @@ export async function approvalRoutes(app: FastifyInstance) {
       .whereRef('t.created_by_user_id', '=', 'e.user_id')
       .where('e.primary_hotel_id', 'in', hotelIds)
       .executeTakeFirstOrThrow();
+    const qs = await db
+      .selectFrom('management_question')
+      .select((eb) => eb.fn.countAll<string>().as('n'))
+      .where('hotel_id', 'in', hotelIds)
+      .where('status', '=', 'open')
+      .executeTakeFirstOrThrow();
+    const questions = Number(qs.n);
     const workedTime = Number(w.n);
     const corrections = Number(c.n);
     const absences = Number(a.n);
-    return { total: workedTime + corrections + absences, workedTime, corrections, absences };
+    return {
+      total: workedTime + corrections + absences + questions,
+      workedTime,
+      corrections,
+      absences,
+      questions,
+    };
   });
 
   const decision = z.object({ decision: z.enum(['approve', 'reject']) });

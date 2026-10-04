@@ -3,12 +3,11 @@
  * Please do not edit it manually.
  */
 
-import type { ColumnType } from 'kysely';
+import type { ColumnType } from "kysely";
 
-export type Generated<T> =
-  T extends ColumnType<infer S, infer I, infer U>
-    ? ColumnType<S, I | undefined, U>
-    : ColumnType<T, T | undefined, T>;
+export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
+  ? ColumnType<S, I | undefined, U>
+  : ColumnType<T, T | undefined, T>;
 
 export type Int8 = ColumnType<string, bigint | number | string, bigint | number | string>;
 
@@ -68,6 +67,25 @@ export interface AdminCompany {
   company_id: number;
 }
 
+export interface Announcement {
+  body: string;
+  company_id: number;
+  created_at: Generated<Timestamp | null>;
+  created_by_user_id: number;
+  hotel_id: number | null;
+  id: Generated<number>;
+  pinned: Generated<boolean>;
+  publish_at: Generated<Timestamp>;
+  requires_ack: Generated<boolean>;
+  title: string;
+}
+
+export interface AnnouncementAck {
+  acknowledged_at: Generated<Timestamp>;
+  announcement_id: number;
+  employee_id: number;
+}
+
 export interface ArbeitszeitkontoEntry {
   created_at: Generated<Timestamp | null>;
   created_by_user_id: number;
@@ -96,6 +114,14 @@ export interface AuditLog {
   reason: string | null;
   status: string | null;
   user_agent: string | null;
+}
+
+export interface CalendarFeed {
+  created_at: Generated<Timestamp | null>;
+  employee_id: number;
+  id: Generated<number>;
+  revoked_at: Timestamp | null;
+  token_hash: string;
 }
 
 export interface Company {
@@ -156,9 +182,23 @@ export interface Employee {
   primary_department_id: number;
   primary_hotel_id: number;
   status: Generated<string>;
+  terminated_at: Timestamp | null;
+  termination_reason: string | null;
   updated_at: Generated<Timestamp | null>;
   user_id: number;
   work_time_protection: Generated<string>;
+}
+
+export interface EmployeeAvailability {
+  employee_id: number;
+  from_time: string;
+  id: Generated<number>;
+  kind: string;
+  note: string | null;
+  to_time: string;
+  valid_from: Generated<string>;
+  valid_to: string | null;
+  weekday: number;
 }
 
 export interface EmployeeContract {
@@ -189,6 +229,22 @@ export interface EmployeeDepartment {
   employee_id: number;
 }
 
+export interface EmployeeDocument {
+  content_enc: Buffer;
+  created_at: Generated<Timestamp | null>;
+  doc_type: string;
+  employee_id: number;
+  file_name: string;
+  file_ref: Generated<string>;
+  id: Generated<number>;
+  mime: string;
+  size_bytes: number;
+  title: string;
+  uploaded_by_user_id: number;
+  valid_until: string | null;
+  visible_to_employee: Generated<boolean>;
+}
+
 export interface EmployeeHotel {
   employee_id: number;
   hotel_id: number;
@@ -210,6 +266,12 @@ export interface EmployeeLeaveWish {
   start_date: string;
   status: Generated<string>;
   updated_at: Generated<Timestamp | null>;
+}
+
+export interface EmployeeQualification {
+  employee_id: number;
+  qualification_id: number;
+  valid_until: string | null;
 }
 
 export interface EmployeeShiftWish {
@@ -243,6 +305,31 @@ export interface EmployeeVacationAllowance {
   used_days: Generated<Numeric>;
   vacation_days_total: Numeric;
   year: number;
+}
+
+export interface FeedComment {
+  author_name: string;
+  author_user_id: number;
+  body: string;
+  created_at: Generated<Timestamp | null>;
+  deleted_at: Timestamp | null;
+  id: Generated<number>;
+  post_id: number;
+}
+
+export interface FeedLike {
+  post_id: number;
+  user_id: number;
+}
+
+export interface FeedPost {
+  author_name: string;
+  author_user_id: number;
+  body: string;
+  created_at: Generated<Timestamp | null>;
+  deleted_at: Timestamp | null;
+  hotel_id: number;
+  id: Generated<number>;
 }
 
 export interface Hotel {
@@ -304,6 +391,19 @@ export interface KioskDevice {
   token_hash: string;
 }
 
+export interface ManagementQuestion {
+  answer: string | null;
+  answered_at: Timestamp | null;
+  answered_by_user_id: number | null;
+  body: string;
+  created_at: Generated<Timestamp | null>;
+  employee_id: number;
+  hotel_id: number;
+  id: Generated<number>;
+  status: Generated<string>;
+  subject: string;
+}
+
 export interface Manager {
   created_at: Generated<Timestamp | null>;
   created_by_id: number | null;
@@ -327,6 +427,31 @@ export interface Notification {
   payload: Json | null;
   read_at: Timestamp | null;
   user_id: number;
+}
+
+export interface OpenShift {
+  created_at: Generated<Timestamp | null>;
+  created_by_role: string;
+  created_by_user_id: number;
+  department_id: number;
+  filled_schedule_id: number | null;
+  hotel_id: number;
+  id: Generated<number>;
+  planned_break_minutes: Generated<number>;
+  planned_end: Timestamp;
+  planned_start: Timestamp;
+  shift_date: string;
+  shift_id: number | null;
+  status: Generated<string>;
+}
+
+export interface OpenShiftClaim {
+  created_at: Generated<Timestamp | null>;
+  decided_by_user_id: number | null;
+  employee_id: number;
+  id: Generated<number>;
+  open_shift_id: number;
+  status: Generated<string>;
 }
 
 export interface PayrollPeriod {
@@ -407,6 +532,13 @@ export interface PunchRecordHistory {
   reason: string | null;
 }
 
+export interface Qualification {
+  company_id: number;
+  has_expiry: Generated<boolean>;
+  id: Generated<number>;
+  name: string;
+}
+
 export interface RefreshToken {
   active_employee_id: number | null;
   active_role: string;
@@ -470,6 +602,7 @@ export interface Shift {
   hotel_id: number;
   id: Generated<number>;
   name: string;
+  required_qualification_id: number | null;
   start_time: string;
 }
 
@@ -479,6 +612,23 @@ export interface ShiftStaffingRequirement {
   required_headcount: number;
   shift_id: number;
   weekday: number | null;
+}
+
+export interface ShiftSwapRequest {
+  counterpart_employee_id: number | null;
+  counterpart_schedule_id: number | null;
+  created_at: Generated<Timestamp | null>;
+  decided_at: Timestamp | null;
+  decided_by_role: string | null;
+  decided_by_user_id: number | null;
+  decision_note: string | null;
+  expires_at: Timestamp;
+  hotel_id: number;
+  id: Generated<number>;
+  reason: string | null;
+  requester_employee_id: number;
+  schedule_id: number;
+  status: Generated<string>;
 }
 
 export interface SuperAdmin {
@@ -582,30 +732,43 @@ export interface DB {
   absence_type: AbsenceType;
   admin: Admin;
   admin_company: AdminCompany;
+  announcement: Announcement;
+  announcement_ack: AnnouncementAck;
   arbeitszeitkonto_entry: ArbeitszeitkontoEntry;
   audit_log: AuditLog;
+  calendar_feed: CalendarFeed;
   company: Company;
   company_feature: CompanyFeature;
   department: Department;
   employee: Employee;
+  employee_availability: EmployeeAvailability;
   employee_contract: EmployeeContract;
   employee_department: EmployeeDepartment;
+  employee_document: EmployeeDocument;
   employee_hotel: EmployeeHotel;
   employee_leave_wish: EmployeeLeaveWish;
+  employee_qualification: EmployeeQualification;
   employee_shift_wish: EmployeeShiftWish;
   employee_vacation_allowance: EmployeeVacationAllowance;
+  feed_comment: FeedComment;
+  feed_like: FeedLike;
+  feed_post: FeedPost;
   hotel: Hotel;
   hour_category: HourCategory;
   import_job: ImportJob;
   kiosk_device: KioskDevice;
+  management_question: ManagementQuestion;
   manager: Manager;
   manager_hotel: ManagerHotel;
   notification: Notification;
+  open_shift: OpenShift;
+  open_shift_claim: OpenShiftClaim;
   payroll_period: PayrollPeriod;
   public_holiday: PublicHoliday;
   punch_record: PunchRecord;
   punch_record_category_minutes: PunchRecordCategoryMinutes;
   punch_record_history: PunchRecordHistory;
+  qualification: Qualification;
   refresh_token: RefreshToken;
   rule_profile: RuleProfile;
   schedule: Schedule;
@@ -613,6 +776,7 @@ export interface DB {
   schema_migrations: SchemaMigrations;
   shift: Shift;
   shift_staffing_requirement: ShiftStaffingRequirement;
+  shift_swap_request: ShiftSwapRequest;
   super_admin: SuperAdmin;
   time_correction_request: TimeCorrectionRequest;
   time_off: TimeOff;

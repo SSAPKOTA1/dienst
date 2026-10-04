@@ -399,3 +399,126 @@ export function PayrollExport() {
     </section>
   );
 }
+
+// ---------------------------------------------------------------- qualifications and team visibility
+export function QualificationManager() {
+  const { t } = useTranslation();
+  const { me } = useAuth();
+  const list = useGet('/qualifications');
+  const [name, setName] = useState('');
+  const [expiry, setExpiry] = useState(false);
+  const add = useSend<any>('POST', '/qualifications');
+  const del = useSend<number>('DELETE', (id) => `/qualifications/${id}`);
+  const admin = me?.role !== 'manager';
+  return (
+    <section style={box} aria-labelledby="qm-h">
+      <h3 id="qm-h" style={head}>
+        {t('Qualifikationen')}
+      </h3>
+      {(list.data?.items ?? []).map((q: any) => (
+        <div
+          key={q.id}
+          style={{
+            display: 'flex',
+            gap: 8,
+            alignItems: 'center',
+            padding: 'var(--space-2) var(--space-4)',
+            borderBottom: '1px solid var(--color-divider)',
+          }}
+          data-testid="qual-row"
+        >
+          <b style={{ marginRight: 'auto' }}>{q.name}</b>
+          {q.hasExpiry && <span className="tag tag-neutral">{t('mit Ablaufdatum')}</span>}
+          {admin && (
+            <button
+              className="btn btn-ghost"
+              onClick={() => del.mutate(q.id, { onSuccess: () => void list.refetch() })}
+            >
+              {t('Löschen')}
+            </button>
+          )}
+        </div>
+      ))}
+      {admin && (
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            padding: 'var(--space-2) var(--space-4)',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+          }}
+        >
+          <input
+            className="input"
+            style={{ width: 220 }}
+            aria-label={t('Name')}
+            placeholder={t('z. B. Ersthelfer')}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            data-testid="qual-name"
+          />
+          <label style={{ fontSize: 13, display: 'flex', gap: 6 }}>
+            <input type="checkbox" checked={expiry} onChange={(e) => setExpiry(e.target.checked)} />{' '}
+            {t('läuft ab')}
+          </label>
+          <button
+            className="btn btn-secondary"
+            disabled={!name.trim()}
+            data-testid="qual-add"
+            onClick={() =>
+              add.mutate(
+                { name, hasExpiry: expiry },
+                {
+                  onSuccess: () => {
+                    setName('');
+                    void list.refetch();
+                  },
+                },
+              )
+            }
+          >
+            {t('Hinzufügen')}
+          </button>
+          <ErrorNote error={add.error ?? del.error} />
+        </div>
+      )}
+    </section>
+  );
+}
+
+export function TeamVisibility() {
+  const { t } = useTranslation();
+  const { me } = useAuth();
+  const toast = useToast();
+  const set = useSend<{ value: string }>('PUT', '/settings/team-visibility');
+  if (me?.role === 'manager') return null;
+  return (
+    <section
+      style={{
+        ...box,
+        padding: 'var(--space-3) var(--space-4)',
+        display: 'flex',
+        gap: 'var(--space-3)',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+      }}
+    >
+      <span style={{ marginRight: 'auto', fontWeight: 700 }}>
+        {t('Abwesenheiten im Team sichtbar (nur Namen)')}
+      </span>
+      <button
+        className="btn btn-secondary"
+        onClick={() => set.mutate({ value: 'names_only' }, { onSuccess: () => toast(t('Gespeichert.')) })}
+      >
+        {t('Einschalten')}
+      </button>
+      <button
+        className="btn btn-secondary"
+        onClick={() => set.mutate({ value: 'none' }, { onSuccess: () => toast(t('Gespeichert.')) })}
+      >
+        {t('Ausschalten')}
+      </button>
+    </section>
+  );
+}

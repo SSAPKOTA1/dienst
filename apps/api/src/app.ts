@@ -26,9 +26,13 @@ import { exportRoutes } from './routes/exports';
 import { importRoutes } from './routes/imports';
 import { leaveRoutes } from './routes/leave';
 import { hoursRoutes } from './routes/hours';
-import { runAutoCheckout, wipeExpiredCredentials } from './jobs/autoCheckout';
+import { swapRoutes } from './routes/swaps';
+import { peopleRoutes } from './routes/people';
+import { commsRoutes } from './routes/comms';
+import { expireSwaps, runAutoCheckout, wipeExpiredCredentials } from './jobs/autoCheckout';
 import { runVacationJobs } from './services/vacationJobs';
 import { runDailyOnce } from './jobs/daily';
+import { runOffboarding, runReminders } from './services/reminders';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -95,8 +99,11 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       () =>
         void Promise.all([
           runDailyOnce('vacation', app.clock(), (n) => runVacationJobs(db, n)),
+          runDailyOnce('reminders', app.clock(), (n) => runReminders(db, n)),
+          runDailyOnce('offboarding', app.clock(), (n) => runOffboarding(db, n)),
           runAutoCheckout(db, app.clock()),
           wipeExpiredCredentials(db, app.clock()),
+          expireSwaps(db, app.clock()),
         ]).catch((e) => app.log.error({ err: (e as Error).message }, 'background job failed')),
       60_000,
     );
@@ -182,6 +189,9 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       await api.register(importRoutes);
       await api.register(leaveRoutes);
       await api.register(hoursRoutes);
+      await api.register(swapRoutes);
+      await api.register(peopleRoutes);
+      await api.register(commsRoutes);
       api.get('/health', { config: { rateLimit: false } }, async () => {
         await sql`select 1`.execute(db);
         return { status: 'ok', time: app.clock().toISOString() };

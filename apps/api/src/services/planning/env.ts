@@ -5,6 +5,7 @@ import {
   displayName,
   mondayOf,
   workingMinutes,
+  type AvailabilityRule,
   type LeaveWishRule,
   type RuleLimits,
   isNightWork,
@@ -99,6 +100,10 @@ export class PlanEnv {
   leaveWishes = new Map<number, LeaveWishRule[]>();
   /** limits of the rule profile per hotel (hotel profile, else company profile, else statutory defaults) */
   limits = new Map<number, Partial<RuleLimits>>();
+  availability = new Map<number, AvailabilityRule[]>();
+  qualifications = new Map<number, Array<{ id: number; validUntil: string | null }>>();
+  /** qualification required per shift id (only shifts that require one) */
+  shiftQualification = new Map<number, number>();
   /** compact year history per employee for the Sunday and night statistics */
   calendar = new Map<number, Array<{ id: number; date: string; sunday: boolean; night: boolean }>>();
 
@@ -240,6 +245,45 @@ export class PlanEnv {
           { from: w.start_date, to: w.end_date, priority: w.priority },
         ]);
     }
+    if (ids.length) {
+      const av = await db
+        .selectFrom('employee_availability')
+        .selectAll()
+        .where('employee_id', 'in', ids)
+        .where('valid_from', '<=', to)
+        .where((eb) => eb.or([eb('valid_to', 'is', null), eb('valid_to', '>=', from)]))
+        .execute();
+      const mins = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+      for (const a of av)
+        env.availability.set(a.employee_id, [
+          ...(env.availability.get(a.employee_id) ?? []),
+          {
+            weekday: a.weekday,
+            fromMin: mins(String(a.from_time)),
+            toMin: mins(String(a.to_time)),
+            kind: a.kind as 'unavailable' | 'preferred',
+            validFrom: a.valid_from,
+            validTo: a.valid_to,
+            note: a.note,
+          },
+        ]);
+      const q = await db
+        .selectFrom('employee_qualification')
+        .selectAll()
+        .where('employee_id', 'in', ids)
+        .execute();
+      for (const x of q)
+        env.qualifications.set(x.employee_id, [
+          ...(env.qualifications.get(x.employee_id) ?? []),
+          { id: x.qualification_id, validUntil: x.valid_until },
+        ]);
+    }
+    const sq = await db
+      .selectFrom('shift')
+      .select(['id', 'required_qualification_id'])
+      .where('required_qualification_id', 'is not', null)
+      .execute();
+    for (const x of sq) env.shiftQualification.set(x.id, x.required_qualification_id!);
     const profiles = await db
       .selectFrom('hotel as h')
       .innerJoin('company as c', 'c.id', 'h.company_id')
@@ -392,6 +436,11 @@ export class PlanEnv {
       absenceOnDay: this.absentOn(s.employeeId, local.localDate),
       periodClosed: this.isClosed(s.hotelId, local.localDate),
       today: localDate(this.now, hotel.tz),
+      availability: this.availability.get(s.employeeId) ?? [],
+      qualification: {
+        requiredId: s.shiftId ? (this.shiftQualification.get(s.shiftId) ?? null) : null,
+        held: this.qualifications.get(s.employeeId) ?? [],
+      },
       limits: this.limits.get(s.hotelId),
       calendar: {
         sundayDates: (this.calendar.get(s.employeeId) ?? [])

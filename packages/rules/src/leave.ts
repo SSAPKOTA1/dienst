@@ -108,3 +108,68 @@ export function wishConflicts(
     });
   return out;
 }
+
+// ---------------------------------------------------------------- availability and qualifications (backlog M12)
+export interface AvailabilityRule {
+  /** 1 = Monday ... 7 = Sunday */
+  weekday: number;
+  /** minutes since midnight */
+  fromMin: number;
+  toMin: number;
+  kind: 'unavailable' | 'preferred';
+  validFrom: string;
+  validTo: string | null;
+  note?: string | null;
+}
+
+const isoWd = (iso: string): number => {
+  const d = new Date(`${iso}T00:00:00Z`).getUTCDay();
+  return d === 0 ? 7 : d;
+};
+const nextDay = (iso: string): string =>
+  new Date(Date.parse(`${iso}T00:00:00Z`) + 86400000).toISOString().slice(0, 10);
+
+/** Entries that run into a window of "cannot work" need a reason (`UNAVAILABLE`). A window past midnight is checked on the next day too. */
+export function availabilityConflicts(
+  entry: { localDate: string; startLocalMin: number; endLocalMin: number },
+  windows: AvailabilityRule[],
+): Violation[] {
+  const pieces: Array<{ date: string; from: number; to: number }> = [
+    { date: entry.localDate, from: entry.startLocalMin, to: Math.min(entry.endLocalMin, 1440) },
+  ];
+  if (entry.endLocalMin > 1440)
+    pieces.push({ date: nextDay(entry.localDate), from: 0, to: entry.endLocalMin - 1440 });
+  const out: Violation[] = [];
+  for (const p of pieces)
+    for (const w of windows) {
+      if (w.kind !== 'unavailable' || w.weekday !== isoWd(p.date)) continue;
+      if (w.validFrom > p.date || (w.validTo != null && w.validTo < p.date)) continue;
+      if (Math.min(p.to, w.toMin) - Math.max(p.from, w.fromMin) <= 0) continue;
+      out.push({
+        code: 'UNAVAILABLE',
+        severity: 'needs_reason',
+        message: 'The employee marked this time as unavailable',
+        details: { date: p.date, from: w.fromMin, to: w.toMin, note: w.note ?? null },
+      });
+    }
+  return out;
+}
+
+/** A shift may require a qualification; a missing or expired one is a warning. */
+export function qualificationIssue(
+  requiredId: number | null | undefined,
+  held: Array<{ id: number; validUntil: string | null }>,
+  onDate: string,
+): Violation[] {
+  if (!requiredId) return [];
+  const q = held.find((h) => h.id === requiredId);
+  if (q && (q.validUntil == null || q.validUntil >= onDate)) return [];
+  return [
+    {
+      code: 'QUALIFICATION_MISSING',
+      severity: 'warn',
+      message: q ? 'The qualification has expired' : 'The employee lacks the required qualification',
+      details: { qualificationId: requiredId, expired: !!q, validUntil: q?.validUntil ?? null },
+    },
+  ];
+}

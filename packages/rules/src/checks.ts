@@ -3,7 +3,14 @@ import { isoWeekday } from './basics';
 import { DEFAULT_LIMITS, type RuleLimits } from './profile';
 import { isNightWork, sundaysInYear } from './hours';
 import { ageOn, overlapsNightWindow } from './minors';
-import { wishConflicts, type LeaveWishRule, type ShiftWishRule } from './leave';
+import {
+  availabilityConflicts,
+  qualificationIssue,
+  wishConflicts,
+  type AvailabilityRule,
+  type LeaveWishRule,
+  type ShiftWishRule,
+} from './leave';
 
 export type Severity = 'block' | 'needs_reason' | 'warn';
 
@@ -48,6 +55,10 @@ export interface CheckInput {
   today: string;
   /** open or granted wishes of the employee (backlog); optional so the v1 vectors stay unchanged */
   wishes?: { shift: ShiftWishRule[]; leave: LeaveWishRule[] };
+  /** recurring windows of the employee (backlog) */
+  availability?: AvailabilityRule[];
+  /** qualification required by the shift and the ones the employee holds (backlog) */
+  qualification?: { requiredId: number | null; held: Array<{ id: number; validUntil: string | null }> };
   /** limits of the company / hotel rule profile (stricter than the statutory defaults only) */
   limits?: Partial<RuleLimits>;
   /** Sunday and night statistics of the employee from all other entries (backlog) */
@@ -190,6 +201,14 @@ export function checkEntry(i: CheckInput): Violation[] {
         );
     }
   }
+  if (i.availability)
+    for (const w of availabilityConflicts(
+      { localDate: e.localDate, startLocalMin: e.startLocalMin, endLocalMin: e.endLocalMin },
+      i.availability,
+    ))
+      add(w);
+  if (i.qualification)
+    for (const w of qualificationIssue(i.qualification.requiredId, i.qualification.held, e.localDate)) add(w);
   if (i.wishes)
     for (const w of wishConflicts(
       { localDate: e.localDate, shiftId: e.shiftId ?? null },

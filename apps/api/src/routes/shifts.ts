@@ -21,6 +21,7 @@ const shiftOut = (s: any) => ({
   startTime: String(s.start_time).slice(0, 5),
   endTime: String(s.end_time).slice(0, 5),
   breakMinutes: s.break_duration_minutes,
+  requiredQualificationId: s.required_qualification_id ?? null,
 });
 
 const staffingBody = z.object({
@@ -40,6 +41,7 @@ export async function shiftRoutes(app: FastifyInstance) {
     startTime: hhmm,
     endTime: hhmm,
     breakMinutes: z.number().int().min(0).max(240).default(0),
+    requiredQualificationId: z.number().int().positive().nullish(),
   });
 
   async function checkDept(trx: Trx | typeof db, hotelId: number, departmentId: number) {
@@ -50,6 +52,17 @@ export async function shiftRoutes(app: FastifyInstance) {
       .executeTakeFirst();
     if (!d || d.hotel_id !== hotelId)
       throw new AppError('VALIDATION', 'The department does not belong to this hotel');
+  }
+  async function checkQualification(trx: Trx | typeof db, hotelId: number, qualificationId?: number | null) {
+    if (!qualificationId) return;
+    const q = await trx
+      .selectFrom('qualification as q')
+      .innerJoin('hotel as h', 'h.company_id', 'q.company_id')
+      .select('q.id')
+      .where('q.id', '=', qualificationId)
+      .where('h.id', '=', hotelId)
+      .executeTakeFirst();
+    if (!q) throw new AppError('VALIDATION', 'Unknown qualification for this company');
   }
   async function loadShift(trx: Trx | typeof db, p: Principal, id: number) {
     const s = await trx.selectFrom('shift').selectAll().where('id', '=', id).executeTakeFirst();
@@ -64,6 +77,7 @@ export async function shiftRoutes(app: FastifyInstance) {
     p.scope.assertHotel(b.hotelId);
     const row = await tx(async (trx) => {
       await checkDept(trx, b.hotelId, b.departmentId);
+      await checkQualification(trx, b.hotelId, b.requiredQualificationId);
       const s = await trx
         .insertInto('shift')
         .values({
@@ -73,6 +87,7 @@ export async function shiftRoutes(app: FastifyInstance) {
           start_time: b.startTime,
           end_time: b.endTime,
           break_duration_minutes: b.breakMinutes,
+          required_qualification_id: b.requiredQualificationId ?? null,
         })
         .returningAll()
         .executeTakeFirstOrThrow();
@@ -141,6 +156,7 @@ export async function shiftRoutes(app: FastifyInstance) {
       return tx(async (trx) => {
         const old = await loadShift(trx, p, req.params.id);
         if (b.departmentId) await checkDept(trx, old.hotel_id, b.departmentId);
+        await checkQualification(trx, old.hotel_id, b.requiredQualificationId);
         const s = await trx
           .updateTable('shift')
           .set({
@@ -149,6 +165,9 @@ export async function shiftRoutes(app: FastifyInstance) {
             ...(b.startTime !== undefined && { start_time: b.startTime }),
             ...(b.endTime !== undefined && { end_time: b.endTime }),
             ...(b.breakMinutes !== undefined && { break_duration_minutes: b.breakMinutes }),
+            ...(b.requiredQualificationId !== undefined && {
+              required_qualification_id: b.requiredQualificationId,
+            }),
           })
           .where('id', '=', old.id)
           .returningAll()

@@ -5,6 +5,7 @@ import { download, useGet, useSend } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { fdate, fnum, fsigned, WEEKDAYS } from '../lib/format';
 import { LedgerTable } from '../components/Ledger';
+import { DocumentsPanel, QualificationsEditor, TerminatePanel } from './StaffMore';
 import { ErrorNote, Kicker, Label, PageHead, useToast } from '../components/ui';
 
 const EMPLOYMENT: Record<string, string> = {
@@ -259,6 +260,20 @@ function StaffDetail({ id }: { id: number }) {
             <Label>{t('Arbeitszeitkonto')}</Label>
             <LedgerTable path={`/employees/${id}/time-account/ledger`} canEdit={admin} employeeId={id} />
           </div>
+        </>
+      )}
+      {!reduced && (
+        <>
+          <hr className="hr" style={{ margin: 0 }} />
+          <QualificationsEditor id={id} />
+        </>
+      )}
+      {admin && !reduced && (
+        <>
+          <hr className="hr" style={{ margin: 0 }} />
+          <DocumentsPanel id={id} />
+          <hr className="hr" style={{ margin: 0 }} />
+          <TerminatePanel id={id} name={e.displayName} lastDay={e.contractEndDate ?? null} />
         </>
       )}
       {!reduced && <TimesheetDownload id={id} name={e.displayName} />}

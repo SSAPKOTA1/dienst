@@ -12,30 +12,20 @@ import {
 import { AppError, notFound } from '../lib/errors';
 import { actorOf, getPrincipal, requireRole } from '../lib/auth';
 import { csvIds, idParam, isoDate } from '../lib/http';
-import type { Db, Trx } from '../db';
-import type { Principal } from '../lib/scope';
 import { buildGrid } from '../services/planning/grid';
 import { findCandidates } from '../services/planning/candidates';
-import { PlanEnv } from '../services/planning/env';
 import {
   checkPlan,
   copyBody,
-  deleteEntry,
   entryBody,
-  executePlan,
   loadEntry,
   moveBody,
-  planCopy,
-  planCreate,
-  planMove,
-  planSwap,
-  planUpdate,
   swapBody,
   updateBody,
   type Ctx,
-  type Plan,
 } from '../services/planning/ops';
 import { absenceBody, createAbsence, deleteAbsence } from '../services/planning/absence';
+import { buildPlan, runOp } from '../services/planning/run';
 import {
   changesInRange,
   clearWeek,
@@ -94,85 +84,6 @@ export async function scheduleRoutes(app: FastifyInstance) {
       .transaction()
       .execute((trx) => fn({ trx, principal: getPrincipal(req), actor: actorOf(req), now: app.clock() }));
 
-  /** Builds the plan for an entry operation. Reads only. */
-  async function buildPlan(
-    h: Db | Trx,
-    p: Principal,
-    op: z.infer<typeof validateBody> | (z.infer<typeof bulkOp> & { operation?: string }),
-  ): Promise<{ plan: Plan | null; env: PlanEnv }> {
-    const kind = 'operation' in op && op.operation ? op.operation : (op as any).op;
-    const now = app.clock();
-    const dayOf = (...d: Array<string | undefined>) => d.filter(Boolean) as string[];
-    if (kind === 'create') {
-      const i = op as z.infer<typeof entryBody>;
-      const env = await PlanEnv.create(h, now, { employeeIds: [i.employeeId], from: i.date, to: i.date });
-      return { env, plan: await planCreate(h, env, p, i) };
-    }
-    if (kind === 'update') {
-      const i = op as z.infer<typeof updateBody> & { entryId: number };
-      const row = await loadEntry(h, p, i.entryId);
-      const ds = dayOf(row.shift_date, i.date);
-      const env = await PlanEnv.create(h, now, {
-        employeeIds: [row.employee_id, i.employeeId ?? row.employee_id],
-        from: ds.sort()[0],
-        to: ds.sort()[ds.length - 1],
-      });
-      return { env, plan: await planUpdate(h, env, p, i.entryId, i) };
-    }
-    if (kind === 'move' || kind === 'copy') {
-      const i = op as z.infer<typeof moveBody>;
-      const row = await loadEntry(h, p, i.entryId);
-      const ds = dayOf(row.shift_date, i.toDate).sort();
-      const env = await PlanEnv.create(h, now, {
-        employeeIds: [row.employee_id, i.toEmployeeId ?? row.employee_id],
-        from: ds[0],
-        to: ds[ds.length - 1],
-      });
-      return { env, plan: kind === 'move' ? await planMove(h, env, p, i) : await planCopy(h, env, p, i) };
-    }
-    if (kind === 'swap') {
-      const i = op as z.infer<typeof swapBody>;
-      const a = await loadEntry(h, p, i.entryAId);
-      const b = await loadEntry(h, p, i.entryBId);
-      const ds = [a.shift_date, b.shift_date].sort();
-      const env = await PlanEnv.create(h, now, {
-        employeeIds: [a.employee_id, b.employee_id],
-        from: ds[0],
-        to: ds[1],
-      });
-      return { env, plan: await planSwap(h, env, p, i) };
-    }
-    if (kind === 'delete') {
-      const i = op as { entryId: number };
-      const row = await loadEntry(h, p, i.entryId);
-      return {
-        env: await PlanEnv.create(h, now, {
-          employeeIds: [row.employee_id],
-          from: row.shift_date,
-          to: row.shift_date,
-        }),
-        plan: null,
-      };
-    }
-    throw new AppError('VALIDATION', 'Unknown operation');
-  }
-
-  async function runOp(ctx: Ctx, op: any) {
-    const kind = op.op ?? op.operation;
-    if (kind === 'absence') return createAbsence(ctx, op);
-    if (kind === 'delete') {
-      const row = await loadEntry(ctx.trx, ctx.principal, op.entryId);
-      const env = await PlanEnv.create(ctx.trx, ctx.now, {
-        employeeIds: [row.employee_id],
-        from: row.shift_date,
-        to: row.shift_date,
-      });
-      return deleteEntry(ctx, env, op.entryId, op.version);
-    }
-    const { plan, env } = await buildPlan(ctx.trx, ctx.principal, op);
-    return executePlan(ctx, env, plan!);
-  }
-
   // ---------------------------------------------------------------- grid
   r.get(
     '/schedule/grid',
@@ -226,7 +137,7 @@ export async function scheduleRoutes(app: FastifyInstance) {
         throw e;
       }
     }
-    const { plan, env } = await buildPlan(db, p, op);
+    const { plan, env } = await buildPlan(db, p, op, app.clock());
     const override = op as { overrideReason?: string; emergencyOverride?: boolean };
     let violations: Violation[] = [];
     let status: 'ok' | 'needs_reason' | 'blocked' = 'ok';

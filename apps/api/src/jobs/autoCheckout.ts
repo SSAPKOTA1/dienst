@@ -108,3 +108,32 @@ export async function wipeExpiredCredentials(db: Db, now: Date): Promise<number>
     .executeTakeFirst();
   return Number(r.numUpdatedRows);
 }
+
+/** Swap requests that nobody accepted or approved in time expire; the requester is told. */
+export async function expireSwaps(db: Db, now: Date): Promise<number> {
+  const rows = await db
+    .updateTable('shift_swap_request')
+    .set({ status: 'expired' })
+    .where('status', 'in', ['open', 'accepted_by_peer'])
+    .where('expires_at', '<=', now)
+    .returning(['id', 'requester_employee_id', 'hotel_id'])
+    .execute();
+  for (const s of rows) {
+    const e = await db
+      .selectFrom('employee')
+      .select(['employee_id', 'user_id'])
+      .where('employee_id', '=', s.requester_employee_id)
+      .executeTakeFirst();
+    if (e)
+      await db
+        .insertInto('notification')
+        .values({
+          user_id: e.user_id,
+          employee_id: e.employee_id,
+          kind: 'swap_expired',
+          payload: JSON.stringify({ requestId: s.id }),
+        })
+        .execute();
+  }
+  return rows.length;
+}

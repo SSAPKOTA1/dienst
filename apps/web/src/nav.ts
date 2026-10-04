@@ -13,6 +13,7 @@ export const PLANNER_NAV: NavSection[] = [
       { path: '/planning', label: 'Dienstplan' },
       { path: '/month', label: 'Monatsübersicht' },
       { path: '/vacation', label: 'Urlaub' },
+      { path: '/open-shifts', label: 'Offene Schichten' },
     ],
   },
   {
@@ -21,6 +22,7 @@ export const PLANNER_NAV: NavSection[] = [
     items: [
       { path: '/live', label: 'Live' },
       { path: '/requests', label: 'Anträge' },
+      { path: '/announcements', label: 'Mitteilungen' },
       { path: '/compliance', label: 'Compliance' },
     ],
   },

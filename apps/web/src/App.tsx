@@ -9,6 +9,9 @@ import { Planning } from './pages/planning/Planning';
 import { Kiosk } from './pages/Kiosk';
 import { Live } from './pages/Live';
 import { Requests } from './pages/Requests';
+import { OpenShifts } from './pages/OpenShifts';
+import { Announcements } from './pages/Announcements';
+import { PortalTeam } from './pages/PortalTeam';
 import { MonthOverview } from './pages/MonthOverview';
 import { Compliance } from './pages/Compliance';
 import { Analytics } from './pages/Analytics';
@@ -73,6 +76,8 @@ export function App() {
               <Route path="/month" element={<MonthOverview />} />
               <Route path="/vacation/*" element={<VacationRoutes />} />
               <Route path="/live" element={<Live />} />
+              <Route path="/open-shifts" element={<OpenShifts />} />
+              <Route path="/announcements" element={<Announcements />} />
               <Route path="/compliance" element={<Compliance />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/requests" element={<Requests />} />
@@ -99,6 +104,7 @@ export function App() {
               <Route path="schedule" element={<PortalSchedule />} />
               <Route path="attendance" element={<PortalAttendance />} />
               <Route path="vacation" element={<PortalVacation />} />
+              <Route path="team" element={<PortalTeam />} />
               <Route path="account" element={<PortalAccount />} />
             </Route>
           </Route>
