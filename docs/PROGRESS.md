@@ -27,3 +27,8 @@
 - API: grid (employee/shift views, week/month, coverage, counts, changes, reduced views), validate dry run, entries CRUD with optimistic locking, move/copy/swap/bulk/copy-week, absences (planner), publish with snapshots and notifications, changes/revert/clear-week, substitute finder.
 - Seed: published week + draft week + absences + pending vacation request from the prototype patterns.
 - Tests: planning (13), absences (9), snapshots (8), grid (8), permission matrix (325 rows) - all green (full API suite ~330 tests).
+
+## M5 Planning UI - done
+- `/planning`: employee and shift views, Hotels/Abteilungen multi-selects with counts and search, week navigator, counters, changes panel with revert, copy last week, clear plan dialog, publish, palette + trash, dnd-kit drag and drop with live validation, + menu (templates/absences or searchable employee list with reasons), side panel (edit times, move, substitute finder, reason field, revert, absence removal), reason/emergency dialogs, version-conflict banner, locked past days, print stylesheet.
+- Compared screen by screen with `design/prototype.html` via screenshots (employee view, shift view, side panel).
+- E2E (Playwright): keyboard path through the + menu, drag template/move/trash, plan -> publish -> remove -> revert: 3 passed.

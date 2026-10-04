@@ -12,6 +12,8 @@ export interface CandidateParams {
   shiftId?: number;
   start?: string;
   end?: string;
+  /** also return employees with a blocking violation, flagged `blocked` (used by the + menu) */
+  includeBlocked?: boolean;
 }
 
 /** SPEC 4.17: employees of the hotel and department who could take the slot, best first. */
@@ -75,7 +77,8 @@ export async function findCandidates(db: Db, p: Principal, now: Date, prm: Candi
       endMs: slot.endMs,
       breakMinutes: slot.breakMinutes,
     });
-    if (v.some((x) => x.severity === 'block')) continue;
+    const blocked = v.some((x) => x.severity === 'block');
+    if (blocked && !prm.includeBlocked) continue;
     const contract = env.contractAt(e, prm.date);
     const weekly = contract
       ? (contract.weeklyTarget ??

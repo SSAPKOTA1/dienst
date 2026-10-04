@@ -1,0 +1,11 @@
+{
+  "name": "@dienst/e2e",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "otplib": "^12.0.1",
+    "@types/node": "^22.20.0"
+  }
+}

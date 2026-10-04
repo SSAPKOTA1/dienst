@@ -148,6 +148,7 @@ export async function buildGrid(db: Db, p: Principal, now: Date, prm: GridParams
   const warningsOf = new Map<number, Violation[]>();
   const live = rawRows.filter((r) => r.status !== 'cancelled' && entryVisible(r));
   for (const r of live) {
+    if (r.shift_date < env.today(r.hotel_id)) continue; // past days are locked, warnings only matter from today on
     const shift = r.shift_id ? shiftById.get(r.shift_id) : undefined;
     const v = env.check(
       {
@@ -370,6 +371,7 @@ export async function buildGrid(db: Db, p: Principal, now: Date, prm: GridParams
         homeHotel: { id: e.primaryHotelId, name: env.hotels.get(e.primaryHotelId)?.name ?? '' },
         isOtherHotel: !hotelIds.includes(e.primaryHotelId),
         hotelId: g?.hotel_id ?? null,
+        hotelName: hotels.find((h) => h.id === g?.hotel_id)?.name ?? '',
         departmentId: g?.id ?? null,
         departmentName: g?.name ?? '',
         reduced,

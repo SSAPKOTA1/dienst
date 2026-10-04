@@ -427,6 +427,7 @@ export async function scheduleRoutes(app: FastifyInstance) {
           shiftId: z.coerce.number().int().optional(),
           start: z.string().optional(),
           end: z.string().optional(),
+          includeBlocked: z.enum(['true', 'false']).optional(),
         }),
       },
     },
@@ -438,6 +439,7 @@ export async function scheduleRoutes(app: FastifyInstance) {
         shiftId: req.query.shiftId,
         start: req.query.start,
         end: req.query.end,
+        includeBlocked: req.query.includeBlocked === 'true',
       }),
     }),
   );
