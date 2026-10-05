@@ -1,6 +1,15 @@
+import type {
+  AuditLogPage,
+  AuditVerifyDto,
+  CompanyDto,
+  HotelDto,
+  Items,
+  KioskDeviceDto,
+  PayrollPeriodDto,
+} from '@dienst/shared';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, download, useGet, useSend } from '../lib/api';
+import { api, download, useGet, useSend, type ApiError } from '../lib/api';
 import { fdate, fdatetime } from '../lib/format';
 import { Dialog, ErrorNote, Field, useToast } from '../components/ui';
 import {
@@ -23,14 +32,14 @@ const wrap: React.CSSProperties = {
 export function AdminTablets() {
   const { t } = useTranslation();
   const toast = useToast();
-  const hotels = useGet('/hotels');
-  const devices = useGet('/kiosk-devices', undefined, { refetchInterval: 30_000 });
+  const hotels = useGet<Items<HotelDto>>('/hotels');
+  const devices = useGet<Items<KioskDeviceDto>>('/kiosk-devices', undefined, { refetchInterval: 30_000 });
   const [pair, setPair] = useState(false);
   const [shown, setShown] = useState<{ name: string; token: string } | null>(null);
   const update = useSend<{ id: number; status: string }>('PUT', (b) => `/kiosk-devices/${b.id}`, [
     ['api', '/kiosk-devices'],
   ]);
-  const hotelName = (id: number) => (hotels.data?.items ?? []).find((h: any) => h.id === id)?.name ?? id;
+  const hotelName = (id: number) => (hotels.data?.items ?? []).find((h) => h.id === id)?.name ?? id;
   return (
     <div style={wrap}>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -51,7 +60,7 @@ export function AdminTablets() {
             </tr>
           </thead>
           <tbody>
-            {(devices.data?.items ?? []).map((d: any) => (
+            {(devices.data?.items ?? []).map((d) => (
               <tr key={d.id} data-testid="device-row">
                 <td style={{ paddingLeft: 'var(--space-4)', fontWeight: 700 }}>{d.name}</td>
                 <td>{hotelName(d.hotelId)}</td>
@@ -138,14 +147,14 @@ function PairDialog({
   onClose,
   onDone,
 }: {
-  hotels: any[];
+  hotels: HotelDto[];
   onClose: () => void;
   onDone: (d: { name: string; token: string }) => void;
 }) {
   const { t } = useTranslation();
   const [hotelId, setHotelId] = useState(String(hotels[0]?.id ?? ''));
   const [name, setName] = useState('');
-  const m = useSend<any, any>('POST', '/kiosk-devices');
+  const m = useSend<Record<string, unknown>, { name: string; token: string }>('POST', '/kiosk-devices');
   return (
     <Dialog
       title={t('Tablet koppeln')}
@@ -222,7 +231,7 @@ export function AdminRules() {
   const { t } = useTranslation();
   const seen = useSend('POST', '/setup/rules-viewed');
   useEffect(() => {
-    seen.mutate({} as any);
+    seen.mutate({});
     // report once on view
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -285,8 +294,8 @@ export function AdminAudit() {
     from: f.from || undefined,
     to: f.to || undefined,
   };
-  const log = useGet('/audit-log', { ...q, page, pageSize: 25 });
-  const verify = useGet('/audit-log/verify', undefined, { enabled: false });
+  const log = useGet<AuditLogPage>('/audit-log', { ...q, page, pageSize: 25 });
+  const verify = useGet<AuditVerifyDto>('/audit-log/verify', undefined, { enabled: false });
   const set = (k: keyof typeof f, v: string) => {
     setF({ ...f, [k]: v });
     setPage(1);
@@ -363,12 +372,12 @@ export function AdminAudit() {
         >
           <b>{verify.data.ok ? t('Protokoll unverändert.') : t('Protokoll weicht ab!')}</b>{' '}
           {t('{{n}} Einträge in {{c}} Ketten geprüft.', {
-            n: verify.data.chains.reduce((a: number, c: any) => a + c.rows, 0),
+            n: verify.data.chains.reduce((a: number, c) => a + c.rows, 0),
             c: verify.data.chains.length,
           })}
           {verify.data.chains
-            .filter((c: any) => !c.ok)
-            .map((c: any) => (
+            .filter((c) => !c.ok)
+            .map((c) => (
               <div key={c.chainKey} style={{ color: 'var(--warn)', fontWeight: 700 }}>
                 {t('Kette {{k}}: erste Abweichung bei Eintrag {{id}}', { k: c.chainKey, id: c.brokenAt })}
               </div>
@@ -392,7 +401,7 @@ export function AdminAudit() {
             </tr>
           </thead>
           <tbody>
-            {(log.data?.items ?? []).map((a: any) => (
+            {(log.data?.items ?? []).map((a) => (
               <tr key={a.id} data-testid="audit-row">
                 <td
                   style={{
@@ -438,10 +447,10 @@ export function AdminAudit() {
 export function ClosePeriods() {
   const { t } = useTranslation();
   const toast = useToast();
-  const periods = useGet('/periods');
-  const companies = useGet('/companies');
+  const periods = useGet<Items<PayrollPeriodDto>>('/periods');
+  const companies = useGet<Items<CompanyDto>>('/companies');
   const [dlg, setDlg] = useState(false);
-  const [reopen, setReopen] = useState<any | null>(null);
+  const [reopen, setReopen] = useState<PayrollPeriodDto | null>(null);
   return (
     <section
       style={{ padding: 'var(--space-4)', borderTop: '2px solid var(--color-divider)' }}
@@ -453,7 +462,7 @@ export function ClosePeriods() {
           {t('Monat abschließen')}
         </button>
       </div>
-      {(periods.data?.items ?? []).slice(0, 6).map((p: any) => (
+      {(periods.data?.items ?? []).slice(0, 6).map((p) => (
         <div
           key={p.id}
           style={{
@@ -517,7 +526,7 @@ function CloseDialog({
   onClose,
   onDone,
 }: {
-  companies: any[];
+  companies: CompanyDto[];
   onClose: () => void;
   onDone: () => void;
 }) {
@@ -526,7 +535,7 @@ function CloseDialog({
   const [companyId, setCompanyId] = useState(String(companies[0]?.id ?? ''));
   const [from, setFrom] = useState(def[0]);
   const [to, setTo] = useState(def[1]);
-  const [err, setErr] = useState<any>(null);
+  const [err, setErr] = useState<ApiError | null>(null);
   const [busy, setBusy] = useState(false);
   const submit = async () => {
     setBusy(true);
@@ -535,12 +544,15 @@ function CloseDialog({
       await api('/periods/close', { method: 'POST', body: { companyId: Number(companyId), from, to } });
       onDone();
     } catch (e) {
-      setErr(e);
+      setErr(e as ApiError);
     } finally {
       setBusy(false);
     }
   };
-  const pend = err?.code === 'PENDING_APPROVALS' ? err.details : null;
+  const pend =
+    err?.code === 'PENDING_APPROVALS'
+      ? (err.details as { workedTime?: PendingItem[]; corrections?: PendingItem[] })
+      : null;
   return (
     <Dialog
       title={t('Monat abschließen')}
@@ -598,12 +610,12 @@ function CloseDialog({
         >
           <b>{t('Es gibt noch offene Freigaben:')}</b>
           <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
-            {(pend.workedTime ?? []).map((x: any) => (
+            {(pend.workedTime ?? []).map((x) => (
               <li key={`w${x.id}`}>
                 {x.employee} · {fdate(x.date)} {x.open ? `· ${t('noch eingestempelt')}` : ''}
               </li>
             ))}
-            {(pend.corrections ?? []).map((x: any) => (
+            {(pend.corrections ?? []).map((x) => (
               <li key={`c${x.id}`}>
                 {x.employee} · {t('Stempelkorrektur')}
               </li>
@@ -617,10 +629,18 @@ function CloseDialog({
   );
 }
 
-function ReopenDialog({ period, onClose, onDone }: { period: any; onClose: () => void; onDone: () => void }) {
+function ReopenDialog({
+  period,
+  onClose,
+  onDone,
+}: {
+  period: PayrollPeriodDto;
+  onClose: () => void;
+  onDone: () => void;
+}) {
   const { t } = useTranslation();
   const [reason, setReason] = useState('');
-  const m = useSend<any>('POST', `/periods/${period.id}/reopen`);
+  const m = useSend('POST', `/periods/${period.id}/reopen`);
   return (
     <Dialog
       title={t('Monat wieder öffnen')}
@@ -652,4 +672,12 @@ function ReopenDialog({ period, onClose, onDone }: { period: any; onClose: () =>
       <ErrorNote error={m.error} />
     </Dialog>
   );
+}
+
+/** Open approvals reported with the PENDING_APPROVALS error. */
+interface PendingItem {
+  id: number;
+  employee: string;
+  date?: string;
+  open?: boolean;
 }

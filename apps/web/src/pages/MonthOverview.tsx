@@ -1,3 +1,4 @@
+import type { HotelDto, Items, ScheduleGridDto } from '@dienst/shared';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -23,9 +24,9 @@ const shiftMonth = (m: string, n: number) =>
 export function MonthOverview() {
   const { t } = useTranslation();
   const [month, setMonth] = useState(() => todayIso().slice(0, 7));
-  const hotels = useGet('/hotels');
-  const hotelIds = (hotels.data?.items ?? []).map((h: any) => h.id);
-  const grid = useGet(hotelIds.length ? '/schedule/grid' : null, {
+  const hotels = useGet<Items<HotelDto>>('/hotels');
+  const hotelIds = (hotels.data?.items ?? []).map((h) => h.id);
+  const grid = useGet<ScheduleGridDto>(hotelIds.length ? '/schedule/grid' : null, {
     hotelIds,
     view: 'employee',
     range: 'month',
@@ -80,7 +81,7 @@ export function MonthOverview() {
             </tr>
           </thead>
           <tbody>
-            {(g?.rows ?? []).map((r: any) => (
+            {(g?.rows ?? []).map((r) => (
               <tr key={r.key}>
                 <td
                   style={{
@@ -93,18 +94,16 @@ export function MonthOverview() {
                 >
                   {r.label}
                 </td>
-                {r.cells.map((c: any) => {
-                  const e = c.entries.filter((x: any) => !x.isOtherHotel);
-                  const abs = (g.absences as any[]).find(
+                {r.cells.map((c) => {
+                  const e = c.entries.filter((x) => !x.isOtherHotel);
+                  const abs = g?.absences.find(
                     (a) => a.employeeId === r.employeeId && a.from <= c.date && a.to >= c.date,
                   );
                   return (
                     <td
                       key={c.date}
                       title={e
-                        .map(
-                          (x: any) => `${x.shiftName ?? ''} ${x.start.slice(11, 16)}–${x.end.slice(11, 16)}`,
-                        )
+                        .map((x) => `${x.shiftName ?? ''} ${x.start.slice(11, 16)}–${x.end.slice(11, 16)}`)
                         .join(', ')}
                       style={{
                         textAlign: 'center',
@@ -118,7 +117,7 @@ export function MonthOverview() {
                       }}
                     >
                       {e.length
-                        ? e.map((x: any) => (x.shiftName ?? '•').charAt(0)).join('')
+                        ? e.map((x) => (x.shiftName ?? '•').charAt(0)).join('')
                         : abs
                           ? (ABS_CODE[abs.type] ?? '–')
                           : ''}

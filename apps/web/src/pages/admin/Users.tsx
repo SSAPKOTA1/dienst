@@ -1,3 +1,4 @@
+import type { CompanyDto, HotelDto, Items, UserList } from '@dienst/shared';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGet, useSend } from '../../lib/api';
@@ -8,7 +9,7 @@ import { Dialog, ErrorNote, Field, Segmented } from '../../components/ui';
 export function AdminUsers() {
   const { t } = useTranslation();
   const [q, setQ] = useState('');
-  const users = useGet('/users', { q: q || undefined, pageSize: 100 });
+  const users = useGet<UserList>('/users', { q: q || undefined, pageSize: 100 });
   const [dlg, setDlg] = useState(false);
   const roleName = (r: string) =>
     r === 'superAdmin'
@@ -48,16 +49,16 @@ export function AdminUsers() {
             </tr>
           </thead>
           <tbody>
-            {(users.data?.items ?? []).map((u: any) => (
+            {(users.data?.items ?? []).map((u) => (
               <tr key={u.userId} style={{ opacity: u.status === 'disabled' ? 0.5 : 1 }}>
                 <td style={{ paddingLeft: 'var(--space-4)' }}>
                   <div style={{ fontWeight: 700 }}>{u.name}</div>
                   <div style={{ fontSize: 11, color: 'var(--color-neutral-700)' }}>{u.login}</div>
                 </td>
-                <td>{u.roles.map((r: any) => t(roleName(r.role))).join(', ')}</td>
+                <td>{u.roles.map((r) => t(roleName(r.role))).join(', ')}</td>
                 <td>
                   {u.roles
-                    .flatMap((r: any) =>
+                    .flatMap((r) =>
                       r.hotelNames.length ? r.hotelNames : r.companyName ? [r.companyName] : [],
                     )
                     .join(', ')}
@@ -100,13 +101,14 @@ export function AdminUsers() {
 export function InviteDialog({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
   const { t } = useTranslation();
   const { me } = useAuth();
-  const hotels = useGet('/hotels');
-  const companies = useGet('/companies');
+  const hotels = useGet<Items<HotelDto>>('/hotels');
+  const companies = useGet<Items<CompanyDto>>('/companies');
   const [kind, setKind] = useState<'manager' | 'admin'>('manager');
   const [f, setF] = useState({ email: '', firstName: '', lastName: '' });
   const [sel, setSel] = useState<number[]>([]);
   const m = useSend('POST', kind === 'manager' ? '/managers' : '/admins');
-  const list: any[] = kind === 'manager' ? (hotels.data?.items ?? []) : (companies.data?.items ?? []);
+  const list: Array<HotelDto | CompanyDto> =
+    kind === 'manager' ? (hotels.data?.items ?? []) : (companies.data?.items ?? []);
   useEffect(() => setSel([]), [kind]);
   return (
     <Dialog

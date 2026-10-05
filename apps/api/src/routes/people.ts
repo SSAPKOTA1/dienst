@@ -1,3 +1,4 @@
+import type { QualificationDto, AvailabilityDto, DocumentDto, ExitStatementDto } from '@dienst/shared';
 import type { DB } from '../db';
 import type { Selectable } from 'kysely';
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
@@ -64,7 +65,7 @@ export async function peopleRoutes(app: FastifyInstance) {
     );
 
   // ------------------------------------------------------------------ qualifications
-  const qualOut = (q: Selectable<DB['qualification']>) => ({
+  const qualOut = (q: Selectable<DB['qualification']>): QualificationDto => ({
     id: q.id,
     name: q.name,
     hasExpiry: q.has_expiry,
@@ -282,7 +283,7 @@ export async function peopleRoutes(app: FastifyInstance) {
   });
 
   // ------------------------------------------------------------------ availability
-  const availOut = (a: Selectable<DB['employee_availability']>) => ({
+  const availOut = (a: Selectable<DB['employee_availability']>): AvailabilityDto => ({
     id: a.id,
     weekday: a.weekday,
     from: String(a.from_time).slice(0, 5),
@@ -445,7 +446,7 @@ export async function peopleRoutes(app: FastifyInstance) {
       | 'visible_to_employee'
       | 'created_at'
     >,
-  ) => ({
+  ): DocumentDto => ({
     id: d.id,
     employeeId: d.employee_id,
     docType: d.doc_type,
@@ -687,7 +688,7 @@ export async function peopleRoutes(app: FastifyInstance) {
   );
 
   // ------------------------------------------------------------------ offboarding
-  const exitStatement = async (employeeId: number, lastDay: string) => {
+  const exitStatement = async (employeeId: number, lastDay: string): Promise<ExitStatementDto> => {
     const e = await db
       .selectFrom('employee')
       .selectAll()

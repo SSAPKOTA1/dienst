@@ -1,3 +1,4 @@
+import type { HotelDto, Items, ShiftDto, StaffingRuleDto, StaffingSuggestionList } from '@dienst/shared';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGet, useSend } from '../lib/api';
@@ -31,29 +32,33 @@ function parseForecast(text: string): Array<{ date: string; occupancyPct: number
 export function Staffing() {
   const { t } = useTranslation();
   const toast = useToast();
-  const hotels = useGet('/hotels');
+  const hotels = useGet<Items<HotelDto>>('/hotels');
   const [hotel, setHotel] = useState<number | ''>('');
   const hotelId = hotel || hotels.data?.items?.[0]?.id || '';
   const [from, setFrom] = useState(mondayOfIso(todayIso()));
   const to = addDaysIso(from, 13);
   const q = hotelId ? { hotelId: String(hotelId), from, to } : undefined;
-  const shifts = useGet('/shifts', hotelId ? { hotelId: String(hotelId) } : undefined, {
+  const shifts = useGet<Items<ShiftDto>>('/shifts', hotelId ? { hotelId: String(hotelId) } : undefined, {
     enabled: !!hotelId,
   });
-  const rules = useGet('/staffing-rules', hotelId ? { hotelId: String(hotelId) } : undefined, {
-    enabled: !!hotelId,
-  });
-  const sug = useGet('/staffing/suggestions', q, { enabled: !!hotelId });
-  const forecast = useSend<any>('PUT', '/occupancy');
-  const addRule = useSend<any>('POST', '/staffing-rules');
+  const rules = useGet<Items<StaffingRuleDto>>(
+    '/staffing-rules',
+    hotelId ? { hotelId: String(hotelId) } : undefined,
+    {
+      enabled: !!hotelId,
+    },
+  );
+  const sug = useGet<StaffingSuggestionList>('/staffing/suggestions', q, { enabled: !!hotelId });
+  const forecast = useSend('PUT', '/occupancy');
+  const addRule = useSend('POST', '/staffing-rules');
   const delRule = useSend<number>('DELETE', (id) => `/staffing-rules/${id}`);
-  const apply = useSend<any>('POST', '/staffing/apply');
+  const apply = useSend('POST', '/staffing/apply');
   const [text, setText] = useState('');
   const [shiftId, setShiftId] = useState<number | ''>('');
   const [pct, setPct] = useState(0);
   const [heads, setHeads] = useState(1);
   const parsed = useMemo(() => parseForecast(text), [text]);
-  const open = (sug.data?.items ?? []).filter((s: any) => s.deltaToRequired !== 0);
+  const open = (sug.data?.items ?? []).filter((s) => s.deltaToRequired !== 0);
   return (
     <main style={{ flex: 1, minWidth: 0 }}>
       <PageHead kicker={t('Planung')} title={t('Besetzung nach Auslastung')} />
@@ -73,7 +78,7 @@ export function Staffing() {
               value={hotelId}
               onChange={(e) => setHotel(Number(e.target.value))}
             >
-              {(hotels.data?.items ?? []).map((h: any) => (
+              {(hotels.data?.items ?? []).map((h) => (
                 <option key={h.id} value={h.id}>
                   {h.name}
                 </option>
@@ -136,7 +141,7 @@ export function Staffing() {
           <div style={head}>{t('Regeln: ab wie viel Prozent wie viele Personen')}</div>
           <table className="table">
             <tbody>
-              {(rules.data?.items ?? []).map((r: any) => (
+              {(rules.data?.items ?? []).map((r) => (
                 <tr key={r.id} data-testid="rule-row">
                   <td style={{ paddingLeft: 'var(--space-4)', fontWeight: 700 }}>{r.shiftName}</td>
                   <td>
@@ -171,7 +176,7 @@ export function Staffing() {
                 onChange={(e) => setShiftId(Number(e.target.value))}
               >
                 <option value="">–</option>
-                {(shifts.data?.items ?? []).map((s: any) => (
+                {(shifts.data?.items ?? []).map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name} {s.startTime}–{s.endTime}
                   </option>
@@ -227,7 +232,7 @@ export function Staffing() {
                 apply.mutate(
                   {
                     hotelId,
-                    items: open.map((s: any) => ({
+                    items: open.map((s) => ({
                       shiftId: s.shiftId,
                       date: s.date,
                       headcount: s.suggested,
@@ -256,7 +261,7 @@ export function Staffing() {
               </tr>
             </thead>
             <tbody>
-              {(sug.data?.items ?? []).map((s: any) => (
+              {(sug.data?.items ?? []).map((s) => (
                 <tr key={`${s.date}-${s.shiftId}`} data-testid="suggestion-row">
                   <td style={{ paddingLeft: 'var(--space-4)' }}>
                     {fdate(s.date, { weekday: 'short', day: '2-digit', month: '2-digit' })}

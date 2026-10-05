@@ -1,3 +1,4 @@
+import type { ContractDto, EmployeeDetailDto, EmployeeSummaryDto } from '@dienst/shared';
 import type { DB } from '../db';
 import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
@@ -72,7 +73,7 @@ export async function currentContract(db: DbOrTrx, employeeId: number, date: str
     .executeTakeFirst();
 }
 
-const contractOut = (c: Selectable<DB['employee_contract']>) => ({
+const contractOut = (c: Selectable<DB['employee_contract']>): ContractDto => ({
   id: c.id,
   validFrom: c.valid_from,
   validTo: c.valid_to,
@@ -88,7 +89,13 @@ const contractOut = (c: Selectable<DB['employee_contract']>) => ({
   getsPublicHoliday: c.gets_public_holiday,
 });
 
-export async function employeeDetail(db: Db, p: Principal, id: number, today: string, year: number) {
+export async function employeeDetail(
+  db: Db,
+  p: Principal,
+  id: number,
+  today: string,
+  year: number,
+): Promise<EmployeeDetailDto> {
   const { e, view } = await employeeView(db, p, id);
   const hotel = await db
     .selectFrom('hotel')
@@ -151,14 +158,18 @@ export async function employeeDetail(db: Db, p: Principal, id: number, today: st
     hotelIds: hs.map((h) => h.hotel_id),
     departmentIds: ds.map((d) => d.department_id),
     contract: c ? contractOut(c) : null,
-    pin: { setAt: e.pin_set_at, lockedUntil: e.pin_locked_until, failedCount: e.pin_failed_count },
+    pin: {
+      setAt: e.pin_set_at.toISOString(),
+      lockedUntil: e.pin_locked_until?.toISOString() ?? null,
+      failedCount: e.pin_failed_count,
+    },
     hasBadge: !!e.badge_hash,
     account: {
       userId: e.user_id,
       username: u.username,
       email: u.email,
       status: u.status,
-      lastLoginAt: u.last_login_at,
+      lastLoginAt: u.last_login_at?.toISOString() ?? null,
     },
   };
 }
@@ -309,7 +320,7 @@ export async function employeeRoutes(app: FastifyInstance) {
       const todayStr = localDate(app.clock(), 'Europe/Berlin');
       for (const e of rows) {
         const fullView = p.role !== 'manager' || p.scope.canHotel(e.primary_hotel_id);
-        const item: Record<string, unknown> = {
+        const item: EmployeeSummaryDto = {
           employeeId: e.employee_id,
           displayName: e.display_name,
           personnelNumber: e.personnel_number,

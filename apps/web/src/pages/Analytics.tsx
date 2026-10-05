@@ -1,3 +1,4 @@
+import type { AnalyticsSummaryDto } from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGet } from '../lib/api';
@@ -16,7 +17,7 @@ export function Analytics() {
   const { t } = useTranslation();
   const [month, setMonth] = useState(todayIso().slice(0, 7));
   const [from, to] = monthRange(month);
-  const a = useGet('/analytics/summary', { from, to });
+  const a = useGet<AnalyticsSummaryDto>('/analytics/summary', { from, to });
   const d = a.data;
   const card = (label: string, value: React.ReactNode, id: string) => (
     <div
@@ -80,7 +81,7 @@ export function Analytics() {
             </tr>
           </thead>
           <tbody>
-            {(d?.departments ?? []).map((x: any) => (
+            {(d?.departments ?? []).map((x) => (
               <tr key={x.departmentId}>
                 <td>{x.hotel}</td>
                 <td>

@@ -1,3 +1,4 @@
+import type { ColleagueList, ColleagueShiftDto, Items, MyScheduleDto } from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGet, useSend } from '../../lib/api';
@@ -11,8 +12,8 @@ export function PortalSchedule() {
   const { t } = useTranslation();
   const [week, setWeek] = useState(() => mondayOfIso(todayIso()));
   const to = addDaysIso(week, 6);
-  const s = useGet('/me/schedule', { from: week, to });
-  const [swap, setSwap] = useState<any | null>(null);
+  const s = useGet<MyScheduleDto>('/me/schedule', { from: week, to });
+  const [swap, setSwap] = useState<MyScheduleEntry | null>(null);
   const days = Array.from({ length: 7 }, (_, i) => addDaysIso(week, i));
   const today = todayIso();
   return (
@@ -36,8 +37,8 @@ export function PortalSchedule() {
       </div>
       <section style={card}>
         {days.map((d) => {
-          const entries = (s.data?.entries ?? []).filter((e: any) => e.date === d);
-          const abs = (s.data?.absences ?? []).filter((a: any) => a.from <= d && a.to >= d);
+          const entries = (s.data?.entries ?? []).filter((e) => e.date === d);
+          const abs = (s.data?.absences ?? []).filter((a) => a.from <= d && a.to >= d);
           return (
             <div
               key={d}
@@ -52,7 +53,7 @@ export function PortalSchedule() {
             >
               <b>{dayLabel(d)}</b>
               <div>
-                {entries.map((e: any) => (
+                {entries.map((e) => (
                   <div key={e.id}>
                     <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>
                       {ftime(e.start, TZ)}–{ftime(e.end, TZ)}
@@ -67,7 +68,7 @@ export function PortalSchedule() {
                     )}
                   </div>
                 ))}
-                {abs.map((a: any) => (
+                {abs.map((a) => (
                   <div key={a.id} style={{ fontSize: 13 }}>
                     {t(ABS[a.type] ?? a.type)}
                     {a.status === 'pending' ? ` (${t('beantragt')})` : ''}
@@ -95,16 +96,24 @@ export function PortalSchedule() {
   );
 }
 
-function SwapDialog({ entry, onClose, onDone }: { entry: any; onClose: () => void; onDone: () => void }) {
+function SwapDialog({
+  entry,
+  onClose,
+  onDone,
+}: {
+  entry: MyScheduleEntry;
+  onClose: () => void;
+  onDone: () => void;
+}) {
   const { t } = useTranslation();
   const toast = useToast();
   const [mode, setMode] = useState<'anyone' | 'colleague'>('anyone');
   const [colleague, setColleague] = useState('');
   const [theirs, setTheirs] = useState('');
   const [reason, setReason] = useState('');
-  const colleagues = useGet('/me/colleagues');
-  const shifts = useGet(colleague ? `/me/colleagues/${colleague}/shifts` : null);
-  const send = useSend<any>('POST', '/me/swap-requests');
+  const colleagues = useGet<ColleagueList>('/me/colleagues');
+  const shifts = useGet<Items<ColleagueShiftDto>>(colleague ? `/me/colleagues/${colleague}/shifts` : null);
+  const send = useSend('POST', '/me/swap-requests');
   return (
     <Dialog
       title={t('Schicht tauschen oder abgeben')}
@@ -148,7 +157,12 @@ function SwapDialog({ entry, onClose, onDone }: { entry: any; onClose: () => voi
         {dayLabel(entry.date)} {ftime(entry.start, TZ)}–{ftime(entry.end, TZ)} {entry.shiftName ?? ''}
       </p>
       <Field label={t('An wen?')} htmlFor="sw-mode">
-        <select id="sw-mode" className="input" value={mode} onChange={(e) => setMode(e.target.value as any)}>
+        <select
+          id="sw-mode"
+          className="input"
+          value={mode}
+          onChange={(e) => setMode(e.target.value as typeof mode)}
+        >
           <option value="anyone">{t('An alle geeigneten Kolleginnen und Kollegen')}</option>
           <option value="colleague">{t('An eine bestimmte Person')}</option>
         </select>
@@ -166,7 +180,7 @@ function SwapDialog({ entry, onClose, onDone }: { entry: any; onClose: () => voi
               }}
             >
               <option value="">–</option>
-              {(colleagues.data?.items ?? []).map((c: any) => (
+              {(colleagues.data?.items ?? []).map((c) => (
                 <option key={c.employeeId} value={c.employeeId}>
                   {c.displayName} · {c.departmentName}
                 </option>
@@ -182,7 +196,7 @@ function SwapDialog({ entry, onClose, onDone }: { entry: any; onClose: () => voi
                 onChange={(e) => setTheirs(e.target.value)}
               >
                 <option value="">{t('Keine, nur abgeben')}</option>
-                {(shifts.data?.items ?? []).map((x: any) => (
+                {(shifts.data?.items ?? []).map((x) => (
                   <option key={x.id} value={x.id}>
                     {dayLabel(x.date)} {ftime(x.start, TZ)}–{ftime(x.end, TZ)} {x.shiftName ?? ''}
                   </option>
@@ -208,3 +222,5 @@ function SwapDialog({ entry, onClose, onDone }: { entry: any; onClose: () => voi
     </Dialog>
   );
 }
+
+type MyScheduleEntry = MyScheduleDto['entries'][number];

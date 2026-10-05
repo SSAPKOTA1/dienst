@@ -1,3 +1,4 @@
+import type { AdminList, CompanyDto, HotelDto, Items } from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api, useGet, useSend } from '../../lib/api';
@@ -6,9 +7,9 @@ import { InviteDialog } from './Users';
 
 export function AdminCompanies() {
   const { t } = useTranslation();
-  const companies = useGet('/companies');
-  const hotels = useGet('/hotels');
-  const admins = useGet('/admins');
+  const companies = useGet<Items<CompanyDto>>('/companies');
+  const hotels = useGet<Items<HotelDto>>('/hotels');
+  const admins = useGet<AdminList>('/admins');
   const [name, setName] = useState('');
   const create = useSend('POST', '/companies');
   const [adm, setAdm] = useState(false);
@@ -23,14 +24,14 @@ export function AdminCompanies() {
     >
       <section>
         <SectionTitle>{t('Unternehmen')}</SectionTitle>
-        {(companies.data?.items ?? []).map((c: any) => (
+        {(companies.data?.items ?? []).map((c) => (
           <div key={c.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--color-divider)' }}>
             <b>{c.name}</b>
             <div style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>
               {t('Toleranz')} {c.graceMinutes} min · {t('PIN-Länge')} {c.pinLength} ·{' '}
               {(hotels.data?.items ?? [])
-                .filter((h: any) => h.companyId === c.id)
-                .map((h: any) => h.name)
+                .filter((h) => h.companyId === c.id)
+                .map((h) => h.name)
                 .join(', ')}
             </div>
           </div>
@@ -65,7 +66,7 @@ export function AdminCompanies() {
       </section>
       <section>
         <SectionTitle>{t('Administration')}</SectionTitle>
-        {(admins.data?.items ?? []).map((a: any) => (
+        {(admins.data?.items ?? []).map((a) => (
           <div key={a.adminId} style={{ padding: '8px 0', borderBottom: '1px solid var(--color-divider)' }}>
             <b>
               {a.firstName} {a.lastName}
@@ -73,8 +74,8 @@ export function AdminCompanies() {
             <span style={{ fontSize: 12 }}>{a.email}</span>
             <div style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>
               {(companies.data?.items ?? [])
-                .filter((c: any) => a.companyIds.includes(c.id))
-                .map((c: any) => c.name)
+                .filter((c) => a.companyIds.includes(c.id))
+                .map((c) => c.name)
                 .join(', ')}
             </div>
           </div>

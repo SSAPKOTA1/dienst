@@ -1,3 +1,4 @@
+import type { CompanyDto, Items, SetupOverviewDto, SetupStatusDto } from '@dienst/shared';
 import { useState } from 'react';
 import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -20,8 +21,8 @@ const TABS = [
 export function AdminLayout() {
   const { t } = useTranslation();
   const { me } = useAuth();
-  const company = useGet('/companies');
-  const name = (company.data?.items ?? []).map((c: any) => c.name).join(', ') || 'Trip Inn Hotels';
+  const company = useGet<Items<CompanyDto>>('/companies');
+  const name = (company.data?.items ?? []).map((c) => c.name).join(', ') || 'Trip Inn Hotels';
   const base = TABS.filter(([k]) => k !== 'integrations' || me?.role !== 'manager');
   const tabs: Array<readonly [string, string]> =
     me?.role === 'superAdmin' ? [...base, ['companies', 'Unternehmen']] : [...base];
@@ -67,8 +68,8 @@ export function AdminOverview() {
   const { t } = useTranslation();
   const nav = useNavigate();
   const { me } = useAuth();
-  const status = useGet('/setup/status');
-  const ov = useGet('/setup/overview');
+  const status = useGet<SetupStatusDto>('/setup/status');
+  const ov = useGet<SetupOverviewDto>('/setup/overview');
   const [hidden, setHidden] = useState(false);
   const s = status.data;
   const steps = s
@@ -285,7 +286,7 @@ export function AdminOverview() {
           {(ov.data?.actionNeeded ?? []).length === 0 && (
             <div style={{ fontSize: 13, padding: '8px 0' }}>{t('Nichts zu tun.')}</div>
           )}
-          {(ov.data?.actionNeeded ?? []).map((a: any) => {
+          {(ov.data?.actionNeeded ?? []).map((a) => {
             const [title, action, to] = todoText(a);
             return (
               <div
@@ -309,7 +310,7 @@ export function AdminOverview() {
         </section>
         <section style={{ padding: 'var(--space-4)' }}>
           <SectionTitle>{t('Letzte Änderungen')}</SectionTitle>
-          {(ov.data?.recentChanges ?? []).map((a: any) => (
+          {(ov.data?.recentChanges ?? []).map((a) => (
             <div
               key={a.id}
               style={{

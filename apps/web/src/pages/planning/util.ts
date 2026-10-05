@@ -1,3 +1,4 @@
+import type { ViolationDto } from '@dienst/shared';
 import { getISOWeek } from 'date-fns';
 import type { TFunction } from 'i18next';
 import i18n from '../../i18n';
@@ -83,12 +84,10 @@ export const EXTRA_ABSENCES = [
 
 const MINOR_CODES = new Set(['MINOR_REST', 'MINOR_NIGHT', 'MINOR_DAILY']);
 
-export interface Violation {
-  code: string;
-  severity: 'block' | 'needs_reason' | 'warn';
-  message?: string;
-  details?: Record<string, any>;
-}
+export type Violation = ViolationDto;
+
+/** Detail values arrive as JSON: numbers are numbers, but the type of the bag is open. */
+const num = (v: unknown): number | null => (v == null || v === '' ? null : Number(v));
 
 /** Title and message of a server violation in the UI language. */
 export function violationText(v: Violation, t: TFunction): { title: string; msg: string } {
@@ -145,12 +144,12 @@ export function violationText(v: Violation, t: TFunction): { title: string; msg:
     case 'MONTHLY_CAP':
       return {
         title: t('Monatsgrenze'),
-        msg: `${fnum(d.plannedHours)} h ${t('geplant')} · ${t('Grenze')} ${fnum(d.cap)} h`,
+        msg: `${fnum(num(d.plannedHours))} h ${t('geplant')} · ${t('Grenze')} ${fnum(num(d.cap))} h`,
       };
     case 'VACATION_EXCEEDS':
       return {
         title: t('Resturlaub reicht nicht'),
-        msg: `${t('Rest')} ${fnum(d.remaining)} · ${t('benötigt')} ${fnum(d.days)}`,
+        msg: `${t('Rest')} ${fnum(num(d.remaining))} · ${t('benötigt')} ${fnum(num(d.days))}`,
       };
     case 'SICK_BACKDATE':
       return { title: t('Vergangen · gesperrt'), msg: t('Zu weit in der Vergangenheit für Leitungen.') };
@@ -177,7 +176,7 @@ export function violationText(v: Violation, t: TFunction): { title: string; msg:
     case 'COMP_TIME_EXCEEDS':
       return {
         title: t('Zeitkonto'),
-        msg: `${t('Guthaben')} ${fnum(d.balanceHours)} h · ${t('danach')} ${fnum(d.afterHours)} h`,
+        msg: `${t('Guthaben')} ${fnum(num(d.balanceHours))} h · ${t('danach')} ${fnum(num(d.afterHours))} h`,
       };
     case 'BLACKOUT':
       return { title: t('Sperrzeit'), msg: t('In diesem Zeitraum ist kein Urlaub vorgesehen.') };

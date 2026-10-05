@@ -1,3 +1,4 @@
+import type { DepartmentDto, HotelDto, Items, OpenShiftWithClaimsDto, ShiftDto } from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGet, useSend } from '../lib/api';
@@ -11,14 +12,14 @@ const TZ = 'Europe/Berlin';
 export function OpenShifts() {
   const { t } = useTranslation();
   const toast = useToast();
-  const list = useGet('/open-shifts', { status: 'open' });
-  const hotels = useGet('/hotels');
-  const depts = useGet('/departments');
-  const shifts = useGet('/shifts');
+  const list = useGet<Items<OpenShiftWithClaimsDto>>('/open-shifts', { status: 'open' });
+  const hotels = useGet<Items<HotelDto>>('/hotels');
+  const depts = useGet<Items<DepartmentDto>>('/departments');
+  const shifts = useGet<Items<ShiftDto>>('/shifts');
   const [dlg, setDlg] = useState(false);
   const cancel = useSend<number>('DELETE', (id) => `/open-shifts/${id}`);
-  const hn = (id: number) => (hotels.data?.items ?? []).find((h: any) => h.id === id)?.name ?? id;
-  const dn = (id: number) => (depts.data?.items ?? []).find((d: any) => d.id === id)?.name ?? id;
+  const hn = (id: number) => (hotels.data?.items ?? []).find((h) => h.id === id)?.name ?? id;
+  const dn = (id: number) => (depts.data?.items ?? []).find((d) => d.id === id)?.name ?? id;
   return (
     <main style={{ flex: 1, minWidth: 0 }}>
       <PageHead kicker={t('Planung')} title={t('Offene Schichten')}>
@@ -31,7 +32,7 @@ export function OpenShifts() {
           {(list.data?.items ?? []).length === 0 && (
             <div style={{ padding: 'var(--space-3)' }}>{t('Keine offenen Schichten.')}</div>
           )}
-          {(list.data?.items ?? []).map((o: any) => (
+          {(list.data?.items ?? []).map((o) => (
             <div
               key={o.id}
               style={{
@@ -54,7 +55,7 @@ export function OpenShifts() {
                 </span>
                 <div style={{ fontSize: 12 }}>
                   {o.claims.length
-                    ? `${o.claims.length} ${t('Bewerbungen')}: ${o.claims.map((c: any) => c.displayName).join(', ')}`
+                    ? `${o.claims.length} ${t('Bewerbungen')}: ${o.claims.map((c) => c.displayName).join(', ')}`
                     : t('Noch keine Bewerbungen.')}
                 </div>
               </div>
@@ -99,9 +100,9 @@ function OpenDialog({
   onClose,
   onDone,
 }: {
-  hotels: any[];
-  depts: any[];
-  shifts: any[];
+  hotels: HotelDto[];
+  depts: DepartmentDto[];
+  shifts: ShiftDto[];
   onClose: () => void;
   onDone: () => void;
 }) {
@@ -113,7 +114,7 @@ function OpenDialog({
   const dd = depts.filter((d) => String(d.hotelId) === hotelId);
   const dept = departmentId || String(dd[0]?.id ?? '');
   const ss = shifts.filter((s) => String(s.departmentId) === dept);
-  const m = useSend<any>('POST', '/open-shifts');
+  const m = useSend('POST', '/open-shifts');
   return (
     <Dialog
       title={t('Offene Schicht anlegen')}

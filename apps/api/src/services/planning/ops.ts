@@ -302,7 +302,7 @@ const subjectOf = (
   entryId,
 });
 
-export const rowOut = (r: any) => ({
+export const rowOut = (r: EntryRow) => ({
   id: r.id,
   version: r.version,
   hotelId: r.hotel_id,

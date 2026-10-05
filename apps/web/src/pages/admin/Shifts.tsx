@@ -1,12 +1,13 @@
+import type { DepartmentDto, Items, QualificationDto, ShiftDto } from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api, useGet } from '../../lib/api';
 import { Dialog, ErrorNote, Field, useToast } from '../../components/ui';
 
-export function minimums(shifts: any[], deptId: number): string {
+export function minimums(shifts: ShiftDto[], deptId: number): string {
   const mine = shifts.filter((x) => x.departmentId === deptId);
   if (!mine.length) return '–';
-  const sum = (wd: string) => mine.reduce((a, x) => a + (x.weekdayDefaults[wd] ?? 0), 0);
+  const sum = (wd: string) => mine.reduce((a, x) => a + (x.weekdayDefaults?.[wd] ?? 0), 0);
   return `${sum('1')} · ${sum('6')}`;
 }
 
@@ -20,7 +21,7 @@ function ShiftEditor({
 }: {
   hotelId: number;
   deptId: number;
-  shift?: any;
+  shift?: ShiftDto;
   onDone: () => void;
 }) {
   const { t } = useTranslation();
@@ -32,14 +33,14 @@ function ShiftEditor({
     breakMinutes: String(shift?.breakMinutes ?? 30),
     requiredQualificationId: String(shift?.requiredQualificationId ?? ''),
   });
-  const quals = useGet('/qualifications');
+  const quals = useGet<Items<QualificationDto>>('/qualifications');
   const [wd, setWd] = useState<Record<string, string>>(
     Object.fromEntries(
       WD.map((_, i) => [String(i + 1), String(shift?.weekdayDefaults?.[String(i + 1)] ?? '')]),
     ),
   );
   const [ov, setOv] = useState<Array<{ date: string; count: string }>>(
-    (shift?.overrides ?? []).map((o: any) => ({ date: o.date, count: String(o.count) })),
+    (shift?.overrides ?? []).map((o) => ({ date: o.date, count: String(o.count) })),
   );
   const [error, setError] = useState<unknown>(null);
   const save = async () => {
@@ -53,8 +54,8 @@ function ShiftEditor({
         requiredQualificationId: f.requiredQualificationId ? Number(f.requiredQualificationId) : null,
       };
       const saved = shift
-        ? await api(`/shifts/${shift.id}`, { method: 'PUT', body: base })
-        : await api('/shifts', { body: { ...base, hotelId, departmentId: deptId } });
+        ? await api<ShiftDto>(`/shifts/${shift.id}`, { method: 'PUT', body: base })
+        : await api<ShiftDto>('/shifts', { body: { ...base, hotelId, departmentId: deptId } });
       await api(`/shifts/${saved.id}/staffing`, {
         method: 'PUT',
         body: {
@@ -140,7 +141,7 @@ function ShiftEditor({
             onChange={(e) => setF({ ...f, requiredQualificationId: e.target.value })}
           >
             <option value="">{t('Keine')}</option>
-            {quals.data.items.map((q: any) => (
+            {(quals.data?.items ?? []).map((q) => (
               <option key={q.id} value={q.id}>
                 {q.name}
               </option>
@@ -224,8 +225,8 @@ export function ShiftsDialog({
   onChanged,
 }: {
   hotelId: number;
-  dept: any;
-  shifts: any[];
+  dept: DepartmentDto;
+  shifts: ShiftDto[];
   onClose: () => void;
   onChanged: () => void;
 }) {

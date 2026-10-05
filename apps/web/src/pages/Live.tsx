@@ -1,3 +1,4 @@
+import type { HotelDto, Items, LiveDto } from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
@@ -5,7 +6,7 @@ import { api, useGet } from '../lib/api';
 import { fdate } from '../lib/format';
 import { Dialog, ErrorNote, Field, Kicker, useToast } from '../components/ui';
 
-const hm = (iso: string | null) =>
+const hm = (iso: string | null | undefined) =>
   iso
     ? new Intl.DateTimeFormat('de-DE', {
         timeZone: 'Europe/Berlin',
@@ -17,13 +18,13 @@ const hm = (iso: string | null) =>
 
 export function Live() {
   const { t } = useTranslation();
-  const hotels = useGet('/hotels');
-  const live = useGet('/live', undefined, { refetchInterval: 15_000 });
-  const [close, setClose] = useState<any | null>(null);
+  const hotels = useGet<Items<HotelDto>>('/hotels');
+  const live = useGet<LiveDto>('/live', undefined, { refetchInterval: 15_000 });
+  const [close, setClose] = useState<LiveItem | null>(null);
   const g = live.data?.groups;
-  const names = (hotels.data?.items ?? []).map((h: any) => h.name).join(' + ');
+  const names = (hotels.data?.items ?? []).map((h) => h.name).join(' + ');
   const server = live.data?.serverTime;
-  const cols = [
+  const cols: Array<{ key: string; title: string; items: LiveItem[]; empty: string }> = [
     { key: 'in', title: t('Eingestempelt'), items: g?.clockedIn ?? [], empty: t('Niemand eingestempelt.') },
     {
       key: 'exp',
@@ -76,7 +77,7 @@ export function Live() {
             style={{ fontSize: 36, fontWeight: 800, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}
             data-testid="server-time"
           >
-            {hm(server)}
+            {hm(server ?? null)}
           </div>
         </div>
       </div>
@@ -118,7 +119,7 @@ export function Live() {
                 {c.items.length}
               </span>
             </div>
-            {c.items.map((it: any) => (
+            {c.items.map((it) => (
               <div
                 key={`${it.punchRecordId ?? it.entryId}`}
                 style={{
@@ -203,7 +204,7 @@ export function Live() {
   );
 }
 
-function CloseDialog({ item, onClose, onDone }: { item: any; onClose: () => void; onDone: () => void }) {
+function CloseDialog({ item, onClose, onDone }: { item: LiveItem; onClose: () => void; onDone: () => void }) {
   const { t } = useTranslation();
   const toast = useToast();
   const def = item.plannedEnd ? hm(item.plannedEnd) : hm(new Date().toISOString());
@@ -213,7 +214,7 @@ function CloseDialog({ item, onClose, onDone }: { item: any; onClose: () => void
   const [error, setError] = useState<unknown>(null);
   const save = async () => {
     try {
-      const day = (item.plannedEnd ?? item.since).slice(0, 10);
+      const day = (item.plannedEnd ?? item.since ?? '').slice(0, 10);
       const local = new Date(`${day}T${out}:00`);
       // the browser interprets the time in its own zone; the hotel zone is Europe/Berlin
       const iso = new Date(local.getTime()).toISOString();
@@ -268,3 +269,20 @@ function CloseDialog({ item, onClose, onDone }: { item: any; onClose: () => void
     </Dialog>
   );
 }
+
+/** The four lists share most fields; each list fills the ones it has. */
+type LiveItem = {
+  punchRecordId?: number;
+  entryId?: number;
+  hotelId: number;
+  employeeId: number;
+  displayName: string | null;
+  departmentName: string | null;
+  since?: string;
+  plannedStart?: string;
+  plannedEnd?: string | null;
+  minutesLate?: number;
+  openMinutes?: number;
+  reason?: string;
+  flags?: string[];
+};

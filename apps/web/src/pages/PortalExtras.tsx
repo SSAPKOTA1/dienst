@@ -1,3 +1,10 @@
+import type {
+  FeaturesDto,
+  MyAvailabilityList,
+  MyDocumentList,
+  PunchStatusDto,
+  MyQualificationList,
+} from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { download, useGet, useSend } from '../lib/api';
@@ -29,12 +36,12 @@ const WD = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 export function PortalExtras() {
   const { t } = useTranslation();
   const toast = useToast();
-  const features = useGet('/me/features');
+  const features = useGet<FeaturesDto>('/me/features');
   const on = (k: string) => features.data?.[k] !== false;
-  const av = useGet(on('availability') ? '/me/availability' : null);
+  const av = useGet<MyAvailabilityList>(on('availability') ? '/me/availability' : null);
   const del = useSend<number>('DELETE', (id) => `/me/availability/${id}`);
-  const quals = useGet('/me/qualifications');
-  const docs = useGet(on('documents') ? '/me/documents' : null);
+  const quals = useGet<MyQualificationList>('/me/qualifications');
+  const docs = useGet<MyDocumentList>(on('documents') ? '/me/documents' : null);
   const [dlg, setDlg] = useState(false);
   const [feed, setFeed] = useState<string | null>(null);
   const makeFeed = useSend<void, { path: string }>('POST', '/me/calendar-feed');
@@ -50,7 +57,7 @@ export function PortalExtras() {
             </button>
           </h2>
           {(av.data?.items ?? []).length === 0 && <div style={line}>{t('Keine Einträge.')}</div>}
-          {(av.data?.items ?? []).map((a: any) => (
+          {(av.data?.items ?? []).map((a) => (
             <div
               key={a.id}
               style={{ ...line, display: 'flex', gap: 8, alignItems: 'baseline' }}
@@ -72,12 +79,12 @@ export function PortalExtras() {
           ))}
         </section>
       )}
-      {(quals.data?.items ?? []).length > 0 && (
+      {quals.data && quals.data.items.length > 0 && (
         <section style={card} aria-labelledby="ql-h">
           <h2 id="ql-h" style={head}>
             {t('Qualifikationen')}
           </h2>
-          {quals.data.items.map((q: any) => (
+          {quals.data.items.map((q) => (
             <div key={q.qualificationId} style={line}>
               {q.name}
               {q.validUntil ? ` · ${t('gültig bis')} ${fdate(q.validUntil)}` : ''}
@@ -85,12 +92,12 @@ export function PortalExtras() {
           ))}
         </section>
       )}
-      {on('documents') && (docs.data?.items ?? []).length > 0 && (
+      {on('documents') && docs.data && docs.data.items.length > 0 && (
         <section style={card} aria-labelledby="dc-h">
           <h2 id="dc-h" style={head}>
             {t('Dokumente')}
           </h2>
-          {docs.data.items.map((d: any) => (
+          {docs.data.items.map((d) => (
             <div
               key={d.id}
               style={{ ...line, display: 'flex', gap: 8, alignItems: 'center' }}
@@ -137,14 +144,14 @@ export function PortalExtras() {
               <button
                 className="btn btn-secondary"
                 data-testid="feed-create"
-                onClick={() => makeFeed.mutate(undefined as any, { onSuccess: (r) => setFeed(r.path) })}
+                onClick={() => makeFeed.mutate(undefined, { onSuccess: (r) => setFeed(r.path) })}
               >
                 {feed ? t('Neuen Link erzeugen') : t('Link erzeugen')}
               </button>
               <button
                 className="btn btn-ghost"
                 onClick={() =>
-                  dropFeed.mutate(undefined as any, {
+                  dropFeed.mutate(undefined, {
                     onSuccess: () => {
                       setFeed(null);
                       toast(t('Link gelöscht'));
@@ -178,7 +185,7 @@ function AvailDialog({ onClose, onDone }: { onClose: () => void; onDone: () => v
   const [to, setTo] = useState('12:00');
   const [kind, setKind] = useState('unavailable');
   const [note, setNote] = useState('');
-  const m = useSend<any>('POST', '/me/availability');
+  const m = useSend('POST', '/me/availability');
   return (
     <Dialog
       title={t('Verfügbarkeit eintragen')}
@@ -256,7 +263,7 @@ function AvailDialog({ onClose, onDone }: { onClose: () => void; onDone: () => v
 export function WebPunchCard() {
   const { t } = useTranslation();
   const toast = useToast();
-  const st = useGet('/me/punch', undefined, { refetchInterval: 30_000 });
+  const st = useGet<PunchStatusDto>('/me/punch', undefined, { refetchInterval: 30_000 });
   const inn = useSend<{ hotelId: number }>('POST', '/me/punch/in');
   const out = useSend<{ breakMinutes: number; reason?: string }>('POST', '/me/punch/out');
   const brk = useSend<{ action: 'start' | 'end' }>('POST', '/me/punch/break');
@@ -312,7 +319,7 @@ export function WebPunchCard() {
               {new Date(open.since).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
               {open.onBreak ? ` · ${t('In der Pause')}` : ''}
             </div>
-            {st.data.hotels.find((h: any) => h.hotelId === open.hotelId)?.breakMode === 'start_stop' && (
+            {st.data.hotels.find((h) => h.hotelId === open.hotelId)?.breakMode === 'start_stop' && (
               <button
                 className="btn btn-secondary"
                 disabled={!!net}

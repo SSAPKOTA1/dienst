@@ -1,3 +1,4 @@
+import type { HourCategoryDto } from '@dienst/shared';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -145,7 +146,7 @@ export async function hoursRoutes(app: FastifyInstance) {
     rule: unknown;
     active: boolean;
     company_id: number | null;
-  }) => ({
+  }): HourCategoryDto => ({
     id: c.id,
     code: c.code,
     name: c.name,

@@ -1,3 +1,4 @@
+import type { CandidateDto, Items } from '@dienst/shared';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../lib/api';
@@ -150,9 +151,9 @@ export function FinderDialog({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const [items, setItems] = useState<any[] | null>(null);
+  const [items, setItems] = useState<CandidateDto[] | null>(null);
   useEffect(() => {
-    api('/schedule/candidates', {
+    api<Items<CandidateDto>>('/schedule/candidates', {
       query: {
         hotelIds: entry.hotelId,
         shiftId: entry.shiftId ?? undefined,
@@ -162,7 +163,7 @@ export function FinderDialog({
         end: entry.shiftId ? undefined : entry.end.slice(11, 16),
       },
     })
-      .then((r) => setItems(r.items.filter((c: any) => c.employeeId !== entry.employeeId)))
+      .then((r) => setItems(r.items.filter((c) => c.employeeId !== entry.employeeId)))
       .catch(() => setItems([]));
   }, [entry, row.departmentId]);
   return (

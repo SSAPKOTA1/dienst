@@ -1,3 +1,4 @@
+import type { LedgerDto } from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGet, useSend } from '../lib/api';
@@ -24,7 +25,7 @@ export function LedgerTable({
   employeeId?: number;
 }) {
   const { t } = useTranslation();
-  const l = useGet(path);
+  const l = useGet<LedgerDto>(path);
   const [dlg, setDlg] = useState(false);
   if (!l.data) return null;
   if (l.data.balanceHours == null) return <div style={{ fontSize: 13 }}>{t('kein Zeitkonto')}</div>;
@@ -51,7 +52,7 @@ export function LedgerTable({
       <div style={{ maxHeight: 320, overflow: 'auto', border: '1px solid var(--color-divider)' }}>
         <table className="table" style={{ fontSize: 13 }}>
           <tbody>
-            {[...l.data.lines].reverse().map((x: any, i: number) => (
+            {[...l.data.lines].reverse().map((x, i) => (
               <tr key={i} data-testid="ledger-line">
                 <td style={{ whiteSpace: 'nowrap' }}>{x.month.length === 7 ? x.month : fdate(x.month)}</td>
                 <td>
@@ -94,7 +95,7 @@ function EntryDialog({
   const [hours, setHours] = useState('');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [note, setNote] = useState('');
-  const m = useSend<any>('POST', `/employees/${employeeId}/time-account/entries`);
+  const m = useSend('POST', `/employees/${employeeId}/time-account/entries`);
   return (
     <Dialog
       title={t('Buchung hinzufügen')}

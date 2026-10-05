@@ -354,4 +354,20 @@ describe('substitute finder', () => {
     expect(mariaItem.warnings.map((w: any) => w.code)).toEqual(['REST_PERIOD']);
     expect(r.body.items[r.body.items.length - 1].displayName).toBe('Maria T.'); // the only candidate with a warning comes last
   });
+
+  it('marks blocked people when blocked candidates are requested, so the planner can disable them', async () => {
+    const date = '2026-12-01';
+    const r = await call(
+      ctx,
+      'GET',
+      `/schedule/candidates?hotelIds=${fx.hotelA1}&departmentId=${fx.deptA1}&date=${date}&shiftId=${fx.early}&includeBlocked=true`,
+      fx.mgrA1.token,
+    );
+    expect(r.status).toBe(200);
+    const byName = new Map(r.body.items.map((c: any) => [c.displayName, c]));
+    expect((byName.get('Jon T.') as any).blocked).toBe(true); // 8 h rest after the late shift
+    expect((byName.get('Lena T.') as any).blocked).toBe(true); // overlap
+    expect((byName.get('Maria T.') as any).blocked).toBe(false);
+    for (const c of r.body.items) expect(typeof c.blocked).toBe('boolean');
+  });
 });

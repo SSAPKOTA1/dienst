@@ -1,3 +1,4 @@
+import type { FeedResponse } from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGet, useSend } from '../lib/api';
@@ -8,9 +9,9 @@ import { ErrorNote } from './ui';
 export function FeedBoard({ hotels }: { hotels: Array<{ id: number; name: string }> }) {
   const { t } = useTranslation();
   const [hotelId, setHotelId] = useState(String(hotels[0]?.id ?? ''));
-  const feed = useGet(hotelId ? '/feed' : null, { hotelId });
+  const feed = useGet<FeedResponse>(hotelId ? '/feed' : null, { hotelId });
   const [text, setText] = useState('');
-  const post = useSend<any>('POST', '/feed/posts');
+  const post = useSend('POST', '/feed/posts');
   const comment = useSend<{ id: number; body: string }>('POST', (b) => `/feed/posts/${b.id}/comments`);
   const like = useSend<number>('PUT', (id) => `/feed/posts/${id}/like`);
   const del = useSend<number>('DELETE', (id) => `/feed/posts/${id}`);
@@ -64,7 +65,7 @@ export function FeedBoard({ hotels }: { hotels: Array<{ id: number; name: string
         </button>
       </div>
       <ErrorNote error={post.error} />
-      {(feed.data?.items ?? []).map((p: any) => (
+      {(feed.data?.items ?? []).map((p) => (
         <article
           key={p.id}
           data-testid="feed-post-item"
@@ -93,7 +94,7 @@ export function FeedBoard({ hotels }: { hotels: Array<{ id: number; name: string
               {p.likedByMe ? '♥' : '♡'} {p.likes}
             </button>
           </div>
-          {p.comments.map((c: any) => (
+          {p.comments.map((c) => (
             <div
               key={c.id}
               style={{

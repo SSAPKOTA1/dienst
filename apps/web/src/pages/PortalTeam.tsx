@@ -1,3 +1,12 @@
+import type {
+  FeaturesDto,
+  MyAnnouncementList,
+  MyHotelList,
+  MyOpenShiftList,
+  MyQuestionList,
+  MySwapList,
+  TeamAbsenceDto,
+} from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGet, useSend } from '../lib/api';
@@ -34,22 +43,25 @@ export function PortalTeam() {
   const { t } = useTranslation();
   const toast = useToast();
   const { me } = useAuth();
-  const features = useGet('/me/features');
+  const features = useGet<FeaturesDto>('/me/features');
   const f = features.data ?? {};
   const on = (k: string) => f[k] !== false;
-  const ann = useGet(on('announcements') ? '/me/announcements' : null);
+  const ann = useGet<MyAnnouncementList>(on('announcements') ? '/me/announcements' : null);
   const ack = useSend<number>('PUT', (id) => `/me/announcements/${id}/ack`);
-  const swaps = useGet(on('swaps') ? '/me/swap-requests' : null);
+  const swaps = useGet<MySwapList>(on('swaps') ? '/me/swap-requests' : null);
   const acceptSwap = useSend<number>('PUT', (id) => `/me/swap-requests/${id}/accept`);
   const declineSwap = useSend<number>('PUT', (id) => `/me/swap-requests/${id}/decline`);
   const cancelSwap = useSend<number>('DELETE', (id) => `/me/swap-requests/${id}`);
-  const open = useGet(on('open_shifts') ? '/me/open-shifts' : null);
+  const open = useGet<MyOpenShiftList>(on('open_shifts') ? '/me/open-shifts' : null);
   const claim = useSend<number>('POST', (id) => `/me/open-shifts/${id}/claim`);
   const unclaim = useSend<number>('DELETE', (id) => `/me/open-shifts/${id}/claim`);
-  const questions = useGet(on('messages') ? '/me/questions' : null);
+  const questions = useGet<MyQuestionList>(on('messages') ? '/me/questions' : null);
   const [ask, setAsk] = useState(false);
-  const team = useGet('/me/team-absences', { from: todayIso(), to: addDaysIso(todayIso(), 30) });
-  const hotels = useGet(on('feed') ? '/me/hotels' : null);
+  const team = useGet<TeamAbsenceDto>('/me/team-absences', {
+    from: todayIso(),
+    to: addDaysIso(todayIso(), 30),
+  });
+  const hotels = useGet<MyHotelList>(on('feed') ? '/me/hotels' : null);
   const err = acceptSwap.error ?? declineSwap.error ?? cancelSwap.error ?? claim.error ?? unclaim.error;
   const done = (msg: string, re: () => unknown) => ({
     onSuccess: () => {
@@ -57,7 +69,9 @@ export function PortalTeam() {
       void re();
     },
   });
-  const slot = (s: any) =>
+  const slot = (
+    s: { date: string; start: string; end: string; shiftName?: string | null } | null | undefined,
+  ) =>
     s
       ? `${dayLabel(s.date)} ${ftime(s.start, TZ)}–${ftime(s.end, TZ)}${s.shiftName ? ` ${s.shiftName}` : ''}`
       : '';
@@ -71,7 +85,7 @@ export function PortalTeam() {
             {t('Mitteilungen')}
           </h2>
           {(ann.data?.items ?? []).length === 0 && <div style={line}>{t('Keine Mitteilungen.')}</div>}
-          {(ann.data?.items ?? []).map((a: any) => (
+          {(ann.data?.items ?? []).map((a) => (
             <div key={a.id} style={line} data-testid="announcement">
               <b>
                 {a.pinned ? '📌 ' : ''}
@@ -99,9 +113,9 @@ export function PortalTeam() {
             {t('Schichttausch')}
           </h2>
           {(swaps.data?.items ?? [])
-            .filter((s: any) => ['open', 'accepted_by_peer'].includes(s.status) || s.role === 'requester')
+            .filter((s) => ['open', 'accepted_by_peer'].includes(s.status) || s.role === 'requester')
             .slice(0, 20)
-            .map((s: any) => (
+            .map((s) => (
               <div key={s.id} style={line} data-testid="swap-row">
                 <div>
                   <b>{slot(s.slot)}</b>
@@ -151,7 +165,7 @@ export function PortalTeam() {
             {t('Offene Schichten')}
           </h2>
           {(open.data?.items ?? []).length === 0 && <div style={line}>{t('Keine offenen Schichten.')}</div>}
-          {(open.data?.items ?? []).map((o: any) => (
+          {(open.data?.items ?? []).map((o) => (
             <div
               key={o.id}
               style={{ ...line, display: 'flex', gap: 8, alignItems: 'center' }}
@@ -188,7 +202,7 @@ export function PortalTeam() {
             {t('Im Team abwesend')}
           </h2>
           {team.data.items.length === 0 && <div style={line}>{t('Niemand abwesend.')}</div>}
-          {team.data.items.map((x: any, i: number) => (
+          {team.data.items.map((x, i) => (
             <div key={i} style={line}>
               <b>{x.displayName}</b> · {fdate(x.from)} – {fdate(x.to)}
             </div>
@@ -204,7 +218,7 @@ export function PortalTeam() {
             </button>
           </h2>
           {(questions.data?.items ?? []).length === 0 && <div style={line}>{t('Noch keine Fragen.')}</div>}
-          {(questions.data?.items ?? []).map((q: any) => (
+          {(questions.data?.items ?? []).map((q) => (
             <div key={q.id} style={line} data-testid="question-row">
               <b>{q.subject}</b>{' '}
               <span className={`tag ${q.status === 'answered' ? 'tag-accent' : 'tag-neutral'}`}>
@@ -226,7 +240,7 @@ export function PortalTeam() {
             {t('Neuigkeiten')}
           </h2>
           <div style={{ padding: 'var(--space-2) var(--space-3)' }}>
-            <FeedBoard hotels={hotels.data.items} />
+            <FeedBoard hotels={hotels.data?.items ?? []} />
           </div>
         </section>
       )}
@@ -257,7 +271,7 @@ function AskDialog({ onClose, onDone }: { onClose: () => void; onDone: () => voi
   const { t } = useTranslation();
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
-  const m = useSend<any>('POST', '/me/questions');
+  const m = useSend('POST', '/me/questions');
   return (
     <Dialog
       title={t('Frage an die Leitung')}

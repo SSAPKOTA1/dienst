@@ -1,3 +1,4 @@
+import type { LiveClockedInDto, LiveLateDto, LiveNeedsReviewDto } from '@dienst/shared';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -22,10 +23,10 @@ export async function liveRoutes(app: FastifyInstance) {
       const hotelIds = p.scope.hotels(req.query.hotelIds);
       const now = app.clock();
       const groups = {
-        clockedIn: [] as any[],
-        expectedNotIn: [] as any[],
-        noShow: [] as any[],
-        needsReview: [] as any[],
+        clockedIn: [] as LiveClockedInDto[],
+        expectedNotIn: [] as LiveLateDto[],
+        noShow: [] as LiveLateDto[],
+        needsReview: [] as LiveNeedsReviewDto[],
       };
       if (!hotelIds.length) return { serverTime: now.toISOString(), groups };
       const hotels = await db

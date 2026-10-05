@@ -82,9 +82,9 @@ function cellText(v: ExcelJS.CellValue): string {
   if (v == null) return '';
   if (v instanceof Date) return v.toISOString().slice(0, 10);
   if (typeof v === 'object') {
-    const o = v as any;
-    if ('result' in o) return cellText(o.result);
-    if ('richText' in o) return o.richText.map((r: any) => r.text).join('');
+    const o = v as unknown as Record<string, unknown>;
+    if ('result' in o) return cellText(o.result as ExcelJS.CellValue);
+    if ('richText' in o) return (o.richText as Array<{ text: string }>).map((r) => r.text).join('');
     if ('text' in o) return String(o.text);
     if ('error' in o) return '';
   }
@@ -99,7 +99,7 @@ export async function parseWorkbook(buf: Buffer, fileName: string): Promise<Pars
   if (buf.includes('vbaProject.bin')) throw new AppError('VALIDATION', 'Workbooks with macros are rejected');
   const wb = new ExcelJS.Workbook();
   try {
-    await wb.xlsx.load(buf as any);
+    await wb.xlsx.load(buf as unknown as ExcelJS.Buffer);
   } catch {
     throw new AppError('VALIDATION', 'The file could not be read as an .xlsx workbook');
   }

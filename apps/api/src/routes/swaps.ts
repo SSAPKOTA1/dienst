@@ -1,6 +1,7 @@
+import type { SwapDto } from '@dienst/shared';
 import type { DB } from '../db';
 import type { Selectable } from 'kysely';
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { AppError, notFound } from '../lib/errors';
@@ -30,7 +31,7 @@ export async function swapRoutes(app: FastifyInstance) {
   const db = app.db;
   const tx = <T>(fn: (trx: Trx) => Promise<T>) => db.transaction().execute(fn);
   const swapsOn = requireFeature(db, 'swaps');
-  const swapOut = (s: Selectable<DB['shift_swap_request']>) => ({
+  const swapOut = (s: Selectable<DB['shift_swap_request']>): SwapDto => ({
     id: s.id,
     hotelId: s.hotel_id,
     scheduleId: s.schedule_id,
@@ -312,7 +313,12 @@ export async function swapRoutes(app: FastifyInstance) {
     return { items };
   });
 
-  const decideAfterAccept = async (trx: Trx, req: any, s: any, companyId: number) => {
+  const decideAfterAccept = async (
+    trx: Trx,
+    req: FastifyRequest,
+    s: Selectable<DB['shift_swap_request']>,
+    companyId: number,
+  ) => {
     const comp = await trx
       .selectFrom('company')
       .select('swap_approval')
@@ -555,7 +561,12 @@ export async function swapRoutes(app: FastifyInstance) {
     },
   );
 
-  async function applySwap(trx: Trx, ctx: Ctx, s: any, overrideReason: string | undefined) {
+  async function applySwap(
+    trx: Trx,
+    ctx: Ctx,
+    s: Selectable<DB['shift_swap_request']>,
+    overrideReason: string | undefined,
+  ) {
     if (s.counterpart_schedule_id) {
       const [va, vb] = await Promise.all([
         trx

@@ -1,3 +1,10 @@
+import type {
+  ApprovalAbsenceList,
+  ApprovalCorrectionList,
+  ApprovalList,
+  HotelDto,
+  Items,
+} from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { fromZonedTime } from 'date-fns-tz';
@@ -58,7 +65,7 @@ const rowStyle: React.CSSProperties = {
 
 const dayIso = (iso: string) => new Intl.DateTimeFormat('sv-SE', { timeZone: TZ }).format(new Date(iso));
 
-function AdjustDialog({ item, onClose }: { item: any; onClose: () => void }) {
+function AdjustDialog({ item, onClose }: { item: WorkedItem; onClose: () => void }) {
   const { t } = useTranslation();
   const toast = useToast();
   const base = item.paidStart ?? item.actualIn;
@@ -82,7 +89,7 @@ function AdjustDialog({ item, onClose }: { item: any; onClose: () => void }) {
         paidEnd: toIso(end, paidStart),
         breakMinutes: Number(brk),
         notes: notes || undefined,
-      } as any,
+      },
       {
         onSuccess: () => {
           toast(t('Freigegeben'));
@@ -175,24 +182,39 @@ function RejectDialog({
 export function Requests() {
   const { t } = useTranslation();
   const toast = useToast();
-  const hotels = useGet('/hotels');
+  const hotels = useGet<Items<HotelDto>>('/hotels');
   const [hotelId, setHotelId] = useState('');
   const q = { hotelId: hotelId || undefined, status: 'pending' };
-  const worked = useGet('/approvals', { ...q, type: 'worked_time' });
-  const absences = useGet('/approvals', { ...q, type: 'absence' });
-  const corrections = useGet('/approvals', { ...q, type: 'correction' });
+  const worked = useGet<ApprovalList>('/approvals', { ...q, type: 'worked_time' });
+  const absences = useGet<ApprovalAbsenceList>('/approvals', { ...q, type: 'absence' });
+  const corrections = useGet<ApprovalCorrectionList>('/approvals', { ...q, type: 'correction' });
   const [sel, setSel] = useState<number[]>([]);
-  const [adjust, setAdjust] = useState<any | null>(null);
-  const [reject, setReject] = useState<{ kind: 'worked' | 'absence' | 'correction'; item: any } | null>(null);
+  const [adjust, setAdjust] = useState<WorkedItem | null>(null);
+  const [reject, setReject] = useState<{
+    kind: 'worked' | 'absence' | 'correction';
+    item: WorkedItem | AbsenceItem | CorrectionItem;
+  } | null>(null);
   const [err, setErr] = useState<unknown>(null);
 
-  const decideWorked = useSend<any>('PUT', (b) => `/approvals/worked-time/${b.id}`);
-  const decideAbsence = useSend<any>('PUT', (b) => `/approvals/absences/${b.id}`);
-  const decideCorr = useSend<any>('PUT', (b) => `/approvals/corrections/${b.id}`);
-  const bulk = useSend<{ ids: number[] }, any>('POST', '/approvals/worked-time/bulk-approve');
+  const decideWorked = useSend<{ id: number } & Record<string, unknown>>(
+    'PUT',
+    (b) => `/approvals/worked-time/${b.id}`,
+  );
+  const decideAbsence = useSend<{ id: number } & Record<string, unknown>>(
+    'PUT',
+    (b) => `/approvals/absences/${b.id}`,
+  );
+  const decideCorr = useSend<{ id: number } & Record<string, unknown>>(
+    'PUT',
+    (b) => `/approvals/corrections/${b.id}`,
+  );
+  const bulk = useSend<{ ids: number[] }, { approved: number[]; failed: unknown[] }>(
+    'POST',
+    '/approvals/worked-time/bulk-approve',
+  );
 
   const items = worked.data?.items ?? [];
-  const selectable = items.filter((i: any) => i.flags.length === 0);
+  const selectable = items.filter((i) => i.flags.length === 0);
   const toggle = (id: number) => setSel((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
   const ok = (msg: string) => () => {
     setErr(null);
@@ -225,7 +247,7 @@ export function Requests() {
           style={{ minWidth: 180 }}
         >
           <option value="">{t('Alle Hotels')}</option>
-          {(hotels.data?.items ?? []).map((h: any) => (
+          {(hotels.data?.items ?? []).map((h) => (
             <option key={h.id} value={h.id}>
               {h.name}
             </option>
@@ -261,7 +283,7 @@ export function Requests() {
           <button
             className="btn btn-secondary"
             disabled={!selectable.length}
-            onClick={() => setSel(sel.length === selectable.length ? [] : selectable.map((i: any) => i.id))}
+            onClick={() => setSel(sel.length === selectable.length ? [] : selectable.map((i) => i.id))}
           >
             {sel.length === selectable.length && sel.length
               ? t('Auswahl aufheben')
@@ -281,7 +303,7 @@ export function Requests() {
             {t('Nichts zu prüfen.')}
           </div>
         )}
-        {items.map((i: any) => (
+        {items.map((i) => (
           <div key={i.id} style={rowStyle} data-testid="worked-row">
             <input
               type="checkbox"
@@ -328,8 +350,8 @@ export function Requests() {
                 {i.breakMinutes ?? 0} {t('Min.')} · <b>{fnum(i.paidHours, 2)} h</b>
               </div>
               {i.variations
-                .filter((v: any) => v.reason)
-                .map((v: any, k: number) => (
+                .filter((v) => v.reason)
+                .map((v, k) => (
                   <div key={k} style={{ fontSize: 12 }}>
                     „{v.reason}“
                   </div>
@@ -384,7 +406,7 @@ export function Requests() {
             {t('Keine offenen Anträge.')}
           </div>
         )}
-        {(absences.data?.items ?? []).map((a: any) => (
+        {(absences.data?.items ?? []).map((a) => (
           <div
             key={a.id}
             style={{ ...rowStyle, gridTemplateColumns: 'minmax(0,1fr) auto' }}
@@ -408,7 +430,7 @@ export function Requests() {
                   ⚠ {t('Unterbesetzung')}:{' '}
                   {a.understaffing
                     .map(
-                      (u: any) =>
+                      (u) =>
                         `${fdate(u.date, { day: '2-digit', month: '2-digit' })} ${u.departmentName} ${u.assigned}/${u.required}`,
                     )
                     .join(', ')}
@@ -465,7 +487,7 @@ export function Requests() {
             {t('Keine offenen Anträge.')}
           </div>
         )}
-        {(corrections.data?.items ?? []).map((c: any) => (
+        {(corrections.data?.items ?? []).map((c) => (
           <div
             key={c.id}
             style={{ ...rowStyle, gridTemplateColumns: 'minmax(0,1fr) auto' }}
@@ -539,3 +561,7 @@ export function Requests() {
     </main>
   );
 }
+
+type WorkedItem = ApprovalList['items'][number];
+type AbsenceItem = ApprovalAbsenceList['items'][number];
+type CorrectionItem = ApprovalCorrectionList['items'][number];

@@ -1,3 +1,4 @@
+import type { PayrollPeriodDto } from '@dienst/shared';
 import type { DB } from '../db';
 import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
@@ -398,7 +399,7 @@ export async function approvalRoutes(app: FastifyInstance) {
   );
 
   // ------------------------------------------------------------------ payroll periods (month close)
-  const periodOut = (x: Selectable<DB['payroll_period']>) => ({
+  const periodOut = (x: Selectable<DB['payroll_period']>): PayrollPeriodDto => ({
     id: x.id,
     companyId: x.company_id,
     hotelId: x.hotel_id,

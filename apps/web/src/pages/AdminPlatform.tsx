@@ -1,3 +1,11 @@
+import type {
+  ApiKeyList,
+  CompanyDto,
+  HotelDto,
+  HotelSettingsFull,
+  Items,
+  SsoProviderDto,
+} from '@dienst/shared';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGet, useSend } from '../lib/api';
@@ -16,7 +24,7 @@ const wrap: React.CSSProperties = {
 export function HotelPlatformSettings({ hotelId }: { hotelId: number }) {
   const { t } = useTranslation();
   const toast = useToast();
-  const s = useGet(`/hotels/${hotelId}/settings`);
+  const s = useGet<HotelSettingsFull>(`/hotels/${hotelId}/settings`);
   const save = useSend<Record<string, unknown>>('PUT', `/hotels/${hotelId}/settings`, [['api']]);
   const [cidrs, setCidrs] = useState('');
   useEffect(() => setCidrs((s.data?.webPunchAllowedCidrs ?? []).join(', ')), [s.data]);
@@ -97,7 +105,7 @@ export function HotelPlatformSettings({ hotelId }: { hotelId: number }) {
 // ---------------------------------------------------------------- API keys and SSO
 export function AdminIntegrations() {
   const { t } = useTranslation();
-  const companies = useGet('/companies');
+  const companies = useGet<Items<CompanyDto>>('/companies');
   return (
     <div style={wrap}>
       <h2 style={{ margin: 0, fontSize: 20 }}>{t('Schnittstellen')}</h2>
@@ -122,12 +130,12 @@ const EXPIRY: Array<[number, string]> = [
   [730, '2 Jahre'],
 ];
 
-function ApiKeys({ companies }: { companies: any[] }) {
+function ApiKeys({ companies }: { companies: CompanyDto[] }) {
   const { t } = useTranslation();
   const toast = useToast();
-  const keys = useGet('/api-keys');
-  const hotels = useGet('/hotels');
-  const create = useSend<any, any>('POST', '/api-keys');
+  const keys = useGet<ApiKeyList>('/api-keys');
+  const hotels = useGet<Items<HotelDto>>('/hotels');
+  const create = useSend<Record<string, unknown>, { key: string }>('POST', '/api-keys');
   const revoke = useSend<number>('DELETE', (id) => `/api-keys/${id}`);
   const [dlg, setDlg] = useState(false);
   const [name, setName] = useState('');
@@ -180,13 +188,13 @@ function ApiKeys({ companies }: { companies: any[] }) {
           </tr>
         </thead>
         <tbody>
-          {(keys.data?.items ?? []).map((k: any) => (
+          {(keys.data?.items ?? []).map((k) => (
             <tr key={k.id} data-testid="api-key-row">
               <td style={{ paddingLeft: 'var(--space-4)', fontWeight: 700 }}>{k.name}</td>
               <td style={{ fontFamily: 'monospace' }}>{k.prefix}…</td>
               <td>
                 {k.hotelId
-                  ? ((hotels.data?.items ?? []).find((h: any) => h.id === k.hotelId)?.name ?? k.hotelId)
+                  ? ((hotels.data?.items ?? []).find((h) => h.id === k.hotelId)?.name ?? k.hotelId)
                   : t('Alle Hotels')}
               </td>
               <td style={{ fontSize: 12 }}>
@@ -298,8 +306,8 @@ function ApiKeys({ companies }: { companies: any[] }) {
             >
               <option value="">{t('Alle Hotels')}</option>
               {(hotels.data?.items ?? [])
-                .filter((h: any) => h.companyId === Number(cid))
-                .map((h: any) => (
+                .filter((h) => h.companyId === Number(cid))
+                .map((h) => (
                   <option key={h.id} value={h.id}>
                     {h.name}
                   </option>
@@ -381,13 +389,15 @@ function ApiKeys({ companies }: { companies: any[] }) {
   );
 }
 
-function Sso({ companies }: { companies: any[] }) {
+function Sso({ companies }: { companies: CompanyDto[] }) {
   const { t } = useTranslation();
   const toast = useToast();
   const [companyId, setCompanyId] = useState<number | ''>('');
   const cid = companyId || companies[0]?.id || null;
-  const cur = useGet('/sso/provider', cid ? { companyId: String(cid) } : undefined, { enabled: !!cid });
-  const save = useSend<any>('PUT', '/sso/provider');
+  const cur = useGet<SsoProviderDto>('/sso/provider', cid ? { companyId: String(cid) } : undefined, {
+    enabled: !!cid,
+  });
+  const save = useSend('PUT', '/sso/provider');
   const remove = useSend<number>('DELETE', (id) => `/sso/provider?companyId=${id}`);
   const [issuer, setIssuer] = useState('');
   const [clientId, setClientId] = useState('');
@@ -500,7 +510,7 @@ function Sso({ companies }: { companies: any[] }) {
           {configured && (
             <button
               className="btn btn-ghost"
-              onClick={() => remove.mutate(cid, { onSuccess: () => toast(t('Gelöscht.')) })}
+              onClick={() => remove.mutate(cid as number, { onSuccess: () => toast(t('Gelöscht.')) })}
             >
               {t('Entfernen')}
             </button>

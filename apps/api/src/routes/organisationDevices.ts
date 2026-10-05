@@ -1,3 +1,4 @@
+import type { DepartmentDto, KioskDeviceDto } from '@dienst/shared';
 import type { DB } from '../db';
 import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
@@ -22,7 +23,7 @@ export async function departmentRoutes(app: FastifyInstance) {
   const tx = <T>(fn: (trx: Trx) => Promise<T>) => db.transaction().execute(fn);
 
   // ---------------------------------------------------------------- departments
-  const deptOut = (d: Selectable<DB['department']>) => ({
+  const deptOut = (d: Selectable<DB['department']>): DepartmentDto => ({
     id: d.id,
     hotelId: d.hotel_id,
     name: d.name,
@@ -161,12 +162,12 @@ export async function departmentRoutes(app: FastifyInstance) {
   );
 
   // ---------------------------------------------------------------- kiosk devices
-  const deviceOut = (d: Selectable<DB['kiosk_device']>, now: Date) => ({
+  const deviceOut = (d: Selectable<DB['kiosk_device']>, now: Date): KioskDeviceDto => ({
     id: d.id,
     hotelId: d.hotel_id,
     name: d.name,
     status: d.status,
-    lastSeenAt: d.last_seen_at,
+    lastSeenAt: d.last_seen_at ? new Date(d.last_seen_at).toISOString() : null,
     online:
       d.status === 'active' &&
       !!d.last_seen_at &&

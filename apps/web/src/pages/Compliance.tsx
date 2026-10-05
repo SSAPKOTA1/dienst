@@ -1,3 +1,4 @@
+import type { ReplacementRestList, RestCompensationList, SundayNightList } from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGet } from '../lib/api';
@@ -37,9 +38,15 @@ export function Compliance() {
   const [tab, setTab] = useState<'rest' | 'replacement' | 'sundays'>('rest');
   const [month, setMonth] = useState(todayIso().slice(0, 7));
   const [from, to] = monthRange(month);
-  const rest = useGet(tab === 'rest' ? '/compliance/rest-compensation' : null, { from, to });
-  const repl = useGet(tab === 'replacement' ? '/compliance/replacement-rest' : null, { from, to });
-  const sun = useGet(tab === 'sundays' ? '/compliance/sundays-nights' : null, {
+  const rest = useGet<RestCompensationList>(tab === 'rest' ? '/compliance/rest-compensation' : null, {
+    from,
+    to,
+  });
+  const repl = useGet<ReplacementRestList>(tab === 'replacement' ? '/compliance/replacement-rest' : null, {
+    from,
+    to,
+  });
+  const sun = useGet<SundayNightList>(tab === 'sundays' ? '/compliance/sundays-nights' : null, {
     year: Number(month.slice(0, 4)),
   });
   const Th = ({ children }: { children?: React.ReactNode }) => <th>{children}</th>;
@@ -79,7 +86,7 @@ export function Compliance() {
                 </tr>
               </thead>
               <tbody>
-                {(rest.data?.items ?? []).map((r: any, i: number) => (
+                {(rest.data?.items ?? []).map((r, i) => (
                   <tr key={i}>
                     <td>{r.displayName}</td>
                     <td>
@@ -113,7 +120,7 @@ export function Compliance() {
                 </tr>
               </thead>
               <tbody>
-                {(repl.data?.items ?? []).map((r: any, i: number) => (
+                {(repl.data?.items ?? []).map((r, i) => (
                   <tr key={i}>
                     <td>{r.displayName}</td>
                     <td>{fdate(r.date)}</td>
@@ -144,7 +151,7 @@ export function Compliance() {
                 </tr>
               </thead>
               <tbody>
-                {(sun.data?.items ?? []).map((r: any) => (
+                {(sun.data?.items ?? []).map((r) => (
                   <tr key={r.employeeId}>
                     <td>{r.displayName}</td>
                     <td>{r.sundaysWorked}</td>

@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api, ApiError, setToken } from '../lib/api';
 import { homePathFor, useAuth, type AvailableRole, type RoleName } from '../lib/auth';
+import type { LoginResponseDto, SessionDto, TwoFactorSetupDto } from '@dienst/shared';
 import { LangSwitch } from '../components/LangSwitch';
 
 type Step = 'credentials' | 'totp' | 'role' | 'setup2fa';
@@ -110,12 +111,15 @@ export function Login() {
     setBusy(true);
     setError(null);
     try {
-      const r = await api('/auth/login', { body: { login, password, totp: totp || undefined }, token: null });
+      const r = await api<LoginResponseDto>('/auth/login', {
+        body: { login, password, totp: totp || undefined },
+        token: null,
+      });
       if (r.accessToken) return finish(r.accessToken);
-      setPre(r.preToken);
+      setPre(r.preToken ?? null);
       setRoles(r.availableRoles);
       if (r.twoFactorSetupRequired) {
-        const s = await api('/auth/2fa/setup', { body: {}, token: r.preToken });
+        const s = await api<TwoFactorSetupDto>('/auth/2fa/setup', { body: {}, token: r.preToken });
         setSetup(s);
         setStep('setup2fa');
       } else setStep('role');
@@ -129,7 +133,10 @@ export function Login() {
   const pick = async (r: AvailableRole, token = pre) => {
     setBusy(true);
     try {
-      const s = await api('/auth/select-role', { body: { role: r.role, employeeId: r.employeeId }, token });
+      const s = await api<SessionDto>('/auth/select-role', {
+        body: { role: r.role, employeeId: r.employeeId },
+        token,
+      });
       finish(s.accessToken);
     } catch (err) {
       fail(err);
@@ -360,13 +367,13 @@ export function SsoCallback() {
     const ticket = new URLSearchParams(window.location.hash.slice(1)).get('ticket');
     window.history.replaceState(null, '', window.location.pathname);
     if (!ticket) return setError(t('Die Anmeldung ist abgelaufen. Bitte noch einmal versuchen.'));
-    api('/auth/sso/exchange', { body: { ticket }, token: null })
+    api<LoginResponseDto>('/auth/sso/exchange', { body: { ticket }, token: null })
       .then((r) => {
         if (r.accessToken) {
           setSession(r.accessToken);
           nav('/', { replace: true });
         } else {
-          setPre(r.preToken);
+          setPre(r.preToken ?? null);
           setRoles(r.availableRoles);
         }
       })
@@ -380,7 +387,7 @@ export function SsoCallback() {
   }, [nav, setSession, t]);
   const pick = async (r: AvailableRole) => {
     try {
-      const s = await api('/auth/select-role', {
+      const s = await api<SessionDto>('/auth/select-role', {
         body: { role: r.role, employeeId: r.employeeId },
         token: pre,
       });

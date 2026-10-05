@@ -202,7 +202,7 @@ export async function setupRoutes(app: FastifyInstance) {
         await db.selectFrom('hotel').select('id').where('company_id', '=', companyId).execute()
       ).map((h) => h.id);
       const hs = hotelIds.length ? hotelIds : [0];
-      const cnt = async (q: any) => Number((await q.executeTakeFirstOrThrow()).n);
+      const cnt = async (q: CountQuery) => Number((await q.executeTakeFirstOrThrow()).n);
       const employees = await cnt(
         db
           .selectFrom('employee')
@@ -307,4 +307,9 @@ export async function setupRoutes(app: FastifyInstance) {
       };
     },
   );
+}
+
+/** A kysely query that ends in a single `n` count column. */
+export interface CountQuery {
+  executeTakeFirstOrThrow(): Promise<{ n: string | number | bigint }>;
 }

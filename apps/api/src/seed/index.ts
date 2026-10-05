@@ -36,6 +36,7 @@ export interface SeedResult {
   }>;
   kioskToken: string;
   totpSecret: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- demo-data id bag: numbers, maps and names by key
   ids: Record<string, any>;
 }
 

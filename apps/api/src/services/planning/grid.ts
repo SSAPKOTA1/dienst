@@ -1,3 +1,4 @@
+import type { CountQuery } from '../../routes/setup';
 import {
   addDays,
   countedDays,
@@ -36,6 +37,37 @@ export function rangeOf(range: 'week' | 'month', from: string): { from: string; 
   const [y, m] = first.split('-').map(Number);
   return { from: first, to: new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10) };
 }
+
+export interface GridEntryOut {
+  start: string;
+  end: string;
+  displayName?: string | null;
+  shiftName?: string | null;
+  isOtherHotel?: boolean;
+  otherHotelName?: string;
+  [field: string]: unknown;
+}
+export interface GridCellOut {
+  date: string;
+  entries: GridEntryOut[];
+  assigned?: number;
+  required?: number | null;
+  [field: string]: unknown;
+}
+export interface GridRowOut {
+  key: string;
+  kind: 'employee' | 'shift' | 'adhoc';
+  label: string;
+  employeeId?: number;
+  departmentName?: string;
+  hotelName?: string;
+  totalHours: number;
+  targetHours?: number | null;
+  openSlots?: number;
+  cells: GridCellOut[];
+  [field: string]: unknown;
+}
+export type GridResult = Awaited<ReturnType<typeof buildGrid>>;
 
 export async function buildGrid(db: Db, p: Principal, now: Date, prm: GridParams) {
   const hotelIds = p.scope.hotels(prm.hotelIds);
@@ -276,7 +308,7 @@ export async function buildGrid(db: Db, p: Principal, now: Date, prm: GridParams
   }
 
   // ---- rows
-  const rows: any[] = [];
+  const rows: GridRowOut[] = [];
   const cellLock = (date: string, hotelId?: number): 'past' | 'closed' | null => {
     const h = hotelId ?? hotelIds[0];
     return date < env.today(h) ? 'past' : env.isClosed(h, date) ? 'closed' : null;
@@ -547,7 +579,7 @@ const weeksOf = (from: string, to: string) => {
 
 export async function openRequestCount(db: Db, hotelIds: number[]): Promise<number> {
   if (!hotelIds.length) return 0;
-  const n = async (q: any) => Number((await q.executeTakeFirstOrThrow()).n);
+  const n = async (q: CountQuery) => Number((await q.executeTakeFirstOrThrow()).n);
   const t = await n(
     db
       .selectFrom('time_off as t')
