@@ -13,6 +13,44 @@ declare module 'fastify' {
   }
 }
 
+interface Cached {
+  until: number;
+  principal: Principal;
+}
+const principalCache = new WeakMap<object, Map<string, Cached>>();
+
+/**
+ * Scope + account status of a token holder. The lookup runs on every request, so a short cache
+ * (PRINCIPAL_CACHE_MS) saves about five queries per call; a revoked role or blocked account is
+ * noticed after at most that long. Deactivation by password reset or logout also revokes the refresh token.
+ */
+async function resolvePrincipal(
+  app: FastifyRequest['server'],
+  userId: number,
+  role: Role,
+  employeeId?: number | null,
+): Promise<Principal> {
+  const ttl = app.cfg.PRINCIPAL_CACHE_MS;
+  const key = `${userId}:${role}:${employeeId ?? ''}`;
+  let cache = principalCache.get(app);
+  if (!cache) principalCache.set(app, (cache = new Map()));
+  const hit = cache.get(key);
+  if (ttl > 0 && hit && hit.until > Date.now()) return hit.principal;
+  const principal = await buildPrincipal(app.db, userId, role, employeeId);
+  if (!principal) throw new AppError('UNAUTHENTICATED', 'Role is no longer available');
+  const user = await app.db
+    .selectFrom('user_account')
+    .select('status')
+    .where('id', '=', userId)
+    .executeTakeFirst();
+  if (!user || user.status !== 'active') throw new AppError('UNAUTHENTICATED', 'Account is not active');
+  if (ttl > 0) {
+    if (cache.size > 5000) cache.clear();
+    cache.set(key, { until: Date.now() + ttl, principal });
+  } else cache.delete(key);
+  return principal;
+}
+
 export type RoleSpec = Role | 'ANY';
 
 function bearer(req: FastifyRequest): string | null {
@@ -33,14 +71,7 @@ export function requireRole(...roles: RoleSpec[]): preValidationAsyncHookHandler
     );
     if (!claims || claims.pre || !claims.role)
       throw new AppError('UNAUTHENTICATED', 'Invalid or expired token');
-    const principal = await buildPrincipal(app.db, Number(claims.sub), claims.role, claims.employeeId);
-    if (!principal) throw new AppError('UNAUTHENTICATED', 'Role is no longer available');
-    const user = await app.db
-      .selectFrom('user_account')
-      .select('status')
-      .where('id', '=', principal.userId)
-      .executeTakeFirst();
-    if (!user || user.status !== 'active') throw new AppError('UNAUTHENTICATED', 'Account is not active');
+    const principal = await resolvePrincipal(app, Number(claims.sub), claims.role, claims.employeeId);
     if (!roles.includes('ANY') && !roles.includes(principal.role)) {
       throw new AppError('FORBIDDEN_SCOPE', 'This role may not use this endpoint');
     }

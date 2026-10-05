@@ -27,6 +27,13 @@ const schema = z.object({
   MAIL_MODE: z.enum(['smtp', 'json']).default('smtp'),
   /** maximum database connections of this process */
   DB_POOL_MAX: z.coerce.number().int().min(1).max(100).default(10),
+  /** false: this process serves HTTP only and a separate worker (`worker.mjs`) runs the background jobs */
+  RUN_JOBS: z
+    .string()
+    .default('true')
+    .transform((v) => v !== 'false'),
+  /** how long (ms) a resolved login/scope may be reused; role or status changes take effect after at most this long. 0 = off */
+  PRINCIPAL_CACHE_MS: z.coerce.number().int().min(0).max(60000).default(5000),
   /** wait this long after SIGTERM before closing the listener (the balancer notices the readiness change) */
   SHUTDOWN_DRAIN_MS: z.coerce.number().int().min(0).max(60000).default(2000),
   /** hard limit for a clean shutdown */
