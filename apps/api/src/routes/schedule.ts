@@ -123,7 +123,11 @@ export async function scheduleRoutes(app: FastifyInstance) {
         });
       } catch (e) {
         if (e instanceof Rollback)
-          return { status: 'ok', violations: (e.payload as any).warnings ?? [], totals: [] };
+          return {
+            status: 'ok',
+            violations: (e.payload as { warnings?: unknown[] }).warnings ?? [],
+            totals: [],
+          };
         if (e instanceof AppError) {
           const vs = (e.details.violations as Violation[] | undefined) ?? [
             { code: e.code, severity: 'block', message: e.message, details: e.details },

@@ -1,3 +1,4 @@
+import type { GridEntryOut, GridResult, GridRowOut } from './planning/grid';
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import { eachDay, isoWeekday } from '@dienst/rules';
@@ -68,11 +69,11 @@ const headStyle = (row: ExcelJS.Row) => {
 
 // ---------------------------------------------------------------------------------------------
 // schedule workbook (from the grid result, so the export shows exactly what the grid shows)
-export function scheduleWorkbook(grid: any, hotelNames: string[]): ExcelJS.Workbook {
+export function scheduleWorkbook(grid: GridResult, hotelNames: string[]): ExcelJS.Workbook {
   const wb = new ExcelJS.Workbook();
   wb.creator = 'Dienstplan';
   const ws = wb.addWorksheet('Dienstplan', { views: [{ state: 'frozen', xSplit: 2, ySplit: 3 }] });
-  const dates: string[] = grid.days.map((d: any) => d.date);
+  const dates: string[] = grid.days.map((d) => d.date);
   const employeeView = grid.view === 'employee';
   ws.addRow([`Dienstplan ${de(grid.from)} – ${de(grid.to)}`]).font = { bold: true, size: 14 };
   ws.addRow([
@@ -88,23 +89,23 @@ export function scheduleWorkbook(grid: any, hotelNames: string[]): ExcelJS.Workb
   ]);
   headStyle(head);
   const absOn = (empId: number, date: string) =>
-    (grid.absences as any[]).filter((a) => a.employeeId === empId && a.from <= date && a.to >= date);
-  const timeOf = (e: any) => `${String(e.start).slice(11, 16)}–${String(e.end).slice(11, 16)}`;
-  for (const r of grid.rows as any[]) {
+    grid.absences.filter((a) => a.employeeId === empId && a.from <= date && a.to >= date);
+  const timeOf = (e: GridEntryOut) => `${String(e.start).slice(11, 16)}–${String(e.end).slice(11, 16)}`;
+  for (const r of grid.rows as GridRowOut[]) {
     if (employeeView) {
-      const cells = (r.cells as any[]).map((c) => {
-        const parts = (c.entries as any[]).map(
+      const cells = r.cells.map((c) => {
+        const parts = c.entries.map(
           (e) =>
             `${timeOf(e)}${e.shiftName ? ` ${e.shiftName}` : ''}${e.isOtherHotel ? ` (${e.otherHotelName})` : ''}`,
         );
-        for (const a of absOn(r.employeeId, c.date))
+        for (const a of absOn(r.employeeId ?? 0, c.date))
           parts.push(`${ABSENCE_DE[a.type] ?? a.type}${a.status === 'pending' ? ' (beantragt)' : ''}`);
         return parts.join('\n');
       });
       ws.addRow([r.label, r.departmentName, ...cells, r.totalHours, r.targetHours ?? '']);
     } else {
-      const cells = (r.cells as any[]).map((c) => {
-        const names = (c.entries as any[]).map((e) => e.displayName).join(', ');
+      const cells = r.cells.map((c) => {
+        const names = c.entries.map((e) => e.displayName).join(', ');
         return c.required != null && c.required > 0
           ? `${c.assigned}/${c.required}${names ? `\n${names}` : ''}`
           : names;
@@ -121,7 +122,7 @@ export function scheduleWorkbook(grid: any, hotelNames: string[]): ExcelJS.Workb
   const totals = ws.addRow([
     'Summe Stunden',
     '',
-    ...dates.map((d) => (grid.totals.perDay as any[]).find((x) => x.date === d)?.hours ?? 0),
+    ...dates.map((d) => grid.totals.perDay.find((x) => x.date === d)?.hours ?? 0),
     '',
     '',
   ]);

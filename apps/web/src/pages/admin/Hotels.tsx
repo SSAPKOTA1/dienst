@@ -1,3 +1,4 @@
+import type { CompanyDto, DepartmentDto, HotelDto, Items, ShiftDto } from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGet, useSend } from '../../lib/api';
@@ -10,14 +11,14 @@ export function AdminHotels() {
   const { t } = useTranslation();
   const { me } = useAuth();
   const toast = useToast();
-  const hotels = useGet('/hotels');
-  const depts = useGet('/departments');
-  const shifts = useGet('/shifts');
-  const companies = useGet('/companies');
+  const hotels = useGet<Items<HotelDto>>('/hotels');
+  const depts = useGet<Items<DepartmentDto>>('/departments');
+  const shifts = useGet<Items<ShiftDto>>('/shifts');
+  const companies = useGet<Items<CompanyDto>>('/companies');
   type Dlg =
     | { kind: 'hotel' }
-    | { kind: 'dept'; hotelId: number; dept?: any }
-    | { kind: 'shifts'; hotelId: number; dept: any };
+    | { kind: 'dept'; hotelId: number; dept?: DepartmentDto }
+    | { kind: 'shifts'; hotelId: number; dept: DepartmentDto };
   const [dlg, setDlg] = useState<Dlg | null>(null);
   const setVis = useSend<{ id: number; employeeHoursVisibility: string }>(
     'PUT',
@@ -37,7 +38,7 @@ export function AdminHotels() {
           </button>
         )}
       </div>
-      {(hotels.data?.items ?? []).map((h: any) => (
+      {(hotels.data?.items ?? []).map((h) => (
         <section key={h.id} style={{ border: '2px solid var(--color-text)' }}>
           <div
             style={{
@@ -91,14 +92,14 @@ export function AdminHotels() {
             </thead>
             <tbody>
               {(depts.data?.items ?? [])
-                .filter((d: any) => d.hotelId === h.id)
-                .map((d: any) => (
+                .filter((d) => d.hotelId === h.id)
+                .map((d) => (
                   <tr key={d.id}>
                     <td style={{ paddingLeft: 'var(--space-4)', fontWeight: 700 }}>{d.name}</td>
                     <td style={{ fontSize: 13 }}>
                       {(shifts.data?.items ?? [])
-                        .filter((x: any) => x.departmentId === d.id)
-                        .map((x: any) => `${x.name} ${x.startTime}–${x.endTime}`)
+                        .filter((x) => x.departmentId === d.id)
+                        .map((x) => `${x.name} ${x.startTime}–${x.endTime}`)
                         .join(' · ') || '–'}
                     </td>
                     <td style={{ fontVariantNumeric: 'tabular-nums' }}>
@@ -159,7 +160,7 @@ export function AdminHotels() {
         <ShiftsDialog
           hotelId={dlg.hotelId}
           dept={dlg.dept}
-          shifts={(shifts.data?.items ?? []).filter((x: any) => x.departmentId === dlg.dept.id)}
+          shifts={(shifts.data?.items ?? []).filter((x) => x.departmentId === dlg.dept.id)}
           onClose={() => setDlg(null)}
           onChanged={() => void shifts.refetch()}
         />
@@ -184,7 +185,7 @@ function HotelDialog({
   onClose,
   onDone,
 }: {
-  companies: any[];
+  companies: CompanyDto[];
   onClose: () => void;
   onDone: () => void;
 }) {
@@ -275,7 +276,7 @@ function DeptDialog({
   onDone,
 }: {
   hotelId: number;
-  dept?: any;
+  dept?: DepartmentDto;
   onClose: () => void;
   onDone: () => void;
 }) {

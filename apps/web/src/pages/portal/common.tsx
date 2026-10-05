@@ -1,3 +1,4 @@
+import type { NotificationDto } from '@dienst/shared';
 import { fdate } from '../../lib/format';
 
 export const TZ = 'Europe/Berlin';
@@ -37,8 +38,13 @@ export const stat = (label: string, value: React.ReactNode) => (
 );
 export const dayLabel = (iso: string) => fdate(iso, { weekday: 'short', day: '2-digit', month: '2-digit' });
 
-export const NOTE_TEXT = (n: any, t: (s: string) => string): string => {
-  const p = n.payload ?? {};
+export const NOTE_TEXT = (n: NotificationDto, t: (s: string) => string): string => {
+  const p = (n.payload ?? {}) as {
+    decision?: string;
+    timeOffId?: number;
+    correctionId?: number;
+    title?: string;
+  };
   const verdict = p.decision === 'approve' ? t('freigegeben') : t('abgelehnt');
   switch (n.kind) {
     case 'schedule_published':

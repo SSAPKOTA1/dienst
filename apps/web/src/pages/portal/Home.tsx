@@ -1,3 +1,4 @@
+import type { MyHomeDto } from '@dienst/shared';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGet, useSend } from '../../lib/api';
@@ -9,7 +10,7 @@ import { NOTE_TEXT, TZ, card, cardHead, dayLabel, line, stat } from './common';
 export function PortalHome() {
   const { t } = useTranslation();
   const { me } = useAuth();
-  const home = useGet('/me/home');
+  const home = useGet<MyHomeDto>('/me/home');
   const read = useSend<number>('PUT', (id) => `/notifications/${id}/read`, [['api', '/me/home']]);
   const h = home.data;
   const first = me?.displayName?.split(' ')[0] ?? '';
@@ -41,7 +42,7 @@ export function PortalHome() {
           {t('Nächste Schichten')}
         </h2>
         {(h?.nextShifts ?? []).length === 0 && <div style={line}>{t('Keine Schichten geplant.')}</div>}
-        {(h?.nextShifts ?? []).map((s: any) => (
+        {(h?.nextShifts ?? []).map((s) => (
           <div
             key={s.id}
             style={{ ...line, display: 'flex', gap: 'var(--space-3)', alignItems: 'baseline' }}
@@ -86,7 +87,7 @@ export function PortalHome() {
           {t('Benachrichtigungen')}
         </h2>
         {(h?.notifications ?? []).length === 0 && <div style={line}>{t('Keine Benachrichtigungen.')}</div>}
-        {(h?.notifications ?? []).map((n: any) => (
+        {(h?.notifications ?? []).map((n) => (
           <div
             key={n.id}
             style={{ ...line, display: 'flex', gap: 8, alignItems: 'center', fontWeight: n.read ? 400 : 700 }}

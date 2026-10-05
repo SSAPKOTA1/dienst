@@ -1,3 +1,4 @@
+import type { AttendanceHistoryEntryDto, AttendanceList, CorrectionDto, Items } from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { fromZonedTime } from 'date-fns-tz';
@@ -41,13 +42,13 @@ const CORR_TYPES = [
 export function PortalAttendance() {
   const { t } = useTranslation();
   const [month, setMonth] = useState(() => monthOf(todayIso()));
-  const [dlg, setDlg] = useState<{ rec?: any } | null>(() =>
+  const [dlg, setDlg] = useState<{ rec?: AttendanceItem } | null>(() =>
     new URLSearchParams(window.location.search).get('correct') ? {} : null,
   );
-  const att = useGet('/me/attendance', { from: `${month}-01`, to: monthEnd(month) });
-  const corr = useGet('/me/corrections');
-  const [hist, setHist] = useState<any | null>(null);
-  const history = useGet(hist ? `/me/attendance/${hist.id}/history` : null);
+  const att = useGet<AttendanceList>('/me/attendance', { from: `${month}-01`, to: monthEnd(month) });
+  const corr = useGet<Items<CorrectionDto>>('/me/corrections');
+  const [hist, setHist] = useState<AttendanceItem | null>(null);
+  const history = useGet<Items<AttendanceHistoryEntryDto>>(hist ? `/me/attendance/${hist.id}/history` : null);
   return (
     <main>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 'var(--space-3)' }}>
@@ -79,7 +80,7 @@ export function PortalAttendance() {
       </div>
       <section style={card} aria-label={t('Zeiten')}>
         {(att.data?.items ?? []).length === 0 && <div style={line}>{t('Keine Zeiten in diesem Monat.')}</div>}
-        {(att.data?.items ?? []).map((i: any) => (
+        {(att.data?.items ?? []).map((i) => (
           <div key={i.id} style={line} data-testid="att-row">
             <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
               <b style={{ minWidth: 92 }}>{dayLabel(i.date)}</b>
@@ -128,7 +129,7 @@ export function PortalAttendance() {
           {t('Meine Korrekturanträge')}
         </h2>
         {(corr.data?.items ?? []).length === 0 && <div style={line}>{t('Keine Anträge.')}</div>}
-        {(corr.data?.items ?? []).map((c: any) => (
+        {(corr.data?.items ?? []).map((c) => (
           <div key={c.id} style={line}>
             <div style={{ display: 'flex', gap: 8 }}>
               <b>{t(CORR_TYPES.find((x) => x[0] === c.type)?.[1] ?? c.type)}</b>
@@ -163,7 +164,7 @@ export function PortalAttendance() {
           {(history.data?.items ?? []).length === 0 && (
             <div style={{ fontSize: 13 }}>{t('Keine Änderungen sichtbar.')}</div>
           )}
-          {(history.data?.items ?? []).map((x: any, k: number) => (
+          {(history.data?.items ?? []).map((x, k) => (
             <div
               key={k}
               style={{ fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--color-divider)' }}
@@ -184,7 +185,15 @@ export function PortalAttendance() {
   );
 }
 
-function CorrectionDialog({ rec, month, onClose }: { rec?: any; month: string; onClose: () => void }) {
+function CorrectionDialog({
+  rec,
+  month,
+  onClose,
+}: {
+  rec?: AttendanceItem;
+  month: string;
+  onClose: () => void;
+}) {
   const { t } = useTranslation();
   const toast = useToast();
   const [type, setType] = useState<string>(rec ? 'wrong_time' : 'missing_day');
@@ -193,7 +202,7 @@ function CorrectionDialog({ rec, month, onClose }: { rec?: any; month: string; o
   const [to, setTo] = useState(rec?.out ? ftime(rec.paidEnd ?? rec.out, TZ) : '');
   const [brk, setBrk] = useState('');
   const [reason, setReason] = useState('');
-  const send = useSend<any>('POST', '/me/corrections');
+  const send = useSend('POST', '/me/corrections');
   const iso = (hm: string, after?: string) => {
     let d = fromZonedTime(`${date}T${hm}:00`, TZ);
     if (after && d <= new Date(after)) d = new Date(d.getTime() + 86400000);
@@ -204,7 +213,11 @@ function CorrectionDialog({ rec, month, onClose }: { rec?: any; month: string; o
     type === 'missed_in' || type === 'missing_day' || type === 'missed_out' || type === 'wrong_time';
   const submit = () => {
     const requestedIn = from ? iso(from) : undefined;
-    const body: any = { type, reason, requestedBreakMinutes: brk === '' ? undefined : Number(brk) };
+    const body: Record<string, unknown> = {
+      type,
+      reason,
+      requestedBreakMinutes: brk === '' ? undefined : Number(brk),
+    };
     if (rec) body.punchRecordId = rec.id;
     if (needsIn && requestedIn) body.requestedIn = requestedIn;
     if (needsOut && to) body.requestedOut = iso(to, requestedIn);
@@ -317,3 +330,5 @@ function CorrectionDialog({ rec, month, onClose }: { rec?: any; month: string; o
 }
 
 // ---------------------------------------------------------------- vacation
+
+type AttendanceItem = AttendanceList['items'][number];

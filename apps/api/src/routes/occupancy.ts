@@ -1,3 +1,4 @@
+import type { StaffingRuleDto } from '@dienst/shared';
 import type { DB } from '../db';
 import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
@@ -86,7 +87,7 @@ export async function occupancyRoutes(app: FastifyInstance) {
   });
 
   // ---- rules ("from X % this shift needs N people")
-  const ruleOut = (x: Selectable<DB['staffing_rule']> & { shift_name?: string | null }) => ({
+  const ruleOut = (x: Selectable<DB['staffing_rule']> & { shift_name?: string | null }): StaffingRuleDto => ({
     id: x.id,
     hotelId: x.hotel_id,
     shiftId: x.shift_id,

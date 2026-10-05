@@ -1,3 +1,4 @@
+import type { CandidateDto, Items } from '@dienst/shared';
 import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -251,11 +252,11 @@ function CellMenu({ target, onClose }: { target: MenuTarget; onClose: () => void
   const past = cell.date < ctx.today;
 
   const cands = useMemo(() => ({ key: `${row.shiftId}:${cell.date}` }), [row.shiftId, cell.date]);
-  const [people, setPeople] = useState<any[] | null>(null);
+  const [people, setPeople] = useState<CandidateDto[] | null>(null);
   useEffect(() => {
     if (!shiftView || !row.shiftId || past) return;
     let alive = true;
-    api('/schedule/candidates', {
+    api<Items<CandidateDto>>('/schedule/candidates', {
       query: {
         hotelIds: row.hotelId ?? undefined,
         shiftId: row.shiftId,
@@ -346,7 +347,7 @@ function CellMenu({ target, onClose }: { target: MenuTarget; onClose: () => void
       done: 'Abwesenheit eingetragen.',
     });
   };
-  const pickPerson = (p: any) => {
+  const pickPerson = (p: CandidateDto) => {
     close();
     void ctx.run({
       method: 'POST',
@@ -386,10 +387,10 @@ function CellMenu({ target, onClose }: { target: MenuTarget; onClose: () => void
       {past && <div className="sec">{t('Vergangener Tag. Keine Änderungen möglich.')}</div>}
       {people === null && !past && <div className="sec">…</div>}
       {(people ?? [])
-        .filter((p) => p.displayName.toLowerCase().includes(q.toLowerCase()))
+        .filter((p) => (p.displayName ?? '').toLowerCase().includes(q.toLowerCase()))
         .map((p) => {
           const reason = p.blocked
-            ? violationText(p.warnings.find((w: any) => w.severity === 'block') ?? p.warnings[0], t)
+            ? violationText(p.warnings.find((w) => w.severity === 'block') ?? p.warnings[0], t)
             : null;
           return (
             <button

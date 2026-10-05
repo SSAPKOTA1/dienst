@@ -1,3 +1,11 @@
+import type {
+  Items,
+  LeaveWishDto,
+  MyShiftList,
+  MyVacationNoticeList,
+  ShiftWishDto,
+  TimeAccountDto,
+} from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { download, useGet, useSend } from '../../lib/api';
@@ -14,7 +22,7 @@ export function PortalAccount() {
   const { t } = useTranslation();
   const toast = useToast();
   const { me } = useAuth();
-  const acc = useGet('/me/time-account');
+  const acc = useGet<TimeAccountDto>('/me/time-account');
   const [month, setMonth] = useState(() => monthOf(todayIso()));
   const get = (format: 'pdf' | 'xlsx') =>
     void download('/me/timesheet', { month, format }, `stundenzettel_${month}.${format}`).catch(() =>
@@ -100,8 +108,8 @@ export function PortalAccount() {
 // ---------------------------------------------------------------- wishes and vacation notices
 export function PortalWishes() {
   const { t } = useTranslation();
-  const leave = useGet('/me/leave-wishes');
-  const shift = useGet('/me/shift-wishes');
+  const leave = useGet<Items<LeaveWishDto>>('/me/leave-wishes');
+  const shift = useGet<Items<ShiftWishDto>>('/me/shift-wishes');
   const [dlg, setDlg] = useState<'leave' | 'shift' | null>(null);
   const withdraw = useSend<{ kind: string; id: number }>('DELETE', (b) => `/me/${b.kind}-wishes/${b.id}`);
   const st = (s: string) => t(WISH_STATUS[s] ?? s);
@@ -123,8 +131,8 @@ export function PortalWishes() {
         </button>
       </div>
       {[
-        ...(leave.data?.items ?? []).map((w: any) => ({ ...w, kind: 'leave' })),
-        ...(shift.data?.items ?? []).map((w: any) => ({ ...w, kind: 'shift' })),
+        ...(leave.data?.items ?? []).map((w) => ({ ...w, kind: 'leave' as const })),
+        ...(shift.data?.items ?? []).map((w) => ({ ...w, kind: 'shift' as const })),
       ].map((w) => (
         <div key={`${w.kind}${w.id}`} style={line} data-testid="wish-row">
           <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
@@ -177,13 +185,13 @@ function WishDialog({
   onDone: () => void;
 }) {
   const { t } = useTranslation();
-  const shifts = useGet(kind === 'shift' ? '/me/shifts' : null);
+  const shifts = useGet<MyShiftList>(kind === 'shift' ? '/me/shifts' : null);
   const [from, setFrom] = useState(todayIso());
   const [to, setTo] = useState(todayIso());
   const [shiftId, setShiftId] = useState('');
   const [priority, setPriority] = useState('2');
   const [reason, setReason] = useState('');
-  const send = useSend<any>('POST', kind === 'leave' ? '/me/leave-wishes' : '/me/shift-wishes');
+  const send = useSend('POST', kind === 'leave' ? '/me/leave-wishes' : '/me/shift-wishes');
   const first = shifts.data?.items?.[0]?.id;
   return (
     <Dialog
@@ -251,7 +259,7 @@ function WishDialog({
             value={shiftId || String(first ?? '')}
             onChange={(e) => setShiftId(e.target.value)}
           >
-            {(shifts.data?.items ?? []).map((s: any) => (
+            {(shifts.data?.items ?? []).map((s) => (
               <option key={s.id} value={s.id}>
                 {s.hotelName} · {s.name} {s.startTime}–{s.endTime}
               </option>
@@ -283,7 +291,7 @@ function WishDialog({
 
 export function PortalNotices() {
   const { t } = useTranslation();
-  const list = useGet('/me/vacation-notices');
+  const list = useGet<MyVacationNoticeList>('/me/vacation-notices');
   const ack = useSend<number>('PUT', (id) => `/me/vacation-notices/${id}/ack`);
   const items = list.data?.items ?? [];
   if (!items.length) return null;
@@ -292,7 +300,7 @@ export function PortalNotices() {
       <h2 id="vn-h" style={cardHead}>
         {t('Hinweise zum Resturlaub')}
       </h2>
-      {items.map((n: any) => (
+      {items.map((n) => (
         <div key={n.id} style={line} data-testid="vac-notice">
           <b>{n.year}</b>: {t('Du hast noch')} {fnum(n.remainingDays)}{' '}
           {t('Urlaubstage. Resturlaub verfällt zum 31.3. des Folgejahres, wenn er nicht genommen wird.')}

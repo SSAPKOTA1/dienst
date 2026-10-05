@@ -1,3 +1,10 @@
+import type {
+  DocumentList,
+  ExitStatementDto,
+  Items,
+  QualificationDto,
+  QualificationHeldList,
+} from '@dienst/shared';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { download, upload, useGet, useSend } from '../lib/api';
@@ -17,13 +24,13 @@ const DOC_TYPES: Array<[string, string]> = [
 export function QualificationsEditor({ id }: { id: number }) {
   const { t } = useTranslation();
   const toast = useToast();
-  const all = useGet('/qualifications');
-  const mine = useGet(`/employees/${id}/qualifications`);
-  const save = useSend<any>('PUT', `/employees/${id}/qualifications`);
+  const all = useGet<Items<QualificationDto>>('/qualifications');
+  const mine = useGet<QualificationHeldList>(`/employees/${id}/qualifications`);
+  const save = useSend('PUT', `/employees/${id}/qualifications`);
   const [add, setAdd] = useState('');
   const [until, setUntil] = useState('');
-  const held: any[] = mine.data?.items ?? [];
-  const put = (items: any[]) =>
+  const held = mine.data?.items ?? [];
+  const put = (items: Array<{ qualificationId: number; validUntil?: string | null }>) =>
     save.mutate(
       { items: items.map((x) => ({ qualificationId: x.qualificationId, validUntil: x.validUntil ?? null })) },
       {
@@ -33,8 +40,8 @@ export function QualificationsEditor({ id }: { id: number }) {
         },
       },
     );
-  const free = (all.data?.items ?? []).filter((q: any) => !held.some((h) => h.qualificationId === q.id));
-  const pick = free.find((q: any) => String(q.id) === add) ?? free[0];
+  const free = (all.data?.items ?? []).filter((q) => !held.some((h) => h.qualificationId === q.id));
+  const pick = free.find((q) => String(q.id) === add) ?? free[0];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }} data-testid="quals">
       <Label>{t('Qualifikationen')}</Label>
@@ -67,7 +74,7 @@ export function QualificationsEditor({ id }: { id: number }) {
             value={String(pick.id)}
             onChange={(e) => setAdd(e.target.value)}
           >
-            {free.map((q: any) => (
+            {free.map((q) => (
               <option key={q.id} value={q.id}>
                 {q.name}
               </option>
@@ -103,7 +110,7 @@ export function QualificationsEditor({ id }: { id: number }) {
 export function DocumentsPanel({ id }: { id: number }) {
   const { t } = useTranslation();
   const toast = useToast();
-  const list = useGet(`/employees/${id}/documents`);
+  const list = useGet<DocumentList>(`/employees/${id}/documents`);
   const del = useSend<number>('DELETE', (d) => `/documents/${d}`);
   const [dlg, setDlg] = useState(false);
   return (
@@ -119,7 +126,7 @@ export function DocumentsPanel({ id }: { id: number }) {
           {t('Hochladen')}
         </button>
       </div>
-      {(list.data?.items ?? []).map((d: any) => (
+      {(list.data?.items ?? []).map((d) => (
         <div
           key={d.id}
           style={{ display: 'flex', gap: 8, alignItems: 'baseline', fontSize: 14 }}
@@ -271,8 +278,8 @@ function UploadDialog({ id, onClose, onDone }: { id: number; onClose: () => void
 export function TerminatePanel({ id, name, lastDay }: { id: number; name: string; lastDay: string | null }) {
   const { t } = useTranslation();
   const [dlg, setDlg] = useState(false);
-  const [st, setSt] = useState<any | null>(null);
-  const stmt = useGet(lastDay ? `/employees/${id}/exit-statement` : null);
+  const [st, setSt] = useState<ExitStatementDto | null>(null);
+  const stmt = useGet<ExitStatementDto>(lastDay ? `/employees/${id}/exit-statement` : null);
   const shown = st ?? stmt.data;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }} data-testid="terminate">
@@ -334,12 +341,12 @@ function TerminateDialog({
   id: number;
   name: string;
   onClose: () => void;
-  onDone: (r: any) => void;
+  onDone: (r: ExitStatementDto) => void;
 }) {
   const { t } = useTranslation();
   const [lastDay, setLastDay] = useState(new Date().toISOString().slice(0, 10));
   const [reason, setReason] = useState('');
-  const m = useSend<any, any>('POST', `/employees/${id}/terminate`);
+  const m = useSend<Record<string, unknown>, ExitStatementDto>('POST', `/employees/${id}/terminate`);
   return (
     <Dialog
       title={`${t('Austritt')}: ${name}`}

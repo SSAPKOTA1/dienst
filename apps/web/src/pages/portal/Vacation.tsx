@@ -1,3 +1,4 @@
+import type { Items, MyVacationDto, TimeOffPreviewDto, TimeOffRequestDto } from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGet, useSend } from '../../lib/api';
@@ -10,8 +11,8 @@ import { PortalNotices, PortalWishes } from './Account';
 export function PortalVacation() {
   const { t } = useTranslation();
   const toast = useToast();
-  const vac = useGet('/me/vacation');
-  const reqs = useGet('/me/time-off-requests');
+  const vac = useGet<MyVacationDto>('/me/vacation');
+  const reqs = useGet<Items<TimeOffRequestDto>>('/me/time-off-requests');
   const [dlg, setDlg] = useState(() => !!new URLSearchParams(window.location.search).get('new'));
   const cancel = useSend<number>('DELETE', (id) => `/me/time-off-requests/${id}`);
   const today = todayIso();
@@ -29,7 +30,7 @@ export function PortalVacation() {
       </div>
       <section style={card} aria-label={t('Meine Anträge')}>
         {(reqs.data?.items ?? []).length === 0 && <div style={line}>{t('Keine Anträge.')}</div>}
-        {(reqs.data?.items ?? []).map((r: any) => (
+        {(reqs.data?.items ?? []).map((r) => (
           <div key={r.id} style={line} data-testid="vac-row">
             <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
               <b>
@@ -94,12 +95,12 @@ function RequestDialog({ onClose, onDone }: { onClose: () => void; onDone: () =>
   const [reason, setReason] = useState('');
   const [half, setHalf] = useState('');
   const valid = from && to && to >= from;
-  const preview = useGet(valid ? '/me/time-off-requests/preview' : null, {
+  const preview = useGet<TimeOffPreviewDto>(valid ? '/me/time-off-requests/preview' : null, {
     from,
     to,
     halfDay: half && from === to ? half : undefined,
   });
-  const send = useSend<any>('POST', '/me/time-off-requests');
+  const send = useSend('POST', '/me/time-off-requests');
   const p = preview.data;
   return (
     <Dialog

@@ -1,3 +1,4 @@
+import type { CandidateDto } from '@dienst/shared';
 import { workingMinutes } from '@dienst/rules';
 import type { Db } from '../../db';
 import { AppError, notFound } from '../../lib/errors';
@@ -17,7 +18,12 @@ export interface CandidateParams {
 }
 
 /** SPEC 4.17: employees of the hotel and department who could take the slot, best first. */
-export async function findCandidates(db: Db, p: Principal, now: Date, prm: CandidateParams) {
+export async function findCandidates(
+  db: Db,
+  p: Principal,
+  now: Date,
+  prm: CandidateParams,
+): Promise<CandidateDto[]> {
   let hotelId = prm.hotelIds[0];
   let departmentId = prm.departmentId;
   if (prm.shiftId) {
@@ -95,6 +101,7 @@ export async function findCandidates(db: Db, p: Principal, now: Date, prm: Candi
         weekly != null && !(p.role === 'manager' && !p.scope.canHotel(e.primaryHotelId))
           ? Math.round(weekly * 10) / 10
           : null,
+      blocked,
       warnings: v.map((x) => ({
         code: x.code,
         severity: x.severity,

@@ -136,7 +136,7 @@ export function Kiosk() {
     }
     const h = window.setTimeout(
       () =>
-        void kapi<{ items: any[] }>('/kiosk/search', { query: { q: q.trim() } })
+        void kapi<{ items: Item[] }>('/kiosk/search', { query: { q: q.trim() } })
           .then((r) => setFound(r.items))
           .catch(() => setFound([])),
       250,

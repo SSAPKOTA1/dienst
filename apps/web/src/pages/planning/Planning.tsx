@@ -1,3 +1,13 @@
+import type {
+  CopyWeekResultDto,
+  DepartmentDto,
+  EmployeeSummaryDto,
+  HotelDto,
+  Items,
+  Paged,
+  ShiftDto,
+  ValidateResultDto,
+} from '@dienst/shared';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -24,7 +34,17 @@ import { MultiSelect } from './Dropdown';
 import { PlanContext, PlanGrid, WarnIcon, type PlanCtx } from './Grid';
 import { SidePanel } from './Panel';
 import { ClearDialog, FinderDialog, ReasonDialog, type ReasonState } from './Dialogs';
-import type { DropState, GridData, GridEntry, GridRow, PlanOp, Sel, ShiftTpl } from './types';
+import type {
+  DragSource,
+  DropState,
+  DropTarget,
+  GridData,
+  GridEntry,
+  GridRow,
+  PlanOp,
+  Sel,
+  ShiftTpl,
+} from './types';
 import {
   OVERRIDABLE,
   addDaysIso,
@@ -107,12 +127,12 @@ export function Planning() {
   const [params, setParams] = useSearchParams();
   const today = todayIso();
   const weekStart = mondayOfIso(params.get('week') ?? today);
-  const hotelsQ = useGet('/hotels');
-  const deptsQ = useGet('/departments');
-  const shiftsQ = useGet('/shifts');
-  const empsQ = useGet('/employees', { pageSize: 200 });
-  const hotels: any[] = useMemo(() => hotelsQ.data?.items ?? [], [hotelsQ.data]);
-  const depts: any[] = useMemo(() => deptsQ.data?.items ?? [], [deptsQ.data]);
+  const hotelsQ = useGet<Items<HotelDto>>('/hotels');
+  const deptsQ = useGet<Items<DepartmentDto>>('/departments');
+  const shiftsQ = useGet<Items<ShiftDto>>('/shifts');
+  const empsQ = useGet<Paged<EmployeeSummaryDto>>('/employees', { pageSize: 200 });
+  const hotels: HotelDto[] = useMemo(() => hotelsQ.data?.items ?? [], [hotelsQ.data]);
+  const depts: DepartmentDto[] = useMemo(() => deptsQ.data?.items ?? [], [deptsQ.data]);
   const shifts: ShiftTpl[] = useMemo(() => shiftsQ.data?.items ?? [], [shiftsQ.data]);
 
   const saved = useMemo(loadLs, []);
@@ -163,7 +183,7 @@ export function Planning() {
     async (op: PlanOp, extra: Record<string, unknown> = {}): Promise<boolean> => {
       try {
         const body = op.method === 'DELETE' ? undefined : { ...(op.body ?? {}), ...extra };
-        const res = await api(op.path, { method: op.method, body });
+        const res = await api<Partial<CopyWeekResultDto>>(op.path, { method: op.method, body });
         setConflict(false);
         await refetch();
         void qc.invalidateQueries({ queryKey: ['api'] });
@@ -176,7 +196,7 @@ export function Planning() {
         return true;
       } catch (e) {
         const err = e as ApiError;
-        const vs: Violation[] = err.details?.violations ?? [];
+        const vs = (err.details?.violations as Violation[] | undefined) ?? [];
         if (err.code === 'REASON_REQUIRED') {
           setReason({
             violations: vs,
@@ -235,74 +255,77 @@ export function Planning() {
     };
   }, []);
 
-  type DragSpec = { op: PlanOp; validate: Record<string, any> };
-  const specFor = useCallback((a: any, o: any, alt: boolean): DragSpec | null => {
-    if (!a || !o) return null;
-    if (a.type === 'entry') {
-      const e: GridEntry = a.entry;
-      if (o.type === 'trash')
-        return {
-          op: {
-            method: 'DELETE',
-            path: `/schedule/entries/${e.id}?version=${e.version}`,
-            done: 'Eintrag entfernt.',
-          },
-          validate: { operation: 'delete', entryId: e.id, version: e.version },
-        };
-      if (o.type === 'chip') {
-        const b: GridEntry = o.entry;
-        if (b.id === e.id || b.isOtherHotel) return null;
-        const body = { entryAId: e.id, versionA: e.version, entryBId: b.id, versionB: b.version };
-        return {
-          op: { method: 'POST', path: '/schedule/swap', body, done: 'Einträge getauscht.' },
-          validate: { operation: 'swap', ...body },
-        };
-      }
-      if (o.type === 'cell') {
-        const row: GridRow = o.row;
-        const date: string = o.cell.date;
-        const body: Record<string, any> = { entryId: e.id, toDate: date };
-        if (row.kind === 'employee') {
-          if (row.employeeId === e.employeeId && date === e.date) return null;
-          body.toEmployeeId = row.employeeId;
-        } else {
-          if (!row.shiftId || (row.shiftId === e.shiftId && date === e.date)) return null;
-          body.toShiftId = row.shiftId;
-        }
-        if (alt)
+  type DragSpec = { op: PlanOp; validate: Record<string, unknown> };
+  const specFor = useCallback(
+    (a: DragSource | undefined, o: DropTarget | undefined, alt: boolean): DragSpec | null => {
+      if (!a || !o) return null;
+      if (a.type === 'entry') {
+        const e: GridEntry = a.entry;
+        if (o.type === 'trash')
           return {
-            op: { method: 'POST', path: '/schedule/copy', body, done: 'Eintrag kopiert.' },
-            validate: { operation: 'copy', ...body },
+            op: {
+              method: 'DELETE',
+              path: `/schedule/entries/${e.id}?version=${e.version}`,
+              done: 'Eintrag entfernt.',
+            },
+            validate: { operation: 'delete', entryId: e.id, version: e.version },
           };
-        const mv = { ...body, version: e.version };
+        if (o.type === 'chip') {
+          const b: GridEntry = o.entry;
+          if (b.id === e.id || b.isOtherHotel) return null;
+          const body = { entryAId: e.id, versionA: e.version, entryBId: b.id, versionB: b.version };
+          return {
+            op: { method: 'POST', path: '/schedule/swap', body, done: 'Einträge getauscht.' },
+            validate: { operation: 'swap', ...body },
+          };
+        }
+        if (o.type === 'cell') {
+          const row: GridRow = o.row;
+          const date: string = o.cell.date;
+          const body: Record<string, unknown> = { entryId: e.id, toDate: date };
+          if (row.kind === 'employee') {
+            if (row.employeeId === e.employeeId && date === e.date) return null;
+            body.toEmployeeId = row.employeeId;
+          } else {
+            if (!row.shiftId || (row.shiftId === e.shiftId && date === e.date)) return null;
+            body.toShiftId = row.shiftId;
+          }
+          if (alt)
+            return {
+              op: { method: 'POST', path: '/schedule/copy', body, done: 'Eintrag kopiert.' },
+              validate: { operation: 'copy', ...body },
+            };
+          const mv = { ...body, version: e.version };
+          return {
+            op: { method: 'POST', path: '/schedule/move', body: mv, done: 'Eintrag verschoben.' },
+            validate: { operation: 'move', ...mv },
+          };
+        }
+      }
+      if (a.type === 'tpl' && o.type === 'cell' && o.row.kind === 'employee') {
+        const s: ShiftTpl = a.shift;
+        const body = { hotelId: s.hotelId, employeeId: o.row.employeeId, shiftId: s.id, date: o.cell.date };
         return {
-          op: { method: 'POST', path: '/schedule/move', body: mv, done: 'Eintrag verschoben.' },
-          validate: { operation: 'move', ...mv },
+          op: { method: 'POST', path: '/schedule/entries', body, done: 'Eintrag gespeichert.' },
+          validate: { operation: 'create', ...body },
         };
       }
-    }
-    if (a.type === 'tpl' && o.type === 'cell' && o.row.kind === 'employee') {
-      const s: ShiftTpl = a.shift;
-      const body = { hotelId: s.hotelId, employeeId: o.row.employeeId, shiftId: s.id, date: o.cell.date };
-      return {
-        op: { method: 'POST', path: '/schedule/entries', body, done: 'Eintrag gespeichert.' },
-        validate: { operation: 'create', ...body },
-      };
-    }
-    if (a.type === 'abs' && o.type === 'cell' && o.row.kind === 'employee') {
-      const body = { employeeId: o.row.employeeId, from: o.cell.date, to: o.cell.date, type: a.absence };
-      return {
-        op: { method: 'POST', path: '/schedule/absence', body, done: 'Abwesenheit eingetragen.' },
-        validate: { operation: 'absence', ...body },
-      };
-    }
-    return null;
-  }, []);
+      if (a.type === 'abs' && o.type === 'cell' && o.row.kind === 'employee') {
+        const body = { employeeId: o.row.employeeId, from: o.cell.date, to: o.cell.date, type: a.absence };
+        return {
+          op: { method: 'POST', path: '/schedule/absence', body, done: 'Abwesenheit eingetragen.' },
+          validate: { operation: 'absence', ...body },
+        };
+      }
+      return null;
+    },
+    [],
+  );
 
   const onDragStart = (e: DragStartEvent) => {
     setDragging(true);
     cache.current.clear();
-    const d = e.active.data.current as any;
+    const d = e.active.data.current as DragSource | undefined;
     setDragLabel(
       d?.type === 'entry'
         ? d.entry.displayName
@@ -315,7 +338,11 @@ export function Planning() {
   const onDragOver = async (e: DragOverEvent) => {
     const overId = e.over?.id as string | undefined;
     if (!overId) return setDropState({});
-    const spec = specFor(e.active.data.current, e.over?.data.current, altRef.current);
+    const spec = specFor(
+      e.active.data.current as DragSource | undefined,
+      e.over?.data.current as DropTarget | undefined,
+      altRef.current,
+    );
     if (!spec) return setDropState({ [overId]: 'blocked' });
     if (overId === 'trash') return setDropState({});
     const key = JSON.stringify(spec.validate);
@@ -323,7 +350,7 @@ export function Planning() {
     if (hit) return setDropState({ [overId]: hit });
     setDropState({ [overId]: 'pending' });
     try {
-      const r = await api('/schedule/validate', { method: 'POST', body: spec.validate });
+      const r = await api<ValidateResultDto>('/schedule/validate', { method: 'POST', body: spec.validate });
       const st: DropState =
         r.status === 'ok' ? 'ok' : r.status === 'needs_reason' ? 'needs_reason' : 'blocked';
       cache.current.set(key, st);
@@ -338,7 +365,11 @@ export function Planning() {
     setDropState({});
   };
   const onDragEnd = (e: DragEndEvent) => {
-    const spec = specFor(e.active.data.current, e.over?.data.current, altRef.current);
+    const spec = specFor(
+      e.active.data.current as DragSource | undefined,
+      e.over?.data.current as DropTarget | undefined,
+      altRef.current,
+    );
     endDrag();
     if (spec) void exec(spec.op);
   };
@@ -351,7 +382,7 @@ export function Planning() {
     (s) => hotelIds.includes(s.hotelId) && (!departmentIds || departmentIds.includes(s.departmentId)),
   );
   const hotelName = (id: number) => hotels.find((h) => h.id === id)?.name ?? '';
-  const empItems: any[] = empsQ.data?.items ?? [];
+  const empItems = empsQ.data?.items ?? [];
   const hotelOpts = hotels.map((h) => ({
     id: String(h.id),
     label: h.name,

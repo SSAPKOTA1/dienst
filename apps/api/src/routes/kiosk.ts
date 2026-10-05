@@ -1,3 +1,5 @@
+import type { DB } from '../db';
+import type { Selectable } from 'kysely';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -24,6 +26,15 @@ const onBreak = (segs: unknown): boolean => {
   const a = segs as BreakSegment[] | null;
   return !!a?.length && a[a.length - 1].end == null;
 };
+
+interface OpenRosterEntry {
+  employeeId: number;
+  displayName: string | null;
+  departmentName: string | null;
+  plannedStart: string | null;
+  plannedEnd: string | null;
+  state: 'on_break' | 'working' | 'not_in' | 'done';
+}
 
 export async function kioskRoutes(app: FastifyInstance) {
   const r = app.withTypeProvider<ZodTypeProvider>();
@@ -135,7 +146,7 @@ export async function kioskRoutes(app: FastifyInstance) {
       : [];
     const done = new Set(punched.map((p) => p.schedule_id));
     const openEmp = new Set(open.map((o) => o.employee_id));
-    const byEmp = new Map<number, any>();
+    const byEmp = new Map<number, OpenRosterEntry>();
     for (const o of open) {
       byEmp.set(o.employee_id, {
         employeeId: o.employee_id,
@@ -173,7 +184,7 @@ export async function kioskRoutes(app: FastifyInstance) {
     items.sort(
       (a, b) =>
         (a.plannedStart ?? '').localeCompare(b.plannedStart ?? '') ||
-        a.displayName.localeCompare(b.displayName),
+        (a.displayName ?? '').localeCompare(b.displayName ?? ''),
     );
     return {
       serverTime: now.toISOString(),
@@ -237,7 +248,7 @@ export async function kioskRoutes(app: FastifyInstance) {
   // ---------------------------------------------------------------- clock in
   const pinBody = z.object({ employeeRef: z.string(), pin: z.string().min(4).max(8) });
 
-  async function inResponse(rec: any, grace: number, dev: Device) {
+  async function inResponse(rec: Selectable<DB['punch_record']>, grace: number, dev: Device) {
     const minutes = rec.start_variation_minutes;
     const within = minutes == null ? false : withinGrace(minutes, grace);
     return {

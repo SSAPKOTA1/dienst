@@ -1,6 +1,14 @@
+import type {
+  FeatureSettingList,
+  HourCategoryDto,
+  Items,
+  QualificationDto,
+  RulesSettingsDto,
+  HourCategoryRule,
+} from '@dienst/shared';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { download, useGet, useSend } from '../lib/api';
+import { download, useGet, useSend, type ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { Dialog, ErrorNote, Field, Toggle, useToast } from '../components/ui';
 
@@ -31,23 +39,26 @@ export function RuleLimitsEditor() {
   const { t } = useTranslation();
   const { me } = useAuth();
   const toast = useToast();
-  const rules = useGet('/settings/rules');
+  const rules = useGet<RulesSettingsDto>('/settings/rules');
   const [v, setV] = useState<Record<string, string>>({});
   const admin = me?.role !== 'manager';
-  const save = useSend<any>('PUT', '/settings/rules');
+  const save = useSend('PUT', '/settings/rules');
   const reset = useSend<void>('DELETE', '/settings/rules');
   useEffect(() => {
     if (rules.data)
       setV(Object.fromEntries(Object.entries(rules.data.limits).map(([k, x]) => [k, String(x)])));
   }, [rules.data]);
   const submit = () =>
-    save.mutate({ limits: Object.fromEntries(Object.entries(v).map(([k, x]) => [k, Number(x)])) } as any, {
-      onSuccess: () => {
-        toast(t('Gespeichert.'));
-        void rules.refetch();
+    save.mutate(
+      { limits: Object.fromEntries(Object.entries(v).map(([k, x]) => [k, Number(x)])) },
+      {
+        onSuccess: () => {
+          toast(t('Gespeichert.'));
+          void rules.refetch();
+        },
       },
-    });
-  const err = save.error as any;
+    );
+  const err = save.error as ApiError | null;
   return (
     <section style={box} aria-labelledby="rl-h">
       <h3 id="rl-h" style={head}>
@@ -86,9 +97,9 @@ export function RuleLimitsEditor() {
             </Field>
           ))}
         </div>
-        {err?.details?.errors && (
+        {Array.isArray(err?.details?.errors) && (
           <ul role="alert" style={{ margin: 0, paddingLeft: 18, fontSize: 13, fontWeight: 700 }}>
-            {err.details.errors.map((e: string) => (
+            {(err.details.errors as string[]).map((e) => (
               <li key={e}>{e}</li>
             ))}
           </ul>
@@ -106,7 +117,7 @@ export function RuleLimitsEditor() {
             </button>
             <button
               className="btn btn-secondary"
-              onClick={() => reset.mutate(undefined as any, { onSuccess: () => void rules.refetch() })}
+              onClick={() => reset.mutate(undefined, { onSuccess: () => void rules.refetch() })}
             >
               {t('Auf Standard zurücksetzen')}
             </button>
@@ -133,7 +144,7 @@ const FEATURE_LABEL: Record<string, string> = {
 export function FeatureToggles() {
   const { t } = useTranslation();
   const { me } = useAuth();
-  const list = useGet('/settings/features');
+  const list = useGet<FeatureSettingList>('/settings/features');
   const set = useSend<{ feature: string; enabled: boolean }>('PUT', '/settings/features');
   const admin = me?.role !== 'manager';
   return (
@@ -141,7 +152,7 @@ export function FeatureToggles() {
       <h3 id="ft-h" style={head}>
         {t('Funktionen')}
       </h3>
-      {(list.data?.items ?? []).map((f: any) => (
+      {(list.data?.items ?? []).map((f) => (
         <div
           key={f.feature}
           style={{
@@ -177,11 +188,11 @@ type RuleKind = 'daily' | 'weekday' | 'holiday' | 'dates';
 export function HourCategories() {
   const { t } = useTranslation();
   const { me } = useAuth();
-  const list = useGet('/hour-categories');
+  const list = useGet<Items<HourCategoryDto>>('/hour-categories');
   const [dlg, setDlg] = useState(false);
   const del = useSend<number>('DELETE', (id) => `/hour-categories/${id}`);
   const admin = me?.role !== 'manager';
-  const describe = (r: any) =>
+  const describe = (r: HourCategoryRule) =>
     r.daily
       ? `${r.daily.from}–${r.daily.to}`
       : r.weekday
@@ -202,7 +213,7 @@ export function HourCategories() {
       <div style={{ padding: 'var(--space-2) var(--space-4)', fontSize: 12 }}>
         {t('Aus den Kategorien entstehen Stunden für die Lohnabrechnung. Löhne werden nicht berechnet.')}
       </div>
-      {(list.data?.items ?? []).map((c: any) => (
+      {(list.data?.items ?? []).map((c) => (
         <div
           key={c.code}
           style={{
@@ -216,7 +227,7 @@ export function HourCategories() {
         >
           <b style={{ minWidth: 220 }}>{c.name}</b>
           <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{c.code}</span>
-          <span style={{ fontSize: 13 }}>{describe(c.rule)}</span>
+          <span style={{ fontSize: 13 }}>{describe(c.rule as HourCategoryRule)}</span>
           <span style={{ marginLeft: 'auto' }}>
             {c.system ? (
               <span className="tag tag-neutral">{t('Standard')}</span>
@@ -224,7 +235,7 @@ export function HourCategories() {
               admin && (
                 <button
                   className="btn btn-ghost"
-                  onClick={() => del.mutate(c.id, { onSuccess: () => void list.refetch() })}
+                  onClick={() => del.mutate(c.id as number, { onSuccess: () => void list.refetch() })}
                 >
                   {t('Löschen')}
                 </button>
@@ -255,7 +266,7 @@ function CategoryDialog({ onClose, onDone }: { onClose: () => void; onDone: () =
   const [to, setTo] = useState('06:00');
   const [weekday, setWeekday] = useState('6');
   const [dates, setDates] = useState('12-24,12-31');
-  const m = useSend<any>('POST', '/hour-categories');
+  const m = useSend('POST', '/hour-categories');
   const rule =
     kind === 'daily'
       ? { daily: { from, to } }
@@ -295,7 +306,12 @@ function CategoryDialog({ onClose, onDone }: { onClose: () => void; onDone: () =
         <input id="hc-name" className="input" value={name} onChange={(e) => setName(e.target.value)} />
       </Field>
       <Field label={t('Regel')} htmlFor="hc-kind">
-        <select id="hc-kind" className="input" value={kind} onChange={(e) => setKind(e.target.value as any)}>
+        <select
+          id="hc-kind"
+          className="input"
+          value={kind}
+          onChange={(e) => setKind(e.target.value as typeof kind)}
+        >
           <option value="daily">{t('Täglich von bis')}</option>
           <option value="weekday">{t('Wochentag')}</option>
           <option value="holiday">{t('Feiertage')}</option>
@@ -404,10 +420,10 @@ export function PayrollExport() {
 export function QualificationManager() {
   const { t } = useTranslation();
   const { me } = useAuth();
-  const list = useGet('/qualifications');
+  const list = useGet<Items<QualificationDto>>('/qualifications');
   const [name, setName] = useState('');
   const [expiry, setExpiry] = useState(false);
-  const add = useSend<any>('POST', '/qualifications');
+  const add = useSend('POST', '/qualifications');
   const del = useSend<number>('DELETE', (id) => `/qualifications/${id}`);
   const admin = me?.role !== 'manager';
   return (
@@ -415,7 +431,7 @@ export function QualificationManager() {
       <h3 id="qm-h" style={head}>
         {t('Qualifikationen')}
       </h3>
-      {(list.data?.items ?? []).map((q: any) => (
+      {(list.data?.items ?? []).map((q) => (
         <div
           key={q.id}
           style={{

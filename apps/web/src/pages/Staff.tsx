@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import type { EmployeeDetailDto, EmployeeSummaryDto, Paged } from '@dienst/shared';
 import { download, useGet, useSend } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { fdate, fnum, fsigned, WEEKDAYS } from '../lib/format';
@@ -17,7 +18,7 @@ const EMPLOYMENT: Record<string, string> = {
   short_term: 'Kurzfristig',
   other: 'Sonstiges',
 };
-export const employmentLabel = (k: string | null) => (k ? (EMPLOYMENT[k] ?? k) : '');
+export const employmentLabel = (k: string | null | undefined) => (k ? (EMPLOYMENT[k] ?? k) : '');
 
 export function Staff() {
   const { t } = useTranslation();
@@ -26,8 +27,8 @@ export function Staff() {
   const { me } = useAuth();
   const [q, setQ] = useState('');
   const canCreate = me?.role === 'admin' || me?.role === 'superAdmin';
-  const list = useGet('/employees', { q: q || undefined, pageSize: 200 });
-  const items: any[] = list.data?.items ?? [];
+  const list = useGet<Paged<EmployeeSummaryDto>>('/employees', { q: q || undefined, pageSize: 200 });
+  const items = list.data?.items ?? [];
   const selected = id ? Number(id) : null;
   const hotels = new Set(items.map((e) => e.homeHotel.id));
 
@@ -207,7 +208,7 @@ function StaffDetail({ id }: { id: number }) {
   const { t } = useTranslation();
   const toast = useToast();
   const { me } = useAuth();
-  const q = useGet(`/employees/${id}`);
+  const q = useGet<EmployeeDetailDto>(`/employees/${id}`);
   const [pin, setPin] = useState<string | null>(null);
   const [code, setCode] = useState<{ username: string | null; code: string } | null>(null);
   const reset = useSend<void, { pin: string }>('POST', `/employees/${id}/reset-pin`);
@@ -233,7 +234,8 @@ function StaffDetail({ id }: { id: number }) {
       t('Soll pro Woche'),
       e.targetHoursPerWeek != null ? `${fnum(e.targetHoursPerWeek)} ${t('Std.')}` : '–',
     ]);
-    facts.push([`${t('Resturlaub')} ${e.vacation.year}`, `${fnum(e.vacation.remaining)} ${t('Tage')}`]);
+    if (e.vacation)
+      facts.push([`${t('Resturlaub')} ${e.vacation.year}`, `${fnum(e.vacation.remaining)} ${t('Tage')}`]);
     facts.push([t('Zeitkonto'), e.timeAccount == null ? '–' : fsigned(e.timeAccount)]);
   }
   const locked = e.pin?.lockedUntil && new Date(e.pin.lockedUntil) > new Date();
@@ -317,10 +319,10 @@ function StaffDetail({ id }: { id: number }) {
           <hr className="hr" style={{ margin: 0 }} />
           <DocumentsPanel id={id} />
           <hr className="hr" style={{ margin: 0 }} />
-          <TerminatePanel id={id} name={e.displayName} lastDay={e.contractEndDate ?? null} />
+          <TerminatePanel id={id} name={e.displayName ?? ''} lastDay={e.contractEndDate ?? null} />
         </>
       )}
-      {!reduced && <TimesheetDownload id={id} name={e.displayName} />}
+      {!reduced && <TimesheetDownload id={id} name={e.displayName ?? ''} />}
       {admin && (
         <>
           <hr className="hr" style={{ margin: 0 }} />
@@ -373,15 +375,15 @@ function StaffDetail({ id }: { id: number }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <Label>{t('Konto')}</Label>
             <div style={{ fontSize: 13 }}>
-              {e.account.username ?? e.account.email} ·{' '}
+              {e.account?.username ?? e.account?.email} ·{' '}
               {t(
-                e.account.status === 'active'
+                e.account?.status === 'active'
                   ? 'Aktiv'
-                  : e.account.status === 'pending_invite'
+                  : e.account?.status === 'pending_invite'
                     ? 'Einladung offen'
                     : 'Gesperrt',
               )}
-              {e.account.lastLoginAt ? ` · ${t('Letzte Anmeldung')}: ${fdate(e.account.lastLoginAt)}` : ''}
+              {e.account?.lastLoginAt ? ` · ${t('Letzte Anmeldung')}: ${fdate(e.account?.lastLoginAt)}` : ''}
             </div>
             {code && (
               <div
@@ -396,7 +398,7 @@ function StaffDetail({ id }: { id: number }) {
               </div>
             )}
             <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-              {e.account.email ? (
+              {e.account?.email ? (
                 <button
                   className="btn btn-secondary"
                   onClick={() =>

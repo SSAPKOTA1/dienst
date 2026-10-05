@@ -1,3 +1,4 @@
+import type { OpenShiftDto } from '@dienst/shared';
 import type { DB } from '../db';
 import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
@@ -23,7 +24,7 @@ export async function openShiftRoutes(app: FastifyInstance) {
   const tx = <T>(fn: (trx: Trx) => Promise<T>) => db.transaction().execute(fn);
   const openOn = requireFeature(db, 'open_shifts');
   // ------------------------------------------------------------------ open shifts
-  const openOut = (o: Selectable<DB['open_shift']>) => ({
+  const openOut = (o: Selectable<DB['open_shift']>): OpenShiftDto => ({
     id: o.id,
     hotelId: o.hotel_id,
     departmentId: o.department_id,
@@ -416,7 +417,7 @@ export async function openShiftRoutes(app: FastifyInstance) {
             minute: '2-digit',
             hour12: false,
           }).format(d);
-        const res: any = await runOp(
+        const res = (await runOp(
           { trx, principal: p, actor: actorOf(req), now },
           {
             op: 'create',
@@ -429,7 +430,7 @@ export async function openShiftRoutes(app: FastifyInstance) {
             plannedBreakMinutes: o.planned_break_minutes,
             overrideReason: req.body.overrideReason,
           },
-        );
+        )) as { entry?: { id: number } };
         await trx
           .updateTable('open_shift')
           .set({ status: 'filled', filled_schedule_id: res.entry?.id ?? null })

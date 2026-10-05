@@ -15,7 +15,7 @@
     "build": "pnpm --filter @dienst/web build && node scripts/build-api.mjs",
     "test": "pnpm -r --workspace-concurrency=1 test",
     "e2e": "playwright test -c e2e/playwright.config.ts",
-    "lint": "eslint . --max-warnings 293 && prettier --check .",
+    "lint": "eslint . --max-warnings 0 && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "pnpm -r typecheck",
     "security:rekey": "pnpm --filter @dienst/api security:rekey",

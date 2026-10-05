@@ -39,21 +39,20 @@ export function categoryMinutes(
   for (const seg of segments) {
     for (const c of categories) {
       let m = 0;
-      const r = c.rule as any;
-      if (r.daily) {
+      const r = c.rule;
+      if ('daily' in r) {
         const from = hm(r.daily.from);
         const to = hm(r.daily.to);
         m =
           from <= to
             ? overlap(seg.fromMin, seg.toMin, from, to)
             : overlap(seg.fromMin, seg.toMin, 0, to) + overlap(seg.fromMin, seg.toMin, from, 1440);
-      } else if (r.weekday != null) {
+      } else if ('weekday' in r) {
         if (isoWeekday(seg.date) === r.weekday) m = seg.toMin - seg.fromMin;
-      } else if (r.holiday) {
+      } else if ('holiday' in r) {
         if (holidays.has(seg.date)) m = seg.toMin - seg.fromMin;
-      } else if (r.dates) {
-        if ((r.dates as string[]).includes(seg.date.slice(5)))
-          m = overlap(seg.fromMin, seg.toMin, hm(r.from), hm(r.to));
+      } else if ('dates' in r) {
+        if (r.dates.includes(seg.date.slice(5))) m = overlap(seg.fromMin, seg.toMin, hm(r.from), hm(r.to));
       }
       if (m > 0) out[c.code] = (out[c.code] ?? 0) + m;
     }
@@ -75,14 +74,19 @@ export const DEFAULT_CATEGORIES: Array<HourCategory & { name: string }> = [
 /** Validates a category rule coming from the admin UI; returns an error message or null. */
 export function validateCategoryRule(r: unknown): string | null {
   if (!r || typeof r !== 'object') return 'rule must be an object';
-  const o = r as any;
+  const o = r as Record<string, unknown>;
   const time = (s: unknown) => typeof s === 'string' && /^([01]\d|2[0-3]):[0-5]\d$|^24:00$/.test(s);
   const keys = ['daily', 'weekday', 'holiday', 'dates'].filter((k) => k in o);
   if (keys.length !== 1) return 'exactly one of daily, weekday, holiday, dates';
   if ('daily' in o)
-    return time(o.daily?.from) && time(o.daily?.to) ? null : 'daily needs from and to as HH:mm';
+    return time((o.daily as { from?: unknown } | null)?.from) &&
+      time((o.daily as { to?: unknown } | null)?.to)
+      ? null
+      : 'daily needs from and to as HH:mm';
   if ('weekday' in o)
-    return Number.isInteger(o.weekday) && o.weekday >= 1 && o.weekday <= 7 ? null : 'weekday 1-7';
+    return typeof o.weekday === 'number' && Number.isInteger(o.weekday) && o.weekday >= 1 && o.weekday <= 7
+      ? null
+      : 'weekday 1-7';
   if ('holiday' in o) return o.holiday === true ? null : 'holiday must be true';
   if (
     !Array.isArray(o.dates) ||

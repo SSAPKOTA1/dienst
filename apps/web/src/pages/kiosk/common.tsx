@@ -28,7 +28,7 @@ export class KioskError extends Error {
   constructor(
     readonly status: number,
     readonly code: string,
-    readonly details: Record<string, any>,
+    readonly details: Record<string, unknown>,
     message: string,
   ) {
     super(message);
@@ -43,7 +43,7 @@ export const getToken = () => {
   }
 };
 
-export async function kapi<T = any>(
+export async function kapi<T = unknown>(
   path: string,
   opts: { method?: string; body?: unknown; query?: Record<string, string> } = {},
 ): Promise<T> {
@@ -118,3 +118,8 @@ export const hm = (iso: string | null, tz: string) =>
         hour12: false,
       }).format(new Date(iso))
     : '';
+
+/** Result of a completed clock-out. */
+export type OutRes = Extract<Step, { kind: 'out' }>['res'];
+export type InRes = Extract<Step, { kind: 'in' }>['res'];
+export type BreakRes = Extract<Step, { kind: 'break' }>['out'];

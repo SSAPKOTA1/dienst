@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { enqueue, type OfflineRosterItem } from '../../lib/offlineKiosk';
-import { Item, KioskError, PunchAction, Step, hm, kapi } from './common';
+import { BreakRes, InRes, Item, KioskError, OutRes, PunchAction, Step, hm, kapi } from './common';
 
 export const doneBtn: React.CSSProperties = {
   marginTop: 'auto',
@@ -216,10 +216,10 @@ export function PinStep({
       if (!online) return await queue();
       const body = { employeeRef: item.employeeRef, pin: value };
       if (action === 'out') {
-        const out = await kapi('/kiosk/punch-out', { body });
+        const out = await kapi<BreakRes>('/kiosk/punch-out', { body });
         onDone({ kind: 'break', item, out });
       } else if (action === 'in') {
-        const res = await kapi('/kiosk/punch-in', { body });
+        const res = await kapi<InRes>('/kiosk/punch-in', { body });
         onDone({ kind: 'in', item, res });
       } else {
         await kapi(action === 'break_start' ? '/kiosk/break-start' : '/kiosk/break-end', { body });
@@ -437,7 +437,7 @@ export function BreakStep({
   offlineSubmit,
 }: {
   step: Extract<Step, { kind: 'break' }>;
-  onDone: (r: any) => void;
+  onDone: (r: OutRes) => void;
   onBack: () => void;
   offlineSubmit?: (brk: number, reason?: string) => Promise<void>;
 }) {
@@ -452,7 +452,7 @@ export function BreakStep({
     try {
       if (offlineSubmit) return await offlineSubmit(brk, reason.trim() || undefined);
       onDone(
-        await kapi('/kiosk/punch-out/confirm-break', {
+        await kapi<OutRes>('/kiosk/punch-out/confirm-break', {
           body: {
             confirmToken: out.confirmToken,
             actualBreakMinutes: brk,

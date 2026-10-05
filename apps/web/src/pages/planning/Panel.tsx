@@ -1,3 +1,4 @@
+import type { CandidateDto, Items } from '@dienst/shared';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../lib/api';
@@ -151,7 +152,7 @@ function EntryPanel({
   const needsReason = entry.warnings.some((w) => w.severity !== 'warn');
   const dirty = start !== hm(entry.start) || end !== hm(entry.end) || Number(brk) !== entry.breakMinutes;
   const save = () => {
-    const body: Record<string, any> = {
+    const body: Record<string, unknown> = {
       version: entry.version,
       start,
       end,
@@ -161,7 +162,7 @@ function EntryPanel({
     void ctx.run({ method: 'PUT', path: `/schedule/entries/${entry.id}`, body, done: 'Gespeichert.' });
   };
   const move = () => {
-    const body: Record<string, any> = {
+    const body: Record<string, unknown> = {
       entryId: entry.id,
       version: entry.version,
       toEmployeeId: Number(toEmp),
@@ -348,13 +349,15 @@ function CellPanel({ ctx, row, date }: { ctx: PlanCtx; row: GridRow; date: strin
   const { t } = useTranslation();
   const cell = row.cells.find((c) => c.date === date);
   const locked = date < ctx.today;
-  const [people, setPeople] = useState<any[] | null>(null);
+  const [people, setPeople] = useState<CandidateDto[] | null>(null);
   const shiftRow = row.kind !== 'employee';
   useEffect(() => {
     setPeople(null);
     if (!shiftRow || !row.shiftId || locked) return;
     let alive = true;
-    api('/schedule/candidates', { query: { hotelIds: row.hotelId ?? undefined, shiftId: row.shiftId, date } })
+    api<Items<CandidateDto>>('/schedule/candidates', {
+      query: { hotelIds: row.hotelId ?? undefined, shiftId: row.shiftId, date },
+    })
       .then((r) => alive && setPeople(r.items))
       .catch(() => alive && setPeople([]));
     return () => {
@@ -363,7 +366,7 @@ function CellPanel({ ctx, row, date }: { ctx: PlanCtx; row: GridRow; date: strin
   }, [shiftRow, row.shiftId, row.hotelId, date, locked, cell?.entries.length]);
   const tpls = ctx.shifts.filter((s) => ctx.data.hotelIds.includes(s.hotelId));
   const emp = row.kind === 'employee' ? row : null;
-  const op = (body: Record<string, any>, path = '/schedule/entries'): PlanOp => ({
+  const op = (body: Record<string, unknown>, path = '/schedule/entries'): PlanOp => ({
     method: 'POST',
     path,
     body,

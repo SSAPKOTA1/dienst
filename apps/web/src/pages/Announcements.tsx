@@ -1,3 +1,4 @@
+import type { AnnouncementList, HotelDto, Items } from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGet, useSend } from '../lib/api';
@@ -11,8 +12,8 @@ export function Announcements() {
   const { t } = useTranslation();
   const toast = useToast();
   const { me } = useAuth();
-  const list = useGet('/announcements');
-  const hotels = useGet('/hotels');
+  const list = useGet<AnnouncementList>('/announcements');
+  const hotels = useGet<Items<HotelDto>>('/hotels');
   const del = useSend<number>('DELETE', (id) => `/announcements/${id}`);
   const [dlg, setDlg] = useState(false);
   return (
@@ -33,7 +34,7 @@ export function Announcements() {
         {(list.data?.items ?? []).length === 0 && (
           <div style={{ fontSize: 13 }}>{t('Keine Mitteilungen.')}</div>
         )}
-        {(list.data?.items ?? []).map((a: any) => (
+        {(list.data?.items ?? []).map((a) => (
           <article
             key={a.id}
             style={{ border: '2px solid var(--color-text)', padding: 'var(--space-2) var(--space-3)' }}
@@ -47,7 +48,7 @@ export function Announcements() {
               <span style={{ fontSize: 12 }}>
                 {fdatetime(a.publishAt)} ·{' '}
                 {a.hotelId
-                  ? (hotels.data?.items ?? []).find((h: any) => h.id === a.hotelId)?.name
+                  ? (hotels.data?.items ?? []).find((h) => h.id === a.hotelId)?.name
                   : t('Alle Hotels')}
               </span>
               <button
@@ -80,7 +81,7 @@ export function Announcements() {
           </article>
         ))}
         <h2 style={{ margin: '16px 0 0', fontSize: 20 }}>{t('Neuigkeiten')}</h2>
-        {(hotels.data?.items ?? []).length > 0 && <FeedBoard hotels={hotels.data.items} />}
+        {hotels.data && hotels.data.items.length > 0 && <FeedBoard hotels={hotels.data.items} />}
       </div>
       {dlg && (
         <AnnDialog
@@ -103,7 +104,7 @@ function AnnDialog({
   onClose,
   onDone,
 }: {
-  hotels: any[];
+  hotels: HotelDto[];
   canCompany: boolean;
   onClose: () => void;
   onDone: () => void;
@@ -114,7 +115,7 @@ function AnnDialog({
   const [hotelId, setHotelId] = useState(canCompany ? '' : String(hotels[0]?.id ?? ''));
   const [pinned, setPinned] = useState(false);
   const [ack, setAck] = useState(false);
-  const m = useSend<any>('POST', '/announcements');
+  const m = useSend('POST', '/announcements');
   return (
     <Dialog
       title={t('Mitteilung schreiben')}

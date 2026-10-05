@@ -1,3 +1,4 @@
+import type { CompanyDto, HotelDto, HotelSettingsDto } from '@dienst/shared';
 import type { DB } from '../db';
 import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
@@ -27,7 +28,7 @@ export async function organisationRoutes(app: FastifyInstance) {
     sickBackdateDays: z.number().int().min(0).max(60).optional(),
     pinLength: z.number().int().min(4).max(8).optional(),
   });
-  const companyOut = (c: Selectable<DB['company']>) => ({
+  const companyOut = (c: Selectable<DB['company']>): CompanyDto => ({
     id: c.id,
     name: c.name,
     graceMinutes: c.grace_period_minutes,
@@ -114,7 +115,7 @@ export async function organisationRoutes(app: FastifyInstance) {
   );
 
   // ---------------------------------------------------------------- hotels
-  const hotelOut = (h: Selectable<DB['hotel']>) => ({
+  const hotelOut = (h: Selectable<DB['hotel']>): HotelDto => ({
     id: h.id,
     companyId: h.company_id,
     name: h.name,
@@ -234,7 +235,7 @@ export async function organisationRoutes(app: FastifyInstance) {
   );
 
   // hotel settings: hours visibility (v1) and the platform options (break mode, badge, web punch)
-  const settingsOut = (h: Selectable<DB['hotel']>) => ({
+  const settingsOut = (h: Selectable<DB['hotel']>): HotelSettingsDto => ({
     hotelId: h.id,
     employeeHoursVisibility: h.employee_hours_visibility,
     breakMode: h.break_mode,

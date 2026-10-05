@@ -1,3 +1,4 @@
+import type { DepartmentDto, HotelDto, Items } from '@dienst/shared';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -17,10 +18,10 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 export function StaffNew() {
   const { t } = useTranslation();
-  const hotelsQ = useGet('/hotels');
-  const deptsQ = useGet('/departments');
-  const hotels: any[] = hotelsQ.data?.items ?? [];
-  const depts: any[] = useMemo(() => deptsQ.data?.items ?? [], [deptsQ.data]);
+  const hotelsQ = useGet<Items<HotelDto>>('/hotels');
+  const deptsQ = useGet<Items<DepartmentDto>>('/departments');
+  const hotels: HotelDto[] = hotelsQ.data?.items ?? [];
+  const depts: DepartmentDto[] = useMemo(() => deptsQ.data?.items ?? [], [deptsQ.data]);
   const [step, setStep] = useState(0);
   const [f, setF] = useState({
     firstName: '',

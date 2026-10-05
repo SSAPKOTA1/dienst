@@ -1,7 +1,7 @@
 import type { Db, Trx } from '../../db';
 import { AppError } from '../../lib/errors';
 import type { Principal } from '../../lib/scope';
-import { createAbsence } from './absence';
+import { createAbsence, type AbsenceInput } from './absence';
 import { PlanEnv } from './env';
 import {
   deleteEntry,
@@ -18,22 +18,33 @@ import {
   type UpdateInput,
 } from './ops';
 
+type MoveInput = Parameters<typeof planMove>[3];
+type CopyInput = Parameters<typeof planCopy>[3];
+type SwapInput = Parameters<typeof planSwap>[3];
+
+/** An entry operation as it arrives from a route: tagged with `op` (writes) or `operation` (validation), fields as the zod body of that operation. */
+export interface PlanOpInput {
+  op?: string;
+  operation?: string;
+  [field: string]: unknown;
+}
+
 /** Builds the plan for an entry operation. Reads only. */
 export async function buildPlan(
   h: Db | Trx,
   p: Principal,
-  op: any,
+  op: PlanOpInput,
   now: Date,
 ): Promise<{ plan: Plan | null; env: PlanEnv }> {
-  const kind = 'operation' in op && op.operation ? op.operation : (op as any).op;
+  const kind = op.operation ?? op.op;
   const dayOf = (...d: Array<string | undefined>) => d.filter(Boolean) as string[];
   if (kind === 'create') {
-    const i = op as EntryInput;
+    const i = op as unknown as EntryInput;
     const env = await PlanEnv.create(h, now, { employeeIds: [i.employeeId], from: i.date, to: i.date });
     return { env, plan: await planCreate(h, env, p, i) };
   }
   if (kind === 'update') {
-    const i = op as UpdateInput & { entryId: number };
+    const i = op as unknown as UpdateInput & { entryId: number };
     const row = await loadEntry(h, p, i.entryId);
     const ds = dayOf(row.shift_date, i.date);
     const env = await PlanEnv.create(h, now, {
@@ -44,7 +55,7 @@ export async function buildPlan(
     return { env, plan: await planUpdate(h, env, p, i.entryId, i) };
   }
   if (kind === 'move' || kind === 'copy') {
-    const i = op as any;
+    const i = op as unknown as MoveInput & CopyInput;
     const row = await loadEntry(h, p, i.entryId);
     const ds = dayOf(row.shift_date, i.toDate).sort();
     const env = await PlanEnv.create(h, now, {
@@ -55,7 +66,7 @@ export async function buildPlan(
     return { env, plan: kind === 'move' ? await planMove(h, env, p, i) : await planCopy(h, env, p, i) };
   }
   if (kind === 'swap') {
-    const i = op as any;
+    const i = op as unknown as SwapInput;
     const a = await loadEntry(h, p, i.entryAId);
     const b = await loadEntry(h, p, i.entryBId);
     const ds = [a.shift_date, b.shift_date].sort();
@@ -67,7 +78,7 @@ export async function buildPlan(
     return { env, plan: await planSwap(h, env, p, i) };
   }
   if (kind === 'delete') {
-    const i = op as { entryId: number };
+    const i = op as unknown as { entryId: number };
     const row = await loadEntry(h, p, i.entryId);
     return {
       env: await PlanEnv.create(h, now, {
@@ -81,9 +92,10 @@ export async function buildPlan(
   throw new AppError('VALIDATION', 'Unknown operation');
 }
 
-export async function runOp(ctx: Ctx, op: any) {
-  const kind = op.op ?? op.operation;
-  if (kind === 'absence') return createAbsence(ctx, op);
+export async function runOp(ctx: Ctx, input: PlanOpInput) {
+  const kind = input.op ?? input.operation;
+  if (kind === 'absence') return createAbsence(ctx, input as unknown as AbsenceInput);
+  const op = input as PlanOpInput & { entryId: number; version?: number };
   if (kind === 'delete') {
     const row = await loadEntry(ctx.trx, ctx.principal, op.entryId);
     const env = await PlanEnv.create(ctx.trx, ctx.now, {

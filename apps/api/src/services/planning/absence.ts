@@ -1,3 +1,5 @@
+import type { DB } from '../../db';
+import type { Selectable } from 'kysely';
 import { z } from 'zod';
 import { addDays, countedDays, eachDay, sickBackdateAllowed } from '@dienst/rules';
 import { MENU_ABSENCE_TYPES } from '@dienst/shared';
@@ -337,7 +339,14 @@ export async function createAbsence(ctx: Ctx, input: AbsenceInput) {
   };
 }
 
-async function carveOffDay(trx: Trx, now: Date, o: any, from: string, to: string, userId: number) {
+async function carveOffDay(
+  trx: Trx,
+  now: Date,
+  o: Selectable<DB['time_off']>,
+  from: string,
+  to: string,
+  userId: number,
+) {
   const before = o.start_date < from;
   const after = o.end_date > to;
   if (!before && !after) {

@@ -1,3 +1,10 @@
+import type {
+  Items,
+  OpenShiftWithClaimsDto,
+  QuestionList,
+  SwapApprovalList,
+  ViolationDto,
+} from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGet, useSend } from '../lib/api';
@@ -25,7 +32,9 @@ const row: React.CSSProperties = {
   padding: 'var(--space-2) var(--space-4)',
   borderBottom: '1px solid var(--color-divider)',
 };
-const slot = (s: any) =>
+const slot = (
+  s: { date: string; start: string; end: string; shiftName?: string | null } | null | undefined,
+) =>
   s
     ? `${fdate(s.date, { weekday: 'short', day: '2-digit', month: '2-digit' })} ${ftime(s.start, TZ)}–${ftime(s.end, TZ)}${s.shiftName ? ` ${s.shiftName}` : ''}`
     : '';
@@ -34,12 +43,15 @@ const slot = (s: any) =>
 export function SwapSection({ hotelId }: { hotelId?: string }) {
   const { t } = useTranslation();
   const toast = useToast();
-  const list = useGet('/approvals/swaps', { hotelIds: hotelId || undefined, status: 'accepted_by_peer' });
-  const decide = useSend<any>('PUT', (b) => `/approvals/swaps/${b.id}`);
-  const [reason, setReason] = useState<{ id: number; violations: any[] } | null>(null);
+  const list = useGet<SwapApprovalList>('/approvals/swaps', {
+    hotelIds: hotelId || undefined,
+    status: 'accepted_by_peer',
+  });
+  const decide = useSend<{ id: number } & Record<string, unknown>>('PUT', (b) => `/approvals/swaps/${b.id}`);
+  const [reason, setReason] = useState<{ id: number; violations: ViolationDto[] } | null>(null);
   const [text, setText] = useState('');
   const items = list.data?.items ?? [];
-  const run = (id: number, body: any) =>
+  const run = (id: number, body: Record<string, unknown>) =>
     decide.mutate(
       { id, ...body },
       {
@@ -48,8 +60,9 @@ export function SwapSection({ hotelId }: { hotelId?: string }) {
           toast(t('Entschieden'));
           void list.refetch();
         },
-        onError: (e: any) => {
-          if (e.code === 'REASON_REQUIRED') setReason({ id, violations: e.details?.violations ?? [] });
+        onError: (e) => {
+          if (e.code === 'REASON_REQUIRED')
+            setReason({ id, violations: (e.details?.violations as ViolationDto[] | undefined) ?? [] });
         },
       },
     );
@@ -65,7 +78,7 @@ export function SwapSection({ hotelId }: { hotelId?: string }) {
           {t('Keine offenen Anträge.')}
         </div>
       )}
-      {items.map((s: any) => (
+      {items.map((s) => (
         <div key={s.id} style={row} data-testid="swap-req">
           <div>
             <b>{s.requester}</b> → <b>{s.counterpart}</b>
@@ -75,8 +88,8 @@ export function SwapSection({ hotelId }: { hotelId?: string }) {
             </div>
             {s.reason && <div style={{ fontSize: 12 }}>„{s.reason}“</div>}
             {s.violations
-              .filter((v: any) => v.severity !== 'warn')
-              .map((v: any, i: number) => (
+              .filter((v) => v.severity !== 'warn')
+              .map((v, i) => (
                 <div key={i} style={{ fontSize: 12, fontWeight: 700 }}>
                   ⚠ {v.code}
                 </div>
@@ -127,9 +140,7 @@ export function SwapSection({ hotelId }: { hotelId?: string }) {
           </Field>
         </Dialog>
       )}
-      <ErrorNote
-        error={decide.error && (decide.error as any).code !== 'REASON_REQUIRED' ? decide.error : null}
-      />
+      <ErrorNote error={decide.error && decide.error.code !== 'REASON_REQUIRED' ? decide.error : null} />
     </section>
   );
 }
@@ -138,11 +149,15 @@ export function SwapSection({ hotelId }: { hotelId?: string }) {
 export function ClaimSection({ hotelId }: { hotelId?: string }) {
   const { t } = useTranslation();
   const toast = useToast();
-  const list = useGet('/open-shifts', { hotelIds: hotelId || undefined, status: 'open' });
-  const decide = useSend<any>('PUT', (b) => `/open-shifts/claims/${b.id}`);
-  const items = (list.data?.items ?? []).filter((o: any) =>
-    o.claims.some((c: any) => c.status === 'pending'),
+  const list = useGet<Items<OpenShiftWithClaimsDto>>('/open-shifts', {
+    hotelIds: hotelId || undefined,
+    status: 'open',
+  });
+  const decide = useSend<{ id: number } & Record<string, unknown>>(
+    'PUT',
+    (b) => `/open-shifts/claims/${b.id}`,
   );
+  const items = (list.data?.items ?? []).filter((o) => o.claims.some((c) => c.status === 'pending'));
   return (
     <section data-testid="req-claims" aria-labelledby="req-claim-h" style={{ marginTop: 'var(--space-4)' }}>
       <div style={bar}>
@@ -155,7 +170,7 @@ export function ClaimSection({ hotelId }: { hotelId?: string }) {
           {t('Keine Bewerbungen.')}
         </div>
       )}
-      {items.map((o: any) => (
+      {items.map((o) => (
         <div
           key={o.id}
           style={{ padding: 'var(--space-2) var(--space-4)', borderBottom: '1px solid var(--color-divider)' }}
@@ -165,8 +180,8 @@ export function ClaimSection({ hotelId }: { hotelId?: string }) {
             {ftime(o.end, TZ)}
           </b>
           {o.claims
-            .filter((c: any) => c.status === 'pending')
-            .map((c: any) => (
+            .filter((c) => c.status === 'pending')
+            .map((c) => (
               <div
                 key={c.id}
                 style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '4px 0' }}
@@ -209,8 +224,8 @@ export function ClaimSection({ hotelId }: { hotelId?: string }) {
 /** Questions of employees to management. */
 export function QuestionSection({ hotelId }: { hotelId?: string }) {
   const { t } = useTranslation();
-  const list = useGet('/questions', { hotelIds: hotelId || undefined, status: 'open' });
-  const [q, setQ] = useState<any | null>(null);
+  const list = useGet<QuestionList>('/questions', { hotelIds: hotelId || undefined, status: 'open' });
+  const [q, setQ] = useState<QuestionList['items'][number] | null>(null);
   const items = list.data?.items ?? [];
   return (
     <section data-testid="req-questions" aria-labelledby="req-q-h" style={{ margin: 'var(--space-4) 0' }}>
@@ -224,7 +239,7 @@ export function QuestionSection({ hotelId }: { hotelId?: string }) {
           {t('Keine offenen Fragen.')}
         </div>
       )}
-      {items.map((x: any) => (
+      {items.map((x) => (
         <div key={x.id} style={row} data-testid="question-req">
           <div>
             <b>{x.displayName}</b> · {x.subject}
@@ -250,10 +265,18 @@ export function QuestionSection({ hotelId }: { hotelId?: string }) {
   );
 }
 
-function AnswerDialog({ q, onClose, onDone }: { q: any; onClose: () => void; onDone: () => void }) {
+function AnswerDialog({
+  q,
+  onClose,
+  onDone,
+}: {
+  q: QuestionList['items'][number];
+  onClose: () => void;
+  onDone: () => void;
+}) {
   const { t } = useTranslation();
   const [answer, setAnswer] = useState('');
-  const m = useSend<any>('PUT', `/questions/${q.id}/answer`);
+  const m = useSend('PUT', `/questions/${q.id}/answer`);
   return (
     <Dialog
       title={q.subject}

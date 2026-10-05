@@ -1,3 +1,4 @@
+import type { BlackoutDto, ShiftWishDto, LeaveWishDto } from '@dienst/shared';
 import type { DB } from '../db';
 import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
@@ -48,7 +49,7 @@ export async function leaveRoutes(app: FastifyInstance) {
       maxConcurrentAbsent: z.number().int().min(0).max(500).nullish(),
     })
     .refine((b) => b.to >= b.from, 'to must not be before from');
-  const blackoutOut = (b: Selectable<DB['absence_blackout']>) => ({
+  const blackoutOut = (b: Selectable<DB['absence_blackout']>): BlackoutDto => ({
     id: b.id,
     hotelId: b.hotel_id,
     departmentId: b.department_id,
@@ -334,7 +335,7 @@ export async function leaveRoutes(app: FastifyInstance) {
       Selectable<DB['employee_shift_wish']>,
       'id' | 'date' | 'shift_id' | 'hotel_id' | 'priority' | 'reason' | 'status' | 'decision_note'
     >,
-  ) => ({
+  ): ShiftWishDto => ({
     id: w.id,
     date: w.date,
     shiftId: w.shift_id,
@@ -349,7 +350,7 @@ export async function leaveRoutes(app: FastifyInstance) {
       Selectable<DB['employee_leave_wish']>,
       'id' | 'start_date' | 'end_date' | 'leave_days' | 'priority' | 'reason' | 'status' | 'decision_note'
     >,
-  ) => ({
+  ): LeaveWishDto => ({
     id: w.id,
     from: w.start_date,
     to: w.end_date,

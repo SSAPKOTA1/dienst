@@ -1,3 +1,4 @@
+import type { ShiftDto } from '@dienst/shared';
 import type { DB } from '../db';
 import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
@@ -15,7 +16,7 @@ const SA = 'superAdmin' as const;
 const AD = 'admin' as const;
 const MG = 'manager' as const;
 
-const shiftOut = (s: Selectable<DB['shift']>) => ({
+const shiftOut = (s: Selectable<DB['shift']>): ShiftDto => ({
   id: s.id,
   hotelId: s.hotel_id,
   departmentId: s.department_id,

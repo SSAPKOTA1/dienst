@@ -1,7 +1,18 @@
+import type {
+  BlackoutDto,
+  DepartmentDto,
+  HotelDto,
+  Items,
+  VacationNoticeList,
+  VacationOverviewDto,
+  ViolationDto,
+  WishList,
+  WishListItemDto,
+} from '@dienst/shared';
 import { useState } from 'react';
 import { NavLink, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { api, useGet, useSend } from '../lib/api';
+import { api, useGet, useSend, type ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { fdate, fnum } from '../lib/format';
 import { Dialog, ErrorNote, Field, PageHead, Segmented, useToast } from '../components/ui';
@@ -78,7 +89,7 @@ function VacationOverview() {
   const { t } = useTranslation();
   const toast = useToast();
   const [year, setYear] = useState(Number(todayIso().slice(0, 4)));
-  const ov = useGet('/vacation/overview', { year });
+  const ov = useGet<VacationOverviewDto>('/vacation/overview', { year });
   const [dlg, setDlg] = useState<{ employeeId?: number } | null>(null);
   const [view, setView] = useState<'table' | 'year'>('table');
   return (
@@ -144,7 +155,7 @@ function VacationOverview() {
             </tr>
           </thead>
           <tbody>
-            {(ov.data?.employees ?? []).map((e: any) => (
+            {(ov.data?.employees ?? []).map((e) => (
               <tr key={e.employeeId} data-testid="vac-row">
                 <td style={{ paddingLeft: 'var(--space-4)' }}>
                   <b>{e.displayName}</b>
@@ -216,7 +227,7 @@ function EntryDialog({
   onClose,
   onDone,
 }: {
-  employees: any[];
+  employees: VacationOverviewDto['employees'];
   employeeId?: number;
   onClose: () => void;
   onDone: () => void;
@@ -227,7 +238,7 @@ function EntryDialog({
   const [to, setTo] = useState(todayIso());
   const [half, setHalf] = useState<'' | 'morning' | 'afternoon'>('');
   const [reason, setReason] = useState('');
-  const [needReason, setNeedReason] = useState<any[] | null>(null);
+  const [needReason, setNeedReason] = useState<ViolationDto[] | null>(null);
   const [err, setErr] = useState<unknown>(null);
   const submit = async () => {
     setErr(null);
@@ -244,8 +255,10 @@ function EntryDialog({
         },
       });
       onDone();
-    } catch (e: any) {
-      if (e.code === 'REASON_REQUIRED' && e.details?.violations) setNeedReason(e.details.violations);
+    } catch (e) {
+      const ex = e as ApiError;
+      if (ex.code === 'REASON_REQUIRED' && ex.details?.violations)
+        setNeedReason(ex.details.violations as ViolationDto[]);
       else setErr(e);
     }
   };
@@ -303,7 +316,12 @@ function EntryDialog({
         </Field>
       </div>
       <Field label={t('Halber Tag')} htmlFor="ve-half">
-        <select id="ve-half" className="input" value={half} onChange={(e) => setHalf(e.target.value as any)}>
+        <select
+          id="ve-half"
+          className="input"
+          value={half}
+          onChange={(e) => setHalf(e.target.value as typeof half)}
+        >
           <option value="">{t('Ganze Tage')}</option>
           <option value="morning">{t('Vormittag')}</option>
           <option value="afternoon">{t('Nachmittag')}</option>
@@ -346,14 +364,14 @@ function EntryDialog({
 // ---------------------------------------------------------------- blackout periods
 function Blackouts() {
   const { t } = useTranslation();
-  const hotels = useGet('/hotels');
-  const depts = useGet('/departments');
-  const list = useGet('/blackouts');
-  const [dlg, setDlg] = useState<any | null>(null);
+  const hotels = useGet<Items<HotelDto>>('/hotels');
+  const depts = useGet<Items<DepartmentDto>>('/departments');
+  const list = useGet<Items<BlackoutDto>>('/blackouts');
+  const [dlg, setDlg] = useState<Partial<BlackoutDto> | null>(null);
   const del = useSend<number>('DELETE', (id) => `/blackouts/${id}`);
-  const hn = (id: number) => (hotels.data?.items ?? []).find((h: any) => h.id === id)?.name ?? id;
+  const hn = (id: number) => (hotels.data?.items ?? []).find((h) => h.id === id)?.name ?? id;
   const dn = (id: number | null) =>
-    id ? ((depts.data?.items ?? []).find((d: any) => d.id === id)?.name ?? id) : t('Alle Abteilungen');
+    id ? ((depts.data?.items ?? []).find((d) => d.id === id)?.name ?? id) : t('Alle Abteilungen');
   return (
     <div style={wrap}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -375,7 +393,7 @@ function Blackouts() {
             </tr>
           </thead>
           <tbody>
-            {(list.data?.items ?? []).map((b: any) => (
+            {(list.data?.items ?? []).map((b) => (
               <tr key={b.id} data-testid="blackout-row">
                 <td style={{ paddingLeft: 'var(--space-4)' }}>
                   {fdate(b.from)} – {fdate(b.to)}
@@ -434,9 +452,9 @@ function BlackoutDialog({
   onClose,
   onDone,
 }: {
-  blackout: any;
-  hotels: any[];
-  depts: any[];
+  blackout: Partial<BlackoutDto>;
+  hotels: HotelDto[];
+  depts: DepartmentDto[];
   onClose: () => void;
   onDone: () => void;
 }) {
@@ -448,10 +466,7 @@ function BlackoutDialog({
   const [reason, setReason] = useState(blackout.reason ?? '');
   const [mode, setMode] = useState<'none' | 'cap'>(blackout.maxConcurrentAbsent == null ? 'none' : 'cap');
   const [cap, setCap] = useState(String(blackout.maxConcurrentAbsent ?? 1));
-  const m = useSend<any>(
-    blackout.id ? 'PUT' : 'POST',
-    blackout.id ? `/blackouts/${blackout.id}` : '/blackouts',
-  );
+  const m = useSend(blackout.id ? 'PUT' : 'POST', blackout.id ? `/blackouts/${blackout.id}` : '/blackouts');
   return (
     <Dialog
       title={blackout.id ? t('Sperrzeit bearbeiten') : t('Sperrzeit anlegen')}
@@ -539,7 +554,12 @@ function BlackoutDialog({
         </Field>
       </div>
       <Field label={t('Regel')} htmlFor="bo-mode">
-        <select id="bo-mode" className="input" value={mode} onChange={(e) => setMode(e.target.value as any)}>
+        <select
+          id="bo-mode"
+          className="input"
+          value={mode}
+          onChange={(e) => setMode(e.target.value as typeof mode)}
+        >
           <option value="none">{t('Kein Urlaub')}</option>
           <option value="cap">{t('Begrenzt gleichzeitig Abwesende')}</option>
         </select>
@@ -575,9 +595,12 @@ function Wishes() {
   const { t } = useTranslation();
   const [type, setType] = useState<'leave' | 'shift'>('leave');
   const [status, setStatus] = useState('pending');
-  const list = useGet('/wishes', { type, status: status || undefined });
-  const [rej, setRej] = useState<any | null>(null);
-  const decide = useSend<any>('PUT', (b) => `/wishes/${b.type}/${b.id}`);
+  const list = useGet<WishList>('/wishes', { type, status: status || undefined });
+  const [rej, setRej] = useState<WishListItemDto | null>(null);
+  const decide = useSend<{ type: string; id: number } & Record<string, unknown>>(
+    'PUT',
+    (b) => `/wishes/${b.type}/${b.id}`,
+  );
   const prio = (p: number) => [t('hoch'), t('mittel'), t('niedrig')][p - 1];
   const done = () => {
     setRej(null);
@@ -610,7 +633,7 @@ function Wishes() {
         {(list.data?.items ?? []).length === 0 && (
           <div style={{ padding: 'var(--space-3)' }}>{t('Keine Wünsche.')}</div>
         )}
-        {(list.data?.items ?? []).map((w: any) => (
+        {(list.data?.items ?? []).map((w) => (
           <div
             key={`${w.type}${w.id}`}
             data-testid="wish-row"
@@ -657,10 +680,18 @@ function Wishes() {
   );
 }
 
-function DeclineDialog({ wish, onClose, onDone }: { wish: any; onClose: () => void; onDone: () => void }) {
+function DeclineDialog({
+  wish,
+  onClose,
+  onDone,
+}: {
+  wish: WishListItemDto;
+  onClose: () => void;
+  onDone: () => void;
+}) {
   const { t } = useTranslation();
   const [note, setNote] = useState('');
-  const m = useSend<any>('PUT', `/wishes/${wish.type}/${wish.id}`);
+  const m = useSend('PUT', `/wishes/${wish.type}/${wish.id}`);
   return (
     <Dialog
       title={t('Wunsch ablehnen')}
@@ -699,9 +730,9 @@ function Notices() {
   const { me } = useAuth();
   const toast = useToast();
   const [year, setYear] = useState(Number(todayIso().slice(0, 4)));
-  const list = useGet('/vacation/notices', { year });
-  const send = useSend<any, any>('POST', '/vacation/notices/send');
-  const carry = useSend<any, any>('POST', '/vacation/carryover');
+  const list = useGet<VacationNoticeList>('/vacation/notices', { year });
+  const send = useSend<Record<string, unknown>, { sent: number }>('POST', '/vacation/notices/send');
+  const carry = useSend<Record<string, unknown>, { carried: number }>('POST', '/vacation/carryover');
   const admin = me?.role !== 'manager';
   return (
     <div style={wrap}>
@@ -770,7 +801,7 @@ function Notices() {
             </tr>
           </thead>
           <tbody>
-            {(list.data?.items ?? []).map((n: any) => (
+            {(list.data?.items ?? []).map((n) => (
               <tr key={n.id}>
                 <td style={{ paddingLeft: 'var(--space-4)' }}>{n.displayName}</td>
                 <td>

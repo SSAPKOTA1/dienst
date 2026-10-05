@@ -1,3 +1,4 @@
+import type { ApprovalCountDto } from '@dienst/shared';
 import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -97,7 +98,7 @@ export function PlannerShell() {
       s.items.some((i) => loc.pathname.startsWith(i.path.split('/').slice(0, 2).join('/'))),
     ) ?? PLANNER_NAV[0];
   const { me } = useAuth();
-  const count = useGet('/approvals/count', undefined, { refetchInterval: 30_000 });
+  const count = useGet<ApprovalCountDto>('/approvals/count', undefined, { refetchInterval: 30_000 });
   const open: number = count.data?.total ?? 0;
   const sections = me?.role === 'manager' ? PLANNER_NAV.filter((s) => s.key !== 'admin') : PLANNER_NAV;
   return (

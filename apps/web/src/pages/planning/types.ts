@@ -127,7 +127,13 @@ export type DropState = 'ok' | 'needs_reason' | 'blocked' | 'pending';
 export interface PlanOp {
   method: 'POST' | 'PUT' | 'DELETE';
   path: string;
-  body?: Record<string, any>;
+  body?: Record<string, unknown>;
   /** label for toasts */
   done?: string;
 }
+
+/** What a drag starts from and what it can be dropped on (data attached to the dnd-kit nodes). */
+export type DragSource =
+  { type: 'entry'; entry: GridEntry } | { type: 'tpl'; shift: ShiftTpl } | { type: 'abs'; absence: string };
+export type DropTarget =
+  { type: 'trash' } | { type: 'chip'; entry: GridEntry } | { type: 'cell'; row: GridRow; cell: GridCell };

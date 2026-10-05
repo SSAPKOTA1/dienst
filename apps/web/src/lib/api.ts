@@ -3,7 +3,7 @@ export class ApiError extends Error {
     readonly status: number,
     readonly code: string,
     message: string,
-    readonly details: Record<string, any> = {},
+    readonly details: Record<string, unknown> = {},
   ) {
     super(message);
   }
@@ -73,7 +73,7 @@ async function raw(path: string, o: ReqOpts): Promise<Response> {
 }
 
 async function toError(r: Response): Promise<ApiError> {
-  let b: any = null;
+  let b: { error?: { code?: string; message?: string; details?: Record<string, unknown> } } | null = null;
   try {
     b = await r.json();
   } catch {
@@ -87,7 +87,7 @@ async function toError(r: Response): Promise<ApiError> {
   );
 }
 
-export async function api<T = any>(path: string, o: ReqOpts = {}): Promise<T> {
+export async function api<T = unknown>(path: string, o: ReqOpts = {}): Promise<T> {
   let r = await raw(path, o);
   if (r.status === 401 && !o.noRetry && o.token === undefined && !path.startsWith('/auth/')) {
     if (await refresh()) r = await raw(path, o);
@@ -113,7 +113,7 @@ export async function download(path: string, query: ReqOpts['query'], filename: 
 }
 
 /** multipart upload (employee import); fields must be appended before the file */
-export async function upload<T = any>(path: string, form: FormData): Promise<T> {
+export async function upload<T = unknown>(path: string, form: FormData): Promise<T> {
   const send = () =>
     fetch(buildUrl(path), {
       method: 'POST',
@@ -133,7 +133,7 @@ export async function tryRestoreSession(): Promise<boolean> {
 
 import { useMutation, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
 
-export function useGet<T = any>(
+export function useGet<T = unknown>(
   path: string | null,
   query?: ReqOpts['query'],
   opts: { enabled?: boolean; refetchInterval?: number } = {},
@@ -146,7 +146,7 @@ export function useGet<T = any>(
   });
 }
 
-export function useSend<TBody = any, TRes = any>(
+export function useSend<TBody = void | Record<string, unknown>, TRes = unknown>(
   method: string,
   path: string | ((b: TBody) => string),
   invalidate: QueryKey[] = [['api']],
