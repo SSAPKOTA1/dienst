@@ -139,6 +139,8 @@ jobs:
       - run: scripts/ops/smoke-web.sh dienst-web:ci
       # backup, restore, drill and tamper detection against a migrated and seeded database
       - run: pnpm db:migrate && pnpm db:seed
+        env:
+          DATABASE_URL: postgres://dienst:dienst@localhost:5432/dienst_test
       - run: node scripts/build-api.mjs && scripts/ops/test-backup.sh
       - name: Software bill of materials
         uses: anchore/sbom-action@v0
