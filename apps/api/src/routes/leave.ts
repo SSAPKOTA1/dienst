@@ -1,3 +1,5 @@
+import type { DB } from '../db';
+import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -46,7 +48,7 @@ export async function leaveRoutes(app: FastifyInstance) {
       maxConcurrentAbsent: z.number().int().min(0).max(500).nullish(),
     })
     .refine((b) => b.to >= b.from, 'to must not be before from');
-  const blackoutOut = (b: any) => ({
+  const blackoutOut = (b: Selectable<DB['absence_blackout']>) => ({
     id: b.id,
     hotelId: b.hotel_id,
     departmentId: b.department_id,
@@ -327,7 +329,12 @@ export async function leaveRoutes(app: FastifyInstance) {
 
   // ------------------------------------------------------------------ wishes (employee)
   const priority = z.number().int().min(1).max(3);
-  const shiftWishOut = (w: any) => ({
+  const shiftWishOut = (
+    w: Pick<
+      Selectable<DB['employee_shift_wish']>,
+      'id' | 'date' | 'shift_id' | 'hotel_id' | 'priority' | 'reason' | 'status' | 'decision_note'
+    >,
+  ) => ({
     id: w.id,
     date: w.date,
     shiftId: w.shift_id,
@@ -337,7 +344,12 @@ export async function leaveRoutes(app: FastifyInstance) {
     status: w.status,
     decisionNote: w.decision_note,
   });
-  const leaveWishOut = (w: any) => ({
+  const leaveWishOut = (
+    w: Pick<
+      Selectable<DB['employee_leave_wish']>,
+      'id' | 'start_date' | 'end_date' | 'leave_days' | 'priority' | 'reason' | 'status' | 'decision_note'
+    >,
+  ) => ({
     id: w.id,
     from: w.start_date,
     to: w.end_date,

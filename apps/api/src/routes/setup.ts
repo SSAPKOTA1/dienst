@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { AppError } from '../lib/errors';
@@ -84,7 +84,7 @@ export async function setupRoutes(app: FastifyInstance) {
   );
 
   // ---- onboarding checklist ------------------------------------------------------------------
-  const companyOf = async (req: any, requested?: number) => {
+  const companyOf = async (req: FastifyRequest, requested?: number) => {
     const p = getPrincipal(req);
     const id = requested ?? p.scope.companyIds[0];
     if (!id) throw new AppError('NOT_FOUND', 'No company in scope');

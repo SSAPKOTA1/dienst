@@ -1,4 +1,6 @@
-import type { FastifyInstance } from 'fastify';
+import type { DB } from '../db';
+import type { Selectable } from 'kysely';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { AppError, notFound } from '../lib/errors';
@@ -62,7 +64,11 @@ export async function peopleRoutes(app: FastifyInstance) {
     );
 
   // ------------------------------------------------------------------ qualifications
-  const qualOut = (q: any) => ({ id: q.id, name: q.name, hasExpiry: q.has_expiry });
+  const qualOut = (q: Selectable<DB['qualification']>) => ({
+    id: q.id,
+    name: q.name,
+    hasExpiry: q.has_expiry,
+  });
   const qualBody = z.object({
     name: z.string().trim().min(1).max(100),
     hasExpiry: z.boolean().default(false),
@@ -276,7 +282,7 @@ export async function peopleRoutes(app: FastifyInstance) {
   });
 
   // ------------------------------------------------------------------ availability
-  const availOut = (a: any) => ({
+  const availOut = (a: Selectable<DB['employee_availability']>) => ({
     id: a.id,
     weekday: a.weekday,
     from: String(a.from_time).slice(0, 5),
@@ -425,7 +431,21 @@ export async function peopleRoutes(app: FastifyInstance) {
   );
 
   // ------------------------------------------------------------------ documents (no health data)
-  const docOut = (d: any) => ({
+  const docOut = (
+    d: Pick<
+      Selectable<DB['employee_document']>,
+      | 'id'
+      | 'employee_id'
+      | 'doc_type'
+      | 'title'
+      | 'file_name'
+      | 'mime'
+      | 'size_bytes'
+      | 'valid_until'
+      | 'visible_to_employee'
+      | 'created_at'
+    >,
+  ) => ({
     id: d.id,
     employeeId: d.employee_id,
     docType: d.doc_type,
@@ -523,7 +543,16 @@ export async function peopleRoutes(app: FastifyInstance) {
     return { items: rows.map(docOut) };
   });
 
-  const download = async (req: any, reply: any, d: any, hotelId: number, companyId: number) => {
+  const download = async (
+    req: FastifyRequest,
+    reply: FastifyReply,
+    d: Pick<
+      Selectable<DB['employee_document']>,
+      'id' | 'employee_id' | 'file_name' | 'mime' | 'visible_to_employee' | 'content_enc'
+    >,
+    hotelId: number,
+    companyId: number,
+  ) => {
     await audit(db, actorOf(req), {
       action: 'document_downloaded',
       entityType: 'employee_document',

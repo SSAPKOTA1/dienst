@@ -138,7 +138,14 @@ export async function hoursRoutes(app: FastifyInstance) {
   );
 
   // ------------------------------------------------------------------ hour categories
-  const catOut = (c: any) => ({
+  const catOut = (c: {
+    id: number | null;
+    code: string;
+    name: string;
+    rule: unknown;
+    active: boolean;
+    company_id: number | null;
+  }) => ({
     id: c.id,
     code: c.code,
     name: c.name,

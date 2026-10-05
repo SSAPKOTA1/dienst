@@ -1,5 +1,7 @@
+import type { DB } from '../db';
+import type { Selectable } from 'kysely';
 import { randomUUID } from 'node:crypto';
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { AppError } from '../lib/errors';
@@ -55,7 +57,7 @@ export async function ssoRoutes(app: FastifyInstance) {
   const authLimit = { rateLimit: { max: app.cfg.RATE_LIMIT_AUTH, timeWindow: '1 minute' } };
 
   // ---------------------------------------------------------------- configuration (administrators)
-  const out = (p: any) => ({
+  const out = (p: Selectable<DB['sso_provider']>) => ({
     companyId: p.company_id,
     issuer: p.issuer,
     clientId: p.client_id,
@@ -168,7 +170,7 @@ export async function ssoRoutes(app: FastifyInstance) {
   );
 
   // ---------------------------------------------------------------- login flow
-  const failRedirect = (reply: any, code: string) => {
+  const failRedirect = (reply: FastifyReply, code: string) => {
     removeCookie(reply, app.cfg.COOKIE_SECURE, TX_COOKIE, '/api/v1/auth/sso');
     return reply.redirect(webUrl(`/login?sso_error=${encodeURIComponent(code)}`));
   };

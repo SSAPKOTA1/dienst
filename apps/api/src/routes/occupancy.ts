@@ -1,3 +1,5 @@
+import type { DB } from '../db';
+import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -84,7 +86,7 @@ export async function occupancyRoutes(app: FastifyInstance) {
   });
 
   // ---- rules ("from X % this shift needs N people")
-  const ruleOut = (x: any) => ({
+  const ruleOut = (x: Selectable<DB['staffing_rule']> & { shift_name?: string | null }) => ({
     id: x.id,
     hotelId: x.hotel_id,
     shiftId: x.shift_id,

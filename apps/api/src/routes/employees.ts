@@ -1,3 +1,5 @@
+import type { DB } from '../db';
+import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -69,7 +71,7 @@ export async function currentContract(db: DbOrTrx, employeeId: number, date: str
     .executeTakeFirst();
 }
 
-const contractOut = (c: any) => ({
+const contractOut = (c: Selectable<DB['employee_contract']>) => ({
   id: c.id,
   validFrom: c.valid_from,
   validTo: c.valid_to,

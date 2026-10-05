@@ -15,17 +15,19 @@
     "build": "pnpm --filter @dienst/web build && node scripts/build-api.mjs",
     "test": "pnpm -r --workspace-concurrency=1 test",
     "e2e": "playwright test -c e2e/playwright.config.ts",
-    "lint": "eslint . && prettier --check .",
+    "lint": "eslint . --max-warnings 293 && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "pnpm -r typecheck",
     "security:rekey": "pnpm --filter @dienst/api security:rekey",
-    "build:api": "node scripts/build-api.mjs"
+    "build:api": "node scripts/build-api.mjs",
+    "test:coverage": "pnpm -r --workspace-concurrency=1 test:coverage"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^9.39.0",
     "@playwright/test": "^1.56.0",
     "@types/node": "^22.20.0",
+    "@vitest/coverage-v8": "4.1.11",
     "esbuild": "^0.28.0",
     "eslint": "^9.39.0",
     "eslint-plugin-react-hooks": "^5.2.0",
