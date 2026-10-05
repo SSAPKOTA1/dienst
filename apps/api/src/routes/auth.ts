@@ -9,6 +9,7 @@ import { assertPasswordPolicy, hashSecret, randomToken, sha256, verifySecret } f
 import { signAccessToken } from '../lib/jwt';
 import { actorOf, getPrincipal, requirePreOrAccess, requireRole } from '../lib/auth';
 import { audit } from '../lib/audit';
+import { readCookie, removeCookie, writeCookie } from '../lib/cookies';
 import { buildPrincipal, roleToActorType } from '../lib/scope';
 import { loadAvailableRoles } from '../services/accounts';
 import { resetMail } from '../lib/mail';
@@ -46,12 +47,11 @@ export async function startSessionFor(
       expires_at: new Date(app.clock().getTime() + REFRESH_TTL_MS),
     })
     .execute();
-  reply.setCookie(COOKIE, raw, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: app.cfg.COOKIE_SECURE,
+  // strict: the refresh cookie is only ever needed by requests the web app itself makes
+  writeCookie(reply, app.cfg.COOKIE_SECURE, COOKIE, raw, {
     path: '/api/v1/auth',
     maxAge: REFRESH_TTL_MS / 1000,
+    sameSite: 'strict',
   });
   const accessToken = await signAccessToken(app.keys.signing('access'), {
     sub: userId,
@@ -200,7 +200,7 @@ export async function authRoutes(app: FastifyInstance) {
         throw new AppError('FORBIDDEN_SCOPE', 'Two-factor setup required', { twoFactorSetupRequired: true });
     }
     if (switching) {
-      const old = req.cookies[COOKIE];
+      const old = readCookie(req, app.cfg.COOKIE_SECURE, COOKIE);
       if (old)
         await app.db
           .updateTable('refresh_token')
@@ -239,7 +239,7 @@ export async function authRoutes(app: FastifyInstance) {
 
   // ---- refresh / logout ---------------------------------------------------------------------
   r.post('/auth/refresh', { config: authLimit }, async (req, reply) => {
-    const raw = req.cookies[COOKIE];
+    const raw = readCookie(req, app.cfg.COOKIE_SECURE, COOKIE);
     if (!raw) throw new AppError('UNAUTHENTICATED', 'No refresh token');
     const row = await app.db
       .selectFrom('refresh_token')
@@ -271,7 +271,7 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   r.post('/auth/logout', async (req, reply) => {
-    const raw = req.cookies[COOKIE];
+    const raw = readCookie(req, app.cfg.COOKIE_SECURE, COOKIE);
     if (raw) {
       const row = await app.db
         .updateTable('refresh_token')
@@ -287,7 +287,7 @@ export async function authRoutes(app: FastifyInstance) {
           { action: 'logout', entityType: 'user_account', entityId: row.user_id },
         );
     }
-    reply.clearCookie(COOKIE, { path: '/api/v1/auth' });
+    removeCookie(reply, app.cfg.COOKIE_SECURE, COOKIE, '/api/v1/auth');
     return reply.status(204).send();
   });
 

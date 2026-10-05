@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { AppError } from '../lib/errors';
 import { actorOf, getPrincipal, requireRole } from '../lib/auth';
 import { audit } from '../lib/audit';
+import { readCookie, removeCookie, writeCookie } from '../lib/cookies';
 import { randomToken } from '../lib/security';
 import { signAccessToken, signPayload, verifyToken } from '../lib/jwt';
 import { assertIssuer, authorizationUrl, discover, pkcePair, redeemCode } from '../lib/oidc';
@@ -168,7 +169,7 @@ export async function ssoRoutes(app: FastifyInstance) {
 
   // ---------------------------------------------------------------- login flow
   const failRedirect = (reply: any, code: string) => {
-    reply.clearCookie(TX_COOKIE, { path: '/api/v1/auth/sso' });
+    removeCookie(reply, app.cfg.COOKIE_SECURE, TX_COOKIE, '/api/v1/auth/sso');
     return reply.redirect(webUrl(`/login?sso_error=${encodeURIComponent(code)}`));
   };
 
@@ -197,12 +198,11 @@ export async function ssoRoutes(app: FastifyInstance) {
         { kind: 'sso_tx', state, nonce, verifier, company: p.company_id },
         '10m',
       );
-      reply.setCookie(TX_COOKIE, txToken, {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: app.cfg.COOKIE_SECURE,
+      // lax on purpose: the identity provider sends the browser back with a cross-site top-level navigation
+      writeCookie(reply, app.cfg.COOKIE_SECURE, TX_COOKIE, txToken, {
         path: '/api/v1/auth/sso',
         maxAge: 600,
+        sameSite: 'lax',
       });
       return reply.redirect(
         authorizationUrl(d, { clientId: p.client_id, redirectUri, state, nonce, challenge }),
@@ -223,7 +223,7 @@ export async function ssoRoutes(app: FastifyInstance) {
       },
     },
     async (req, reply) => {
-      const raw = req.cookies[TX_COOKIE];
+      const raw = readCookie(req, app.cfg.COOKIE_SECURE, TX_COOKIE);
       const c = raw
         ? await verifyToken<{
             kind?: string;
@@ -323,7 +323,7 @@ export async function ssoRoutes(app: FastifyInstance) {
         { kind: 'sso_ticket', uid: result.userId, mfa, jti: randomUUID() },
         '2m',
       );
-      reply.clearCookie(TX_COOKIE, { path: '/api/v1/auth/sso' });
+      removeCookie(reply, app.cfg.COOKIE_SECURE, TX_COOKIE, '/api/v1/auth/sso');
       return reply.redirect(webUrl(`/login/sso#ticket=${ticket}`));
     },
   );

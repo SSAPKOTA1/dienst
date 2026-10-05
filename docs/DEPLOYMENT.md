@@ -71,3 +71,6 @@ The server only calls addresses an administrator typed in for SSO. They must be 
 
 ## Client address and the web punch
 The web punch network check, the per-address rate limits and the audit trail use the client address. With `TRUST_PROXY` unset the app uses the TCP peer, which behind a proxy is the proxy: the check then fails closed (nobody can punch) and the API logs a warning once when it sees an `X-Forwarded-For` header. With `TRUST_PROXY=1` the app takes the address the nearest proxy saw (the last `X-Forwarded-For` entry) and ignores anything a client put in front of it. Web punches store the client address in their audit entry.
+
+## Cookies
+With `COOKIE_SECURE=true` (required in production) the session cookie is named `__Secure-rt` and is only accepted by browsers when set over https; it is `HttpOnly`, `SameSite=Strict` and limited to `/api/v1/auth`. Sessions from before this change keep working: the old `rt` cookie is read once, replaced by the new one and cleared. If you serve the API on a different site than the web app, the strict flag blocks the cookie, so keep both under one site (for example `app.example.com` and `api.example.com`) or use the same host with `/api` as shown above.
