@@ -2,7 +2,7 @@
 # Two images from one file:  --target api  (the API, also used for migrations and jobs)
 #                            --target web  (nginx serving the built web app with the security headers)
 
-FROM node:22-slim AS build
+FROM node:26-slim AS build
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH CI=true
 RUN corepack enable
 WORKDIR /app
@@ -18,7 +18,7 @@ RUN pnpm run build
 # the API's production dependencies only (no dev tools, no test runner); the workspace packages are bundled into dist
 RUN pnpm --filter @dienst/api --prod deploy --legacy /deploy
 
-FROM node:22-slim AS api
+FROM node:26-slim AS api
 ENV NODE_ENV=production MIGRATIONS_DIR=/app/db/migrations
 # the runtime only runs `node`; the package managers bundled in the base image are unused attack surface (and what image scans flag)
 RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
