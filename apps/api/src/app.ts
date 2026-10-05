@@ -25,6 +25,7 @@ import { authRoutes } from './routes/auth';
 import { webauthnRoutes } from './routes/webauthn';
 import { meRoutes } from './routes/me';
 import { organisationRoutes } from './routes/organisation';
+import { roleRoutes } from './routes/roles';
 import { departmentRoutes } from './routes/organisationDevices';
 import { employeeRoutes } from './routes/employees';
 import { setupRoutes } from './routes/setup';
@@ -235,6 +236,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       await api.register(ssoRoutes);
       await api.register(meRoutes);
       await api.register(organisationRoutes);
+      await api.register(roleRoutes);
       await api.register(departmentRoutes);
       await api.register(employeeRoutes);
       await api.register(setupRoutes);

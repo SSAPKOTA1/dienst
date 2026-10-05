@@ -44,8 +44,19 @@ export async function employeeView(db: DbOrTrx, p: Principal, employeeId: number
     .where('employee_id', '=', employeeId)
     .executeTakeFirst();
   if (!e) throw notFound('Employee');
-  if (p.role === 'superAdmin' || p.role === 'admin') {
+  if (p.role === 'superAdmin' || (p.role === 'admin' && p.scope.canCompany(e.company_id))) {
     p.scope.assertCompany(e.company_id);
+    return { e, view: 'full' as EmployeeView };
+  }
+  if (p.role === 'admin') {
+    // an admin limited to single hotels sees (and edits) the employees who work at one of those hotels
+    const hs = await db
+      .selectFrom('employee_hotel')
+      .select('hotel_id')
+      .where('employee_id', '=', employeeId)
+      .execute();
+    if (![e.primary_hotel_id, ...hs.map((h) => h.hotel_id)].some((h) => p.scope.canHotel(h)))
+      throw new AppError('FORBIDDEN_SCOPE', 'Employee is outside your hotels');
     return { e, view: 'full' as EmployeeView };
   }
   if (p.role === 'employee') {
@@ -249,10 +260,13 @@ export async function employeeRoutes(app: FastifyInstance) {
           'd.id as dept_id',
           'd.name as dept_name',
         ]);
-      if (p.role === 'manager') {
+      if (p.role === 'manager' || p.role === 'admin') {
+        // managers: employees of their hotels; admins: all employees of their companies plus those of their single hotels
         const hs = p.scope.hotelIds.length ? p.scope.hotelIds : [0];
+        const cs = p.role === 'admin' ? p.scope.companyIds : [];
         qb = qb.where((eb) =>
           eb.or([
+            ...(cs.length ? [eb('e.company_id', 'in', cs)] : []),
             eb('e.primary_hotel_id', 'in', hs),
             eb.exists(
               eb
@@ -429,30 +443,46 @@ export async function employeeRoutes(app: FastifyInstance) {
       const b = req.body;
       await tx(async (trx) => {
         const { e } = await employeeView(trx, p, req.params.id);
-        const hotelIds =
-          b.hotelIds ??
-          (
-            await trx
-              .selectFrom('employee_hotel')
-              .select('hotel_id')
-              .where('employee_id', '=', e.employee_id)
-              .execute()
-          ).map((x) => x.hotel_id);
-        const deptIds =
-          b.departmentIds ??
-          (
-            await trx
-              .selectFrom('employee_department')
-              .select('department_id')
-              .where('employee_id', '=', e.employee_id)
-              .execute()
-          ).map((x) => x.department_id);
+        const currentHotelIds = (
+          await trx
+            .selectFrom('employee_hotel')
+            .select('hotel_id')
+            .where('employee_id', '=', e.employee_id)
+            .execute()
+        ).map((x) => x.hotel_id);
+        const currentDeptRows = await trx
+          .selectFrom('employee_department as ed')
+          .innerJoin('department as d', 'd.id', 'ed.department_id')
+          .select(['ed.department_id', 'd.hotel_id'])
+          .where('ed.employee_id', '=', e.employee_id)
+          .execute();
+        // an admin limited to single hotels may only change what happens at their own hotels: assignments at other
+        // hotels stay exactly as they are
+        const keptHotels = [...new Set([e.primary_hotel_id, ...currentHotelIds])].filter(
+          (h) => !p.scope.canHotel(h),
+        );
+        if (
+          b.primaryHotelId !== undefined &&
+          b.primaryHotelId !== e.primary_hotel_id &&
+          keptHotels.includes(e.primary_hotel_id)
+        )
+          throw new AppError('FORBIDDEN_SCOPE', 'The primary hotel of this employee is outside your hotels');
         const primaryHotel = b.primaryHotelId ?? e.primary_hotel_id;
         const primaryDept = b.primaryDepartmentId ?? e.primary_department_id;
-        const hs = [...new Set([primaryHotel, ...hotelIds])];
-        const ds = [...new Set([primaryDept, ...deptIds])];
+        const requestedHotels = [primaryHotel, ...(b.hotelIds ?? currentHotelIds)];
+        const hs = [...new Set([...requestedHotels, ...keptHotels])];
+        const keptDepts = currentDeptRows
+          .filter((d) => keptHotels.includes(d.hotel_id))
+          .map((d) => d.department_id);
+        const ds = [
+          ...new Set([
+            primaryDept,
+            ...(b.departmentIds ?? currentDeptRows.map((d) => d.department_id)),
+            ...keptDepts,
+          ]),
+        ];
         for (const h of hs) {
-          p.scope.assertHotel(h);
+          if (!keptHotels.includes(h)) p.scope.assertHotel(h);
           const row = await trx
             .selectFrom('hotel')
             .select('company_id')

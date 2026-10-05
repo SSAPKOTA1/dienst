@@ -52,6 +52,21 @@ const rows: Row[] = [
   },
   { method: 'POST', url: () => '/admins', body: () => ({}), allow: ['SA'] },
   { method: 'GET', url: () => '/admins', allow: ['SA'] },
+  { method: 'POST', url: () => '/super-admins', body: () => ({}), allow: ['SA'] },
+  {
+    method: 'PUT',
+    url: () => '/admins/1/access',
+    body: () => ({ companyIds: [], hotelIds: [] }),
+    allow: ['SA'],
+  },
+  {
+    method: 'PUT',
+    url: () => `/hotels/${org.hotelA1}/active`,
+    body: () => ({ active: true }),
+    allow: ['SA'],
+  },
+  { method: 'GET', url: () => '/users/1/roles', allow: ['SA'] },
+  { method: 'PUT', url: () => '/users/1/roles', body: () => ({}), allow: ['SA'] },
   { method: 'POST', url: () => '/managers', body: () => ({}), allow: ['SA', 'AD'] },
   { method: 'GET', url: () => '/managers', allow: ['SA', 'AD'] },
   {

@@ -40,6 +40,7 @@ export async function setupRoutes(app: FastifyInstance) {
             .innerJoin('manager_hotel as mh', 'mh.manager_id', 'm.manager_id')
             .select('m.user_id')
             .where('mh.hotel_id', 'in', hs)
+            .where('m.revoked_at', 'is', null)
             .execute()
         ).forEach((x) => ids.add(x.user_id));
         (
@@ -48,6 +49,7 @@ export async function setupRoutes(app: FastifyInstance) {
             .innerJoin('admin_company as ac', 'ac.admin_id', 'a.admin_id')
             .select('a.user_id')
             .where('ac.company_id', 'in', cs)
+            .where('a.revoked_at', 'is', null)
             .execute()
         ).forEach((x) => ids.add(x.user_id));
       }

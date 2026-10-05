@@ -17,12 +17,22 @@ export async function loadAvailableRoles(
 ): Promise<{ roles: AvailableRole[]; name: string }> {
   const roles: AvailableRole[] = [];
   let name = '';
-  const sa = await db.selectFrom('super_admin').selectAll().where('user_id', '=', userId).executeTakeFirst();
+  const sa = await db
+    .selectFrom('super_admin')
+    .selectAll()
+    .where('user_id', '=', userId)
+    .where('revoked_at', 'is', null)
+    .executeTakeFirst();
   if (sa) {
     roles.push({ role: 'superAdmin' });
     name ||= `${sa.first_name} ${sa.last_name}`;
   }
-  const ad = await db.selectFrom('admin').selectAll().where('user_id', '=', userId).executeTakeFirst();
+  const ad = await db
+    .selectFrom('admin')
+    .selectAll()
+    .where('user_id', '=', userId)
+    .where('revoked_at', 'is', null)
+    .executeTakeFirst();
   if (ad) {
     const cs = await db
       .selectFrom('admin_company as ac')
@@ -30,14 +40,26 @@ export async function loadAvailableRoles(
       .select(['c.id', 'c.name'])
       .where('ac.admin_id', '=', ad.admin_id)
       .execute();
+    const hs = await db
+      .selectFrom('admin_hotel as ah')
+      .innerJoin('hotel as h', 'h.id', 'ah.hotel_id')
+      .select('h.name')
+      .where('ah.admin_id', '=', ad.admin_id)
+      .execute();
     roles.push({
       role: 'admin',
       companyIds: cs.map((c) => c.id),
       companyName: cs.map((c) => c.name).join(', '),
+      hotelNames: hs.map((h) => h.name),
     });
     name ||= `${ad.first_name} ${ad.last_name}`;
   }
-  const mg = await db.selectFrom('manager').selectAll().where('user_id', '=', userId).executeTakeFirst();
+  const mg = await db
+    .selectFrom('manager')
+    .selectAll()
+    .where('user_id', '=', userId)
+    .where('revoked_at', 'is', null)
+    .executeTakeFirst();
   if (mg) {
     const hs = await db
       .selectFrom('manager_hotel as mh')

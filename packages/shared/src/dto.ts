@@ -22,6 +22,18 @@ export interface HotelDto {
   federalState: string | null;
   timezone: string;
   employeeHoursVisibility: string;
+  /** false: switched off by the super admin (hidden from planning and the tablet, history kept) */
+  isActive: boolean;
+}
+/** The staff roles one person holds (super admin only); the employee role follows the employee record. */
+export interface StaffRolesDto {
+  userId: number;
+  name: string;
+  email: string | null;
+  isEmployee: boolean;
+  superAdmin: boolean;
+  admin: { companyIds: number[]; hotelIds: number[] } | null;
+  manager: { hotelIds: number[] } | null;
 }
 export interface HotelSettingsDto {
   hotelId: number;

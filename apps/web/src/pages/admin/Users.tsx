@@ -5,9 +5,13 @@ import { useGet, useSend } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fdate } from '../../lib/format';
 import { Dialog, ErrorNote, Field, Segmented } from '../../components/ui';
+import { RolesDialog } from './Roles';
 
 export function AdminUsers() {
   const { t } = useTranslation();
+  const { me } = useAuth();
+  const sa = me?.role === 'superAdmin';
+  const [rolesFor, setRolesFor] = useState<number | null>(null);
   const [q, setQ] = useState('');
   const users = useGet<UserList>('/users', { q: q || undefined, pageSize: 100 });
   const [dlg, setDlg] = useState(false);
@@ -46,6 +50,7 @@ export function AdminUsers() {
               <th>{t('Zugriff auf Hotels')}</th>
               <th>{t('Letzte Anmeldung')}</th>
               <th>{t('Status')}</th>
+              {sa && <th>{t('Rollen')}</th>}
             </tr>
           </thead>
           <tbody>
@@ -58,9 +63,7 @@ export function AdminUsers() {
                 <td>{u.roles.map((r) => t(roleName(r.role))).join(', ')}</td>
                 <td>
                   {u.roles
-                    .flatMap((r) =>
-                      r.hotelNames.length ? r.hotelNames : r.companyName ? [r.companyName] : [],
-                    )
+                    .flatMap((r) => [...r.hotelNames, ...(r.companyName ? [r.companyName] : [])])
                     .join(', ')}
                 </td>
                 <td style={{ fontVariantNumeric: 'tabular-nums' }}>
@@ -77,6 +80,17 @@ export function AdminUsers() {
                     )}
                   </span>
                 </td>
+                {sa && (
+                  <td>
+                    <button
+                      className="btn btn-ghost"
+                      aria-label={`${t('Rollen ändern')}: ${u.name}`}
+                      onClick={() => setRolesFor(u.userId)}
+                    >
+                      {t('Rollen ändern')}
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -85,6 +99,16 @@ export function AdminUsers() {
       <div style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>
         {t('Neue Benutzer erhalten einen Einladungslink und legen ihr Passwort selbst fest.')}
       </div>
+      {rolesFor !== null && (
+        <RolesDialog
+          userId={rolesFor}
+          onClose={() => setRolesFor(null)}
+          onDone={() => {
+            setRolesFor(null);
+            void users.refetch();
+          }}
+        />
+      )}
       {dlg && (
         <InviteDialog
           onClose={() => setDlg(false)}
@@ -103,13 +127,50 @@ export function InviteDialog({ onClose, onDone }: { onClose: () => void; onDone:
   const { me } = useAuth();
   const hotels = useGet<Items<HotelDto>>('/hotels');
   const companies = useGet<Items<CompanyDto>>('/companies');
-  const [kind, setKind] = useState<'manager' | 'admin'>('manager');
+  const [kind, setKind] = useState<'manager' | 'admin' | 'superAdmin'>('manager');
   const [f, setF] = useState({ email: '', firstName: '', lastName: '' });
-  const [sel, setSel] = useState<number[]>([]);
-  const m = useSend('POST', kind === 'manager' ? '/managers' : '/admins');
-  const list: Array<HotelDto | CompanyDto> =
-    kind === 'manager' ? (hotels.data?.items ?? []) : (companies.data?.items ?? []);
-  useEffect(() => setSel([]), [kind]);
+  const [hotelSel, setHotelSel] = useState<number[]>([]);
+  const [companySel, setCompanySel] = useState<number[]>([]);
+  const m = useSend(
+    'POST',
+    kind === 'manager' ? '/managers' : kind === 'admin' ? '/admins' : '/super-admins',
+  );
+  useEffect(() => {
+    setHotelSel([]);
+    setCompanySel([]);
+  }, [kind]);
+  const complete =
+    !!f.email &&
+    !!f.firstName &&
+    !!f.lastName &&
+    (kind === 'superAdmin' ||
+      (kind === 'manager' ? hotelSel.length > 0 : hotelSel.length + companySel.length > 0));
+  const body = () =>
+    kind === 'manager'
+      ? { ...f, hotelIds: hotelSel }
+      : kind === 'admin'
+        ? { ...f, hotelIds: hotelSel, companyIds: companySel }
+        : { ...f };
+  const check = (
+    legend: string,
+    list: Array<HotelDto | CompanyDto>,
+    sel: number[],
+    set: (v: number[]) => void,
+  ) => (
+    <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+      <legend style={{ fontSize: 12, marginBottom: 5 }}>{legend}</legend>
+      {list.map((x) => (
+        <label key={x.id} style={{ display: 'flex', gap: 8, fontSize: 14, padding: '3px 0' }}>
+          <input
+            type="checkbox"
+            checked={sel.includes(x.id)}
+            onChange={(e) => set(e.target.checked ? [...sel, x.id] : sel.filter((i) => i !== x.id))}
+          />{' '}
+          {x.name}
+        </label>
+      ))}
+    </fieldset>
+  );
   return (
     <Dialog
       title={t('Benutzer einladen')}
@@ -118,13 +179,8 @@ export function InviteDialog({ onClose, onDone }: { onClose: () => void; onDone:
         <>
           <button
             className="btn btn-primary"
-            disabled={!f.email || !f.firstName || !f.lastName || !sel.length}
-            onClick={() =>
-              m.mutate(
-                { ...f, ...(kind === 'manager' ? { hotelIds: sel } : { companyIds: sel }) },
-                { onSuccess: onDone },
-              )
-            }
+            disabled={!complete}
+            onClick={() => m.mutate(body(), { onSuccess: onDone })}
           >
             {t('Einladen')}
           </button>
@@ -141,6 +197,7 @@ export function InviteDialog({ onClose, onDone }: { onClose: () => void; onDone:
           options={[
             { value: 'manager', label: t('Leitung') },
             { value: 'admin', label: t('Administration') },
+            { value: 'superAdmin', label: t('Super-Admin') },
           ]}
         />
       )}
@@ -169,21 +226,20 @@ export function InviteDialog({ onClose, onDone }: { onClose: () => void; onDone:
           onChange={(e) => setF({ ...f, email: e.target.value })}
         />
       </Field>
-      <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-        <legend style={{ fontSize: 12, marginBottom: 5 }}>
-          {kind === 'manager' ? t('Zugriff auf Hotels') : t('Unternehmen')}
-        </legend>
-        {list.map((x) => (
-          <label key={x.id} style={{ display: 'flex', gap: 8, fontSize: 14, padding: '3px 0' }}>
-            <input
-              type="checkbox"
-              checked={sel.includes(x.id)}
-              onChange={(e) => setSel(e.target.checked ? [...sel, x.id] : sel.filter((i) => i !== x.id))}
-            />{' '}
-            {x.name}
-          </label>
-        ))}
-      </fieldset>
+      {kind === 'admin' &&
+        check(
+          t('Ganze Unternehmen (alle ihre Hotels)'),
+          companies.data?.items ?? [],
+          companySel,
+          setCompanySel,
+        )}
+      {kind !== 'superAdmin' &&
+        check(
+          kind === 'manager' ? t('Zugriff auf Hotels') : t('Einzelne Hotels'),
+          hotels.data?.items ?? [],
+          hotelSel,
+          setHotelSel,
+        )}
       <ErrorNote error={m.error} />
     </Dialog>
   );

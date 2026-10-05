@@ -47,12 +47,15 @@ export async function kioskRoutes(app: FastifyInstance) {
     const tok = req.headers['x-kiosk-token'];
     if (typeof tok !== 'string' || !tok) throw new AppError('DEVICE_INVALID', 'Unknown device');
     const d = await db
-      .selectFrom('kiosk_device')
-      .select(['id', 'hotel_id', 'name', 'status', 'last_seen_at'])
-      .where('token_hash', '=', sha256(tok))
+      .selectFrom('kiosk_device as kd')
+      .innerJoin('hotel as h', 'h.id', 'kd.hotel_id')
+      .select(['kd.id', 'kd.hotel_id', 'kd.name', 'kd.status', 'kd.last_seen_at', 'h.is_active'])
+      .where('kd.token_hash', '=', sha256(tok))
       .executeTakeFirst();
     if (!d || d.status !== 'active')
       throw new AppError('DEVICE_INVALID', 'Device is not registered or was revoked');
+    // the tablet of a switched-off hotel stops working until the super admin reactivates the hotel
+    if (!d.is_active) throw new AppError('DEVICE_INVALID', 'This hotel is switched off');
     req.device = { id: d.id, hotelId: d.hotel_id, name: d.name };
     // "online" means seen within three minutes, so writing the timestamp more often than every 30 s only adds load
     // (every tap and every roster poll used to update the same row)

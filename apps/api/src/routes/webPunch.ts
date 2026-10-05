@@ -33,6 +33,7 @@ export async function webPunchRoutes(app: FastifyInstance) {
       .select(['h.id', 'h.name', 'h.web_punch_allowed_cidrs', 'h.break_mode'])
       .where('eh.employee_id', '=', empId)
       .where('h.allow_web_punch', '=', true)
+      .where('h.is_active', '=', true)
       .orderBy('h.name')
       .execute();
     return rows.map((h) => ({

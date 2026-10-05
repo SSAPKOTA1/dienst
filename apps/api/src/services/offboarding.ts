@@ -33,9 +33,20 @@ export async function deactivateEmployee(trx: Trx, employeeId: number, now: Date
       .selectFrom('super_admin')
       .select('user_id')
       .where('user_id', '=', e.user_id)
+      .where('revoked_at', 'is', null)
       .executeTakeFirst()) ||
-    (await trx.selectFrom('admin').select('user_id').where('user_id', '=', e.user_id).executeTakeFirst()) ||
-    (await trx.selectFrom('manager').select('user_id').where('user_id', '=', e.user_id).executeTakeFirst());
+    (await trx
+      .selectFrom('admin')
+      .select('user_id')
+      .where('user_id', '=', e.user_id)
+      .where('revoked_at', 'is', null)
+      .executeTakeFirst()) ||
+    (await trx
+      .selectFrom('manager')
+      .select('user_id')
+      .where('user_id', '=', e.user_id)
+      .where('revoked_at', 'is', null)
+      .executeTakeFirst());
   let accountDisabled = false;
   if (!otherEmp && !staff) {
     await trx

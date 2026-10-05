@@ -7,6 +7,8 @@ import { useAuth } from '../lib/auth';
 import { fdate, fnum, fsigned, WEEKDAYS } from '../lib/format';
 import { LedgerTable } from '../components/Ledger';
 import { DocumentsPanel, QualificationsEditor, TerminatePanel } from './StaffMore';
+import { ContractDialog, EditEmployeeDialog } from './StaffEdit';
+import { RolesDialog } from './admin/Roles';
 import { ErrorNote, Kicker, Label, PageHead, useToast } from '../components/ui';
 
 const EMPLOYMENT: Record<string, string> = {
@@ -209,6 +211,7 @@ function StaffDetail({ id }: { id: number }) {
   const toast = useToast();
   const { me } = useAuth();
   const q = useGet<EmployeeDetailDto>(`/employees/${id}`);
+  const [dlg, setDlg] = useState<'edit' | 'contract' | 'roles' | null>(null);
   const [pin, setPin] = useState<string | null>(null);
   const [code, setCode] = useState<{ username: string | null; code: string } | null>(null);
   const reset = useSend<void, { pin: string }>('POST', `/employees/${id}/reset-pin`);
@@ -253,6 +256,34 @@ function StaffDetail({ id }: { id: number }) {
           {e.status === 'inactive' ? `· ${t('Inaktiv')}` : ''}
         </div>
       </div>
+      {admin && !reduced && (
+        <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+          <button className="btn btn-secondary" data-testid="staff-edit" onClick={() => setDlg('edit')}>
+            {t('Bearbeiten')}
+          </button>
+          <button
+            className="btn btn-secondary"
+            data-testid="staff-contract"
+            onClick={() => setDlg('contract')}
+          >
+            {t('Vertrag ändern')}
+          </button>
+          {me?.role === 'superAdmin' && e.account && (
+            <button className="btn btn-secondary" data-testid="staff-roles" onClick={() => setDlg('roles')}>
+              {t('Rollen')}
+            </button>
+          )}
+        </div>
+      )}
+      {dlg === 'edit' && (
+        <EditEmployeeDialog e={e} onClose={() => setDlg(null)} onDone={() => setDlg(null)} />
+      )}
+      {dlg === 'contract' && (
+        <ContractDialog e={e} onClose={() => setDlg(null)} onDone={() => setDlg(null)} />
+      )}
+      {dlg === 'roles' && e.account && (
+        <RolesDialog userId={e.account.userId} onClose={() => setDlg(null)} onDone={() => setDlg(null)} />
+      )}
       {reduced && (
         <div style={{ border: '1px solid var(--color-divider)', padding: 'var(--space-3)', fontSize: 13 }}>
           {t('Reduzierte Ansicht')}: {t('Stammhaus')} {e.homeHotel.name}.{' '}

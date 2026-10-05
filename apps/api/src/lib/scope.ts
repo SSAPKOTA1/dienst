@@ -50,16 +50,24 @@ export async function buildPrincipal(
   role: Role,
   employeeId?: number | null,
 ): Promise<Principal | null> {
+  // a revoked staff role stays in the table (other records point at it) but grants nothing
   const sa = await db
     .selectFrom('super_admin')
     .select('super_admin_id')
     .where('user_id', '=', userId)
+    .where('revoked_at', 'is', null)
     .executeTakeFirst();
-  const ad = await db.selectFrom('admin').select('admin_id').where('user_id', '=', userId).executeTakeFirst();
+  const ad = await db
+    .selectFrom('admin')
+    .select('admin_id')
+    .where('user_id', '=', userId)
+    .where('revoked_at', 'is', null)
+    .executeTakeFirst();
   const mg = await db
     .selectFrom('manager')
     .select('manager_id')
     .where('user_id', '=', userId)
+    .where('revoked_at', 'is', null)
     .executeTakeFirst();
   const base = {
     userId,
@@ -73,7 +81,7 @@ export async function buildPrincipal(
   if (role === 'superAdmin') {
     if (!sa) return null;
     const companies = await db.selectFrom('company').select('id').execute();
-    const hotels = await db.selectFrom('hotel').select('id').execute();
+    const hotels = await db.selectFrom('hotel').select('id').where('is_active', '=', true).execute();
     return {
       ...base,
       scope: new Scope(
@@ -90,17 +98,27 @@ export async function buildPrincipal(
       .select('company_id')
       .where('admin_id', '=', ad.admin_id)
       .execute();
+    // company-wide access (admin_company) covers all hotels of the company; admin_hotel adds single hotels.
+    // Only the company-wide part fills companyIds, so a hotel-limited admin never passes a company check.
     const companyIds = companies.map((c) => c.company_id);
-    const hotels = companyIds.length
-      ? await db.selectFrom('hotel').select('id').where('company_id', 'in', companyIds).execute()
+    const ofCompanies = companyIds.length
+      ? await db
+          .selectFrom('hotel')
+          .select('id')
+          .where('company_id', 'in', companyIds)
+          .where('is_active', '=', true)
+          .execute()
       : [];
+    const assigned = await db
+      .selectFrom('admin_hotel as ah')
+      .innerJoin('hotel as h', 'h.id', 'ah.hotel_id')
+      .select('h.id')
+      .where('ah.admin_id', '=', ad.admin_id)
+      .where('h.is_active', '=', true)
+      .execute();
     return {
       ...base,
-      scope: new Scope(
-        role,
-        companyIds,
-        hotels.map((h) => h.id),
-      ),
+      scope: new Scope(role, companyIds, [...new Set([...ofCompanies, ...assigned].map((h) => h.id))]),
     };
   }
   if (role === 'manager') {
@@ -110,6 +128,7 @@ export async function buildPrincipal(
       .innerJoin('hotel as h', 'h.id', 'mh.hotel_id')
       .select(['h.id', 'h.company_id'])
       .where('mh.manager_id', '=', mg.manager_id)
+      .where('h.is_active', '=', true)
       .execute();
     return {
       ...base,
