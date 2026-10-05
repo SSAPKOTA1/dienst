@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { parseTrustProxy, type TrustProxy } from './lib/proxy';
 
 const schema = z.object({
   DATABASE_URL: z.string().default('postgres://dienst:dienst@localhost:5432/dienst'),
@@ -28,11 +29,11 @@ const schema = z.object({
   RATE_LIMIT_KIOSK: z.coerce.number().default(60),
   /** requests per minute and client for every other route */
   RATE_LIMIT_GLOBAL: z.coerce.number().default(600),
-  /** set to 1 behind a reverse proxy so the client IP (rate limits, audit log) is read from X-Forwarded-For */
-  TRUST_PROXY: z
-    .string()
-    .default('false')
-    .transform((v) => v === 'true' || v === '1'),
+  /**
+   * Whose X-Forwarded-For to believe: false (default), the number of reverse proxies in front (e.g. 1), or
+   * their addresses/CIDR ranges. See lib/proxy.ts. `true` is refused in production.
+   */
+  TRUST_PROXY: z.string().optional(),
   NODE_ENV: z.string().default('development'),
   /**
    * Whether the server may call private and loopback addresses when it fetches an administrator-supplied
@@ -43,7 +44,10 @@ const schema = z.object({
 });
 
 type Parsed = z.infer<typeof schema>;
-export type Config = Omit<Parsed, 'OUTBOUND_ALLOW_PRIVATE'> & { OUTBOUND_ALLOW_PRIVATE: boolean };
+export type Config = Omit<Parsed, 'OUTBOUND_ALLOW_PRIVATE' | 'TRUST_PROXY'> & {
+  OUTBOUND_ALLOW_PRIVATE: boolean;
+  TRUST_PROXY: TrustProxy;
+};
 
 const DEV_SECRETS = new Set([
   'dev-only-secret-change-me-please-0123456789',
@@ -75,6 +79,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   }
   return {
     ...cfg,
+    TRUST_PROXY: parseTrustProxy(cfg.TRUST_PROXY, cfg.NODE_ENV === 'production'),
     OUTBOUND_ALLOW_PRIVATE:
       (cfg.OUTBOUND_ALLOW_PRIVATE ?? (cfg.NODE_ENV === 'production' ? 'false' : 'true')) === 'true',
   };

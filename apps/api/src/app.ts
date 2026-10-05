@@ -61,7 +61,12 @@ export interface AppOptions {
 export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> {
   const cfg = loadConfig({ ...process.env, ...(opts.config as NodeJS.ProcessEnv | undefined) });
   const app = Fastify({
-    trustProxy: cfg.TRUST_PROXY,
+    // a hop count N means: the N nearest hops are our own proxies, the next address is the client. (Fastify's own
+    // number option counts differently, so spell it out as a function: hop 0 is the TCP peer.)
+    trustProxy:
+      typeof cfg.TRUST_PROXY === 'number'
+        ? (_a: string, hop: number) => hop < Number(cfg.TRUST_PROXY)
+        : cfg.TRUST_PROXY,
     logger: opts.logger ?? {
       level: cfg.LOG_LEVEL,
       redact: {
@@ -119,6 +124,20 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   }
 
   await registerSecurityHeaders(app, cfg.NODE_ENV === 'production');
+
+  // a proxy header that nobody trusts is almost always a misconfiguration: the web punch network check and the
+  // rate limits would then see the proxy instead of the client. Say so once.
+  if (cfg.TRUST_PROXY === false) {
+    let warned = false;
+    app.addHook('onRequest', async (req) => {
+      if (!warned && req.headers['x-forwarded-for']) {
+        warned = true;
+        req.log.warn(
+          'X-Forwarded-For received but TRUST_PROXY is not set: client addresses will be the proxy address',
+        );
+      }
+    });
+  }
   await app.register(rateLimit, { global: true, max: cfg.RATE_LIMIT_GLOBAL, timeWindow: '1 minute' });
   await app.register(cookie);
   await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 10 } });
