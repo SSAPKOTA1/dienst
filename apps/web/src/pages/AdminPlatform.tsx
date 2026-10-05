@@ -107,6 +107,21 @@ export function AdminIntegrations() {
   );
 }
 
+const SCOPES: Array<[string, string]> = [
+  ['hotels:read', 'Hotels'],
+  ['employees:read', 'Mitarbeitende (Name, Personalnummer)'],
+  ['schedule:read', 'Veröffentlichte Dienstpläne'],
+  ['attendance:read', 'Freigegebene Arbeitszeiten'],
+  ['absences:read', 'Genehmigte Abwesenheiten'],
+];
+const EXPIRY: Array<[number, string]> = [
+  [30, '30 Tage'],
+  [90, '90 Tage'],
+  [180, '180 Tage'],
+  [365, '1 Jahr'],
+  [730, '2 Jahre'],
+];
+
 function ApiKeys({ companies }: { companies: any[] }) {
   const { t } = useTranslation();
   const toast = useToast();
@@ -119,6 +134,13 @@ function ApiKeys({ companies }: { companies: any[] }) {
   const [companyId, setCompanyId] = useState<number | ''>('');
   const [hotelId, setHotelId] = useState<number | ''>('');
   const [shown, setShown] = useState<string | null>(null);
+  const [scopes, setScopes] = useState<string[]>(SCOPES.map(([k]) => k));
+  const [days, setDays] = useState(365);
+  const [cidrs, setCidrs] = useState('');
+  const cidrList = cidrs
+    .split(/[,\s]+/)
+    .map((x) => x.trim())
+    .filter(Boolean);
   const cid = companyId || companies[0]?.id || '';
   return (
     <section style={box}>
@@ -151,6 +173,8 @@ function ApiKeys({ companies }: { companies: any[] }) {
             <th style={{ paddingLeft: 'var(--space-4)' }}>{t('Name')}</th>
             <th>{t('Schlüssel')}</th>
             <th>{t('Hotel')}</th>
+            <th>{t('Rechte')}</th>
+            <th>{t('Gültig bis')}</th>
             <th>{t('Zuletzt benutzt')}</th>
             <th />
           </tr>
@@ -164,6 +188,25 @@ function ApiKeys({ companies }: { companies: any[] }) {
                 {k.hotelId
                   ? ((hotels.data?.items ?? []).find((h: any) => h.id === k.hotelId)?.name ?? k.hotelId)
                   : t('Alle Hotels')}
+              </td>
+              <td style={{ fontSize: 12 }}>
+                {k.scopes.map((x: string) => x.replace(':read', '')).join(', ')}
+                {k.allowedCidrs.length ? ` · ${k.allowedCidrs.join(', ')}` : ''}
+              </td>
+              <td>
+                {fdatetime(k.expiresAt)}
+                {!k.revokedAt && Date.parse(k.expiresAt) < Date.now() && (
+                  <span className="tag tag-accent" style={{ marginLeft: 6 }}>
+                    {t('Abgelaufen')}
+                  </span>
+                )}
+                {!k.revokedAt &&
+                  Date.parse(k.expiresAt) >= Date.now() &&
+                  Date.parse(k.expiresAt) - Date.now() < 30 * 86400e3 && (
+                    <span className="tag tag-neutral" style={{ marginLeft: 6 }}>
+                      {t('Läuft bald ab')}
+                    </span>
+                  )}
               </td>
               <td>{k.revokedAt ? t('Widerrufen') : k.lastUsedAt ? fdatetime(k.lastUsedAt) : '–'}</td>
               <td style={{ textAlign: 'right', paddingRight: 'var(--space-4)' }}>
@@ -180,7 +223,7 @@ function ApiKeys({ companies }: { companies: any[] }) {
           ))}
           {(keys.data?.items ?? []).length === 0 && (
             <tr>
-              <td colSpan={5} style={{ paddingLeft: 'var(--space-4)' }}>
+              <td colSpan={7} style={{ paddingLeft: 'var(--space-4)' }}>
                 {t('Noch keine Schlüssel.')}
               </td>
             </tr>
@@ -195,10 +238,17 @@ function ApiKeys({ companies }: { companies: any[] }) {
             <>
               <button
                 className="btn btn-primary"
-                disabled={!name.trim() || !cid}
+                disabled={!name.trim() || !cid || scopes.length === 0}
                 onClick={() =>
                   create.mutate(
-                    { companyId: Number(cid), hotelId: hotelId || null, name },
+                    {
+                      companyId: Number(cid),
+                      hotelId: hotelId || null,
+                      name,
+                      scopes,
+                      expiresInDays: days,
+                      ...(cidrList.length ? { allowedCidrs: cidrList } : {}),
+                    },
                     {
                       onSuccess: (r) => {
                         setShown(r.key);
@@ -255,6 +305,48 @@ function ApiKeys({ companies }: { companies: any[] }) {
                   </option>
                 ))}
             </select>
+          </Field>
+          <Field label={t('Gültigkeit')} htmlFor="ak-days">
+            <select
+              id="ak-days"
+              className="input"
+              value={days}
+              onChange={(e) => setDays(Number(e.target.value))}
+            >
+              {EXPIRY.map(([d, l]) => (
+                <option key={d} value={d}>
+                  {t(l)}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+            <legend style={{ fontWeight: 700, fontSize: 13 }}>{t('Darf lesen')}</legend>
+            {SCOPES.map(([k, l]) => (
+              <label key={k} style={{ display: 'flex', gap: 8, alignItems: 'center', minHeight: 28 }}>
+                <input
+                  type="checkbox"
+                  checked={scopes.includes(k)}
+                  onChange={(e) =>
+                    setScopes(e.target.checked ? [...scopes, k] : scopes.filter((x) => x !== k))
+                  }
+                />
+                {t(l)}
+              </label>
+            ))}
+          </fieldset>
+          <Field
+            label={t('Erlaubte Netzwerke (optional, IP oder CIDR)')}
+            htmlFor="ak-cidr"
+            hint={t('Leer: von überall. Sonst nur aus diesen Netzen.')}
+          >
+            <input
+              id="ak-cidr"
+              className="input"
+              value={cidrs}
+              onChange={(e) => setCidrs(e.target.value)}
+              placeholder="203.0.113.0/24"
+            />
           </Field>
           <ErrorNote error={create.error} />
         </Dialog>

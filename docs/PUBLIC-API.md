@@ -3,7 +3,13 @@
 Base path `/api/public/v1`. The machine-readable description is at `/api/public/v1/openapi.json`.
 
 ## Authentication
-An administrator creates a key under Admin → Schnittstellen (or `POST /api/v1/api-keys`). The key looks like `dk_…`, is shown once and is stored only as a hash. Send it as `X-API-Key: dk_…` or `Authorization: Bearer dk_…`. A key belongs to one company and optionally to one hotel. Revoke it at any time. Limit: 120 requests per minute and key.
+An administrator creates a key under Admin → Schnittstellen (or `POST /api/v1/api-keys`). The key looks like `dk_…`, is shown once and is stored only as a hash. Send it as `X-API-Key: dk_…` or `Authorization: Bearer dk_…`. A key belongs to one company and optionally to one hotel, and it is limited in three ways when it is created:
+
+- **Expiry:** 30 days to 2 years (default 1 year). An expired key answers `401`. The creator and the company administrators get a notification 14 and 3 days before. Create a new key and revoke the old one to rotate.
+- **Scopes:** `hotels:read`, `employees:read`, `schedule:read`, `attendance:read`, `absences:read`. A request for something outside the scopes answers `403` with `requiredScope`. Give a key only what its user needs (a payroll tool does not need `schedule:read`).
+- **Network (optional):** IP addresses or CIDR ranges the key may be used from; other addresses answer `403`. Behind a proxy this needs `TRUST_PROXY` (see `docs/DEPLOYMENT.md`).
+
+Revoke a key at any time. Limit: 120 requests per minute and key.
 
 ## Endpoints (GET only)
 | Path | Returns |

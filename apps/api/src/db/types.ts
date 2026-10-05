@@ -87,16 +87,20 @@ export interface AnnouncementAck {
 }
 
 export interface ApiKey {
+  allowed_cidrs: string[] | null;
   company_id: number;
   created_at: Generated<Timestamp>;
   created_by_user_id: number | null;
+  expires_at: Timestamp;
   hotel_id: number | null;
   id: Generated<number>;
   key_hash: string;
   key_prefix: string;
   last_used_at: Timestamp | null;
+  last_used_ip: string | null;
   name: string;
   revoked_at: Timestamp | null;
+  scopes: Generated<string[]>;
 }
 
 export interface ArbeitszeitkontoEntry {

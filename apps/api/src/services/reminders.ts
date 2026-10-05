@@ -131,6 +131,31 @@ export async function runReminders(db: Db, now: Date): Promise<number> {
       );
     }
   }
+  // public API keys: the creator and the company admins hear about it 14 and 3 days before a key stops working
+  for (const d of [14, 3]) {
+    const until = new Date(now.getTime() + d * 86400e3);
+    const keys = await db
+      .selectFrom('api_key')
+      .select(['id', 'company_id', 'name', 'expires_at', 'created_by_user_id'])
+      .where('revoked_at', 'is', null)
+      .where('expires_at', '>', now)
+      .where('expires_at', '<=', until)
+      .execute();
+    for (const k of keys) {
+      const left = Math.ceil((k.expires_at.getTime() - now.getTime()) / 86400e3);
+      if ((left <= 3 ? 3 : 14) !== d) continue;
+      const users = new Set([
+        ...(await adminUsersOf(db, k.company_id)),
+        ...(k.created_by_user_id ? [k.created_by_user_id] : []),
+      ]);
+      sent += await remind(db, [...users], 'api_key_expiring', `k${k.id}:${d}`, {
+        keyId: k.id,
+        name: k.name,
+        expiresAt: k.expires_at.toISOString(),
+        days: left,
+      });
+    }
+  }
   return sent;
 }
 
