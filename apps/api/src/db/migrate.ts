@@ -6,7 +6,10 @@ import pg from 'pg';
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const MIGRATIONS_DIR = path.resolve(here, '../../../../db/migrations');
 
-export async function migrate(databaseUrl: string, log: (m: string) => void = console.log): Promise<string[]> {
+export async function migrate(
+  databaseUrl: string,
+  log: (m: string) => void = console.log,
+): Promise<string[]> {
   const client = new pg.Client({ connectionString: databaseUrl });
   await client.connect();
   const applied: string[] = [];

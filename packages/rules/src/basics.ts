@@ -85,3 +85,54 @@ export function timeAccountBalance(p: {
   target -= (p.dailyTarget ?? 0) * (p.unpaidDays ?? 0);
   return Math.round(((p.opening ?? 0) + p.approvedPaidHours + p.creditHours - target) * 100) / 100;
 }
+
+/** PIN policy (SPEC 4.12): all-equal digits and straight ascending/descending runs are rejected. */
+export function isWeakPin(pin: string): boolean {
+  if (!/^\d+$/.test(pin)) return true;
+  const d = pin.split('').map(Number);
+  if (d.every((x) => x === d[0])) return true;
+  const asc = d.every((x, i) => i === 0 || x === d[i - 1] + 1);
+  const desc = d.every((x, i) => i === 0 || x === d[i - 1] - 1);
+  return asc || desc;
+}
+
+// ---- date helpers on ISO strings (pure) ---------------------------------------------------
+export const addDays = (iso: string, n: number): string => {
+  const d = new Date(iso + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+/** ISO weekday 1=Mon..7=Sun */
+export const isoWeekday = (iso: string): number => {
+  const d = new Date(iso + 'T00:00:00Z').getUTCDay();
+  return d === 0 ? 7 : d;
+};
+export const mondayOf = (iso: string): string => addDays(iso, 1 - isoWeekday(iso));
+export function eachDay(from: string, to: string): string[] {
+  const out: string[] = [];
+  for (let d = from; d <= to; d = addDays(d, 1)) out.push(d);
+  return out;
+}
+
+/** SPEC 4.4: counted days = dates on the employee's working weekdays that are not public holidays. */
+export function countedDays(
+  from: string,
+  to: string,
+  workingWeekdays: number[],
+  holidays: Set<string>,
+): string[] {
+  return eachDay(from, to).filter((d) => workingWeekdays.includes(isoWeekday(d)) && !holidays.has(d));
+}
+
+/** Required headcount for a shift on a date: date override, else weekday default, else 0 (SPEC 3, 4.9). */
+export function resolveRequired(
+  date: string,
+  weekdayDefaults: Record<number, number> | Map<number, number>,
+  overrides: Record<string, number> | Map<string, number>,
+): number {
+  const o = overrides instanceof Map ? overrides.get(date) : overrides[date];
+  if (o !== undefined) return o;
+  const wd = isoWeekday(date);
+  const d = weekdayDefaults instanceof Map ? weekdayDefaults.get(wd) : weekdayDefaults[wd];
+  return d ?? 0;
+}

@@ -4,16 +4,46 @@ import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fas
 import helmet from '@fastify/helmet';
 import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
+import multipart from '@fastify/multipart';
 import { ZodError } from 'zod';
 import { loadConfig, type Config } from './config';
 import { createDb, type Db } from './db';
+import rateLimit from '@fastify/rate-limit';
 import { AppError } from './lib/errors';
+import { Mailer } from './lib/mail';
+import { authRoutes } from './routes/auth';
+import { meRoutes } from './routes/me';
+import { organisationRoutes } from './routes/organisation';
+import { employeeRoutes } from './routes/employees';
+import { setupRoutes } from './routes/setup';
+import { shiftRoutes } from './routes/shifts';
+import { scheduleRoutes } from './routes/schedule';
+import { kioskRoutes } from './routes/kiosk';
+import { liveRoutes } from './routes/live';
+import { approvalRoutes } from './routes/approvals';
+import { occupancyRoutes } from './routes/occupancy';
+import { apiKeyRoutes, publicApiRoutes } from './routes/apiKeys';
+import { ssoRoutes } from './routes/sso';
+import { selfRoutes } from './routes/self';
+import { webPunchRoutes } from './routes/webPunch';
+import { exportRoutes } from './routes/exports';
+import { importRoutes } from './routes/imports';
+import { leaveRoutes } from './routes/leave';
+import { hoursRoutes } from './routes/hours';
+import { swapRoutes } from './routes/swaps';
+import { peopleRoutes } from './routes/people';
+import { commsRoutes } from './routes/comms';
+import { expireSwaps, runAutoCheckout, wipeExpiredCredentials } from './jobs/autoCheckout';
+import { runVacationJobs } from './services/vacationJobs';
+import { runDailyOnce } from './jobs/daily';
+import { runOffboarding, runReminders } from './services/reminders';
 
 declare module 'fastify' {
   interface FastifyInstance {
     db: Db;
     cfg: Config;
     clock: () => Date;
+    mailer: Mailer;
   }
 }
 
@@ -22,11 +52,14 @@ export interface AppOptions {
   clock?: () => Date;
   logger?: boolean | object;
   db?: Db;
+  /** run the auto-checkout job every minute (the server enables it; tests call runAutoCheckout directly) */
+  autoCheckout?: boolean;
 }
 
 export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> {
   const cfg = loadConfig({ ...process.env, ...(opts.config as NodeJS.ProcessEnv | undefined) });
   const app = Fastify({
+    trustProxy: cfg.TRUST_PROXY,
     logger: opts.logger ?? {
       level: cfg.LOG_LEVEL,
       redact: {
@@ -43,7 +76,6 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
         censor: '[redacted]',
       },
     },
-    trustProxy: true,
   });
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
@@ -56,8 +88,37 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
     if (!opts.db) await db.destroy();
   });
 
+  app.decorateRequest('principal', null);
+  app.decorateRequest('preUserId', null);
+  app.decorateRequest('preSsoMfa', false);
+  app.decorate(
+    'mailer',
+    new Mailer(
+      { mode: cfg.MAIL_MODE, host: cfg.SMTP_HOST, port: cfg.SMTP_PORT, from: cfg.MAIL_FROM },
+      app.log,
+    ),
+  );
+
+  if (opts.autoCheckout) {
+    const timer = setInterval(
+      () =>
+        void Promise.all([
+          runDailyOnce('vacation', app.clock(), (n) => runVacationJobs(db, n)),
+          runDailyOnce('reminders', app.clock(), (n) => runReminders(db, n)),
+          runDailyOnce('offboarding', app.clock(), (n) => runOffboarding(db, n)),
+          runAutoCheckout(db, app.clock()),
+          wipeExpiredCredentials(db, app.clock()),
+          expireSwaps(db, app.clock()),
+        ]).catch((e) => app.log.error({ err: (e as Error).message }, 'background job failed')),
+      60_000,
+    );
+    app.addHook('onClose', async () => clearInterval(timer));
+  }
+
   await app.register(helmet);
+  await app.register(rateLimit, { global: true, max: cfg.RATE_LIMIT_GLOBAL, timeWindow: '1 minute' });
   await app.register(cookie);
+  await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 10 } });
   await app.register(cors, { origin: cfg.WEB_ORIGIN, credentials: true });
 
   app.setErrorHandler((err: unknown, req, reply) => {
@@ -118,13 +179,36 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   const r = app.withTypeProvider<ZodTypeProvider>();
   await app.register(
     async (api) => {
-      api.get('/health', async () => {
+      await api.register(authRoutes);
+      await api.register(ssoRoutes);
+      await api.register(meRoutes);
+      await api.register(organisationRoutes);
+      await api.register(employeeRoutes);
+      await api.register(setupRoutes);
+      await api.register(shiftRoutes);
+      await api.register(scheduleRoutes);
+      await api.register(kioskRoutes);
+      await api.register(liveRoutes);
+      await api.register(approvalRoutes);
+      await api.register(selfRoutes);
+      await api.register(apiKeyRoutes);
+      await api.register(occupancyRoutes);
+      await api.register(webPunchRoutes);
+      await api.register(exportRoutes);
+      await api.register(importRoutes);
+      await api.register(leaveRoutes);
+      await api.register(hoursRoutes);
+      await api.register(swapRoutes);
+      await api.register(peopleRoutes);
+      await api.register(commsRoutes);
+      api.get('/health', { config: { rateLimit: false } }, async () => {
         await sql`select 1`.execute(db);
         return { status: 'ok', time: app.clock().toISOString() };
       });
     },
     { prefix: '/api/v1' },
   );
+  await app.register(publicApiRoutes, { prefix: '/api/public/v1' });
   void r;
   return app;
 }

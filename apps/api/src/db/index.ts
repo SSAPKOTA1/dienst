@@ -11,7 +11,9 @@ export type Trx = Transaction<DB>;
 export type DbOrTrx = Db | Trx;
 
 export function createDb(connectionString: string): Db {
-  return new Kysely<DB>({ dialect: new PostgresDialect({ pool: new pg.Pool({ connectionString, max: 10 }) }) });
+  return new Kysely<DB>({
+    dialect: new PostgresDialect({ pool: new pg.Pool({ connectionString, max: 10 }) }),
+  });
 }
 
 export type { DB };

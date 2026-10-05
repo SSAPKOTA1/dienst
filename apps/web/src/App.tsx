@@ -1,141 +1,120 @@
-import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { PLANNER_NAV } from './nav';
-import { setLang } from './i18n';
+import { AuthProvider, homePathFor, useAuth, type RoleName } from './lib/auth';
+import { ToastProvider } from './components/ui';
+import { PlannerShell } from './components/Shell';
+import { Login, SsoCallback } from './pages/Login';
+import { AcceptInvitation, ForgotPassword } from './pages/AccountPages';
+import { Planning } from './pages/planning/Planning';
+import { Kiosk } from './pages/Kiosk';
+import { Live } from './pages/Live';
+import { Requests } from './pages/Requests';
+import { OpenShifts } from './pages/OpenShifts';
+import { Announcements } from './pages/Announcements';
+import { PortalTeam } from './pages/PortalTeam';
+import { MonthOverview } from './pages/MonthOverview';
+import { Compliance } from './pages/Compliance';
+import { Analytics } from './pages/Analytics';
+import { VacationRoutes } from './pages/Vacation';
+import {
+  PortalAccount,
+  PortalAttendance,
+  PortalHome,
+  PortalSchedule,
+  PortalShell,
+  PortalVacation,
+} from './pages/Portal';
+import { AdminAudit, AdminRules, AdminTablets } from './pages/AdminMore';
+import { AdminIntegrations } from './pages/AdminPlatform';
+import { Staffing } from './pages/Staffing';
+import { Staff } from './pages/Staff';
+import { StaffNew } from './pages/StaffNew';
+import { StaffImport } from './pages/StaffImport';
+import {
+  AdminCompanies,
+  AdminHotels,
+  AdminIndex,
+  AdminLayout,
+  AdminOverview,
+  AdminUsers,
+} from './pages/Admin';
 
-function Shell({ children }: { children: React.ReactNode }) {
-  const { t, i18n } = useTranslation();
-  const loc = useLocation();
-  const nav = useNavigate();
-  const section =
-    PLANNER_NAV.find((s) =>
-      s.items.some((i) => loc.pathname.startsWith(i.path.split('/').slice(0, 2).join('/'))),
-    ) ?? PLANNER_NAV[0];
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <header
-        className="nav"
-        data-noprint
-        style={{
-          flexWrap: 'wrap',
-          gap: 'var(--space-3) var(--space-4)',
-          padding: 'var(--space-2) var(--space-4)',
-        }}
-      >
-        <div className="nav-brand" style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-2)' }}>
-          Trip Inn
-          <span style={{ fontWeight: 400, fontSize: 13, color: 'var(--color-neutral-700)' }}>
-            {t('Dienstplan & Zeiterfassung')}
-          </span>
-        </div>
-        <nav aria-label={t('Hauptnavigation')} style={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          {PLANNER_NAV.map((s) => {
-            const active = s.key === section.key;
-            return (
-              <button
-                key={s.key}
-                onClick={() => nav(s.items[0].path)}
-                aria-current={active ? 'page' : undefined}
-                style={{
-                  fontSize: 13,
-                  fontWeight: active ? 700 : 400,
-                  padding: '7px 11px',
-                  border: 0,
-                  background: active ? 'var(--color-text)' : 'transparent',
-                  color: active ? 'var(--color-bg)' : 'var(--color-text)',
-                  cursor: 'pointer',
-                }}
-              >
-                {t(s.label)}
-              </button>
-            );
-          })}
-        </nav>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', fontSize: 13 }}>
-          <div
-            role="group"
-            aria-label={t('Sprache')}
-            style={{ display: 'flex', border: '1px solid var(--color-divider)' }}
-          >
-            {(['de', 'en'] as const).map((l) => {
-              const on = i18n.language === l;
-              return (
-                <button
-                  key={l}
-                  onClick={() => setLang(l)}
-                  aria-pressed={on}
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 700,
-                    padding: '5px 9px',
-                    border: 0,
-                    cursor: 'pointer',
-                    background: on ? 'var(--color-text)' : 'transparent',
-                    color: on ? 'var(--color-bg)' : 'var(--color-text)',
-                  }}
-                >
-                  {l.toUpperCase()}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </header>
-      {section.items.length > 1 && (
-        <div
-          style={{
-            display: 'flex',
-            gap: 'var(--space-1)',
-            flexWrap: 'wrap',
-            padding: '0 var(--space-4)',
-            borderBottom: '2px solid var(--color-divider)',
-          }}
-        >
-          {section.items.map((si) => {
-            const on = loc.pathname.startsWith(si.path);
-            return (
-              <button
-                key={si.path}
-                onClick={() => nav(si.path)}
-                style={{
-                  fontSize: 14,
-                  fontWeight: on ? 800 : 500,
-                  padding: '10px 14px',
-                  border: 0,
-                  borderBottom: `3px solid ${on ? 'var(--color-accent)' : 'transparent'}`,
-                  marginBottom: -2,
-                  background: 'transparent',
-                  color: 'var(--color-text)',
-                  cursor: 'pointer',
-                }}
-              >
-                {t(si.label)}
-              </button>
-            );
-          })}
-        </div>
-      )}
-      <main style={{ flex: 1, padding: 'var(--space-4)' }}>{children}</main>
-    </div>
-  );
+function Guard({ roles }: { roles: RoleName[] }) {
+  const { ready, me } = useAuth();
+  if (!ready) return null;
+  if (!me) return <Navigate to="/login" replace />;
+  if (!roles.includes(me.role)) return <Navigate to={homePathFor(me.role)} replace />;
+  return <Outlet />;
+}
+
+function Home() {
+  const { ready, me } = useAuth();
+  if (!ready) return null;
+  return <Navigate to={me ? homePathFor(me.role) : '/login'} replace />;
 }
 
 const Placeholder = ({ title }: { title: string }) => {
   const { t } = useTranslation();
-  return <h1 style={{ fontSize: 30 }}>{t(title)}</h1>;
+  return (
+    <main style={{ padding: 'var(--space-4)' }}>
+      <h1 style={{ fontSize: 30 }}>{t(title)}</h1>
+    </main>
+  );
 };
 
 export function App() {
   return (
-    <Shell>
-      <Routes>
-        <Route path="/" element={<Navigate to="/planning" replace />} />
-        <Route path="/planning" element={<Placeholder title="Dienstplan" />} />
-        <Route path="/live" element={<Placeholder title="Live" />} />
-        <Route path="/requests" element={<Placeholder title="Anträge" />} />
-        <Route path="/staff" element={<Placeholder title="Mitarbeiter" />} />
-        <Route path="/admin/*" element={<Placeholder title="Einrichtung" />} />
-      </Routes>
-    </Shell>
+    <AuthProvider>
+      <ToastProvider>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/login/sso" element={<SsoCallback />} />
+          <Route path="/accept-invitation" element={<AcceptInvitation />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/kiosk" element={<Kiosk />} />
+          <Route element={<Guard roles={['superAdmin', 'admin', 'manager']} />}>
+            <Route element={<PlannerShell />}>
+              <Route path="/planning" element={<Planning />} />
+              <Route path="/month" element={<MonthOverview />} />
+              <Route path="/vacation/*" element={<VacationRoutes />} />
+              <Route path="/live" element={<Live />} />
+              <Route path="/open-shifts" element={<OpenShifts />} />
+              <Route path="/staffing" element={<Staffing />} />
+              <Route path="/announcements" element={<Announcements />} />
+              <Route path="/compliance" element={<Compliance />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/requests" element={<Requests />} />
+              <Route path="/staff" element={<Staff />} />
+              <Route path="/staff/new" element={<StaffNew />} />
+              <Route path="/staff/import" element={<StaffImport />} />
+              <Route path="/staff/:id" element={<Staff />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminIndex />} />
+                <Route path="overview" element={<AdminOverview />} />
+                <Route path="hotels" element={<AdminHotels />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="tablets" element={<AdminTablets />} />
+                <Route path="integrations" element={<AdminIntegrations />} />
+                <Route path="rules" element={<AdminRules />} />
+                <Route path="audit" element={<AdminAudit />} />
+                <Route path="companies" element={<AdminCompanies />} />
+                <Route path="*" element={<Placeholder title="Einrichtung" />} />
+              </Route>
+            </Route>
+          </Route>
+          <Route element={<Guard roles={['employee']} />}>
+            <Route path="/me" element={<PortalShell />}>
+              <Route index element={<PortalHome />} />
+              <Route path="schedule" element={<PortalSchedule />} />
+              <Route path="attendance" element={<PortalAttendance />} />
+              <Route path="vacation" element={<PortalVacation />} />
+              <Route path="team" element={<PortalTeam />} />
+              <Route path="account" element={<PortalAccount />} />
+            </Route>
+          </Route>
+        </Routes>
+      </ToastProvider>
+    </AuthProvider>
   );
 }
