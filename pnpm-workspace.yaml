@@ -2,3 +2,7 @@ packages:
   - apps/*
   - packages/*
   - e2e
+# Dependabot resolves with a 3-day minimum release age; our nodemailer floor (^10.0.14) was itself released inside that
+# window, which made every dependency update fail. Exempt it so the rest of the workspace can be updated.
+minimumReleaseAgeExclude:
+  - nodemailer
