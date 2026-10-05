@@ -1,9 +1,9 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import { sql } from 'kysely';
 import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fastify-type-provider-zod';
-import helmet from '@fastify/helmet';
 import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
+import { registerSecurityHeaders } from './lib/securityHeaders';
 import multipart from '@fastify/multipart';
 import { ZodError } from 'zod';
 import { loadConfig, type Config } from './config';
@@ -115,11 +115,18 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
     app.addHook('onClose', async () => clearInterval(timer));
   }
 
-  await app.register(helmet);
+  await registerSecurityHeaders(app, cfg.NODE_ENV === 'production');
   await app.register(rateLimit, { global: true, max: cfg.RATE_LIMIT_GLOBAL, timeWindow: '1 minute' });
   await app.register(cookie);
   await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 10 } });
-  await app.register(cors, { origin: cfg.WEB_ORIGIN, credentials: true });
+  // exactly the configured web origin; any other origin gets no CORS headers at all
+  await app.register(cors, {
+    origin: (origin, cb) => cb(null, !origin || origin === cfg.WEB_ORIGIN),
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['authorization', 'content-type', 'x-kiosk-token'],
+    maxAge: 600,
+  });
 
   app.setErrorHandler((err: unknown, req, reply) => {
     if (err instanceof AppError) {

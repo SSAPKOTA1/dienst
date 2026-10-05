@@ -78,6 +78,8 @@ docs            DECISIONS.md (every ambiguity and how it was resolved), PROGRESS
 
 ## Production notes
 
+Security headers, CORS and the reverse-proxy setup are described in `docs/DEPLOYMENT.md`.
+
 - Set `NODE_ENV=production`, a long random `JWT_SECRET`, a fresh `TOTP_ENC_KEY` (64 hex characters) and `COOKIE_SECURE=true`; the API refuses to start with the development secrets.
 - Behind a reverse proxy set `TRUST_PROXY=true` so rate limits and the audit log see the client IP; terminate TLS at the proxy.
 - Configure SMTP (`SMTP_HOST`, `SMTP_PORT`, `MAIL_FROM`) for invitation and password-reset mails; with `MAIL_MODE=json` mails are only logged (development).
