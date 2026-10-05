@@ -108,6 +108,7 @@ export async function webPunchRoutes(app: FastifyInstance) {
           deviceId: null,
           grace,
           tz,
+          ip: req.ip,
         }),
       );
       return {
@@ -188,6 +189,7 @@ export async function webPunchRoutes(app: FastifyInstance) {
           reason: req.body.reason,
           forceReview: true,
           source: 'web',
+          ip: req.ip,
         }),
       );
     },

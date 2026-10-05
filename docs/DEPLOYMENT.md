@@ -36,8 +36,8 @@ server {
   location /api/ {
     proxy_pass http://127.0.0.1:3000;
     proxy_set_header Host $host;
-    # overwrite, never append: the API trusts this value when TRUST_PROXY=true
-    proxy_set_header X-Forwarded-For $remote_addr;
+    # the API believes the address the proxy saw (TRUST_PROXY=1); a client-supplied header only adds entries to the left
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto https;
     client_max_body_size 11m;
   }
@@ -50,7 +50,7 @@ server {
 Note: `add_header` in a `location` replaces the server-level headers, so repeat the security headers there (or use an `include`).
 
 ## Environment
-`NODE_ENV=production`, `COOKIE_SECURE=true`, `WEB_ORIGIN=https://dienst.example.com`, and `TRUST_PROXY=true` only when the API is reachable through the proxy alone (the web punch network check and rate limits use the client address). Production refuses the development secrets.
+`NODE_ENV=production`, `COOKIE_SECURE=true`, `WEB_ORIGIN=https://dienst.example.com`, and `TRUST_PROXY` set to the number of reverse proxies in front of the API (`1` for the nginx above) or to their addresses (`10.0.0.0/8,192.168.1.5`). `true` is refused in production because it believes any `X-Forwarded-For` and lets a client choose its own address.
 
 ## Keys and secrets
 
@@ -68,3 +68,6 @@ Generate with `openssl rand -hex 32` (`DATA_KEY` needs 64 hex characters, `JWT_S
 
 ## Outbound requests (SSO)
 The server only calls addresses an administrator typed in for SSO. They must be https and publicly routable: private, loopback, link-local (cloud metadata), CGNAT and similar ranges are refused, and so are redirects. For an identity provider inside your own network set `OUTBOUND_ALLOW_PRIVATE=true`; this lets administrators make the server reach internal addresses, so only do it when administrators are trusted and the network is segmented. Also block outbound traffic from the API host to the metadata service at the network level.
+
+## Client address and the web punch
+The web punch network check, the per-address rate limits and the audit trail use the client address. With `TRUST_PROXY` unset the app uses the TCP peer, which behind a proxy is the proxy: the check then fails closed (nobody can punch) and the API logs a warning once when it sees an `X-Forwarded-For` header. With `TRUST_PROXY=1` the app takes the address the nearest proxy saw (the last `X-Forwarded-For` entry) and ignores anything a client put in front of it. Web punches store the client address in their audit entry.

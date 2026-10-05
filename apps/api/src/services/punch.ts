@@ -56,6 +56,8 @@ export async function punchIn(
     deviceId: number | null;
     grace: number;
     tz: string;
+    /** client address, kept in the audit entry of web punches */
+    ip?: string;
   },
 ) {
   const open = await trx
@@ -136,7 +138,13 @@ export async function punchIn(
     entityId: rec.id,
     hotelId: p.hotelId,
     companyId: p.companyId,
-    new: { deviceId: p.deviceId, source: p.source, unplanned: !match, variationMinutes: variation },
+    new: {
+      deviceId: p.deviceId,
+      source: p.source,
+      unplanned: !match,
+      variationMinutes: variation,
+      ...(p.ip ? { ip: p.ip } : {}),
+    },
   });
   return { rec, duplicate: false };
 }
@@ -161,6 +169,7 @@ export async function closePunch(
     forceReview?: boolean;
     offline?: boolean;
     source?: PunchSource;
+    ip?: string;
   },
 ): Promise<CloseResult> {
   const rec = await trx
@@ -266,7 +275,14 @@ export async function closePunch(
     entityId: rec.id,
     hotelId: rec.hotel_id,
     companyId: p.companyId,
-    new: { paidHours: hours, breakMinutes: brk, flagged, underBreak: under, source: p.source ?? null },
+    new: {
+      paidHours: hours,
+      breakMinutes: brk,
+      flagged,
+      underBreak: under,
+      source: p.source ?? null,
+      ...(p.ip ? { ip: p.ip } : {}),
+    },
     reason,
   });
   return {
