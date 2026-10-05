@@ -20,7 +20,8 @@
     "typecheck": "pnpm -r typecheck",
     "security:rekey": "pnpm --filter @dienst/api security:rekey",
     "build:api": "node scripts/build-api.mjs",
-    "test:coverage": "pnpm -r --workspace-concurrency=1 test:coverage"
+    "test:coverage": "pnpm -r --workspace-concurrency=1 test:coverage",
+    "mutation": "pnpm --filter @dienst/rules mutation"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

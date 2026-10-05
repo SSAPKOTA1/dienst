@@ -53,7 +53,7 @@ test.describe('Barrierefreiheit', () => {
 
   test('administration', async ({ page }) => {
     await login(page, 'admin@demo.test', { totp: true, role: /Administration/ });
-    for (const path of ['/admin/overview', '/admin/hotels', '/admin/users', '/admin/tablets', '/admin/integrations', '/admin/rules', '/admin/audit']) {
+    for (const path of ['/admin/overview', '/admin/hotels', '/admin/users', '/admin/tablets', '/admin/integrations', '/admin/rules', '/admin/audit', '/security']) {
       await page.goto(path);
       await page.waitForLoadState('networkidle');
       await scan(page, path);

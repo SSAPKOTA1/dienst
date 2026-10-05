@@ -5,14 +5,14 @@ import type { Config } from '../config';
  * One key per purpose, derived (HKDF-SHA256) from two master secrets, so that a token for one job can
  * never be accepted for another and a leak of one derived key does not expose the others.
  *
- *  - signing:  `JWT_SECRET`  -> access (sessions), kiosk (tablet references and confirmations), sso (login flow)
+ *  - signing:  `JWT_SECRET`  -> access (sessions), kiosk (tablet references and confirmations), sso (login flow), webauthn (challenges)
  *  - data:     `DATA_KEY`    -> totp, documents, import-credentials, sso-client-secret, badge (HMAC)
  *
  * Rotation: put the old value into `JWT_SECRET_PREVIOUS` / `DATA_KEY_PREVIOUS` (comma separated). Tokens
  * signed with a previous secret are still accepted until they expire; data written with a previous key
  * (or with the legacy raw `TOTP_ENC_KEY`) is still readable and `pnpm security:rekey` re-encrypts it.
  */
-export type SignPurpose = 'access' | 'kiosk' | 'sso';
+export type SignPurpose = 'access' | 'kiosk' | 'sso' | 'webauthn';
 export type DataPurpose = 'totp' | 'documents' | 'import-credentials' | 'sso-client-secret' | 'badge';
 
 const derive = (master: string | Buffer, label: string): Buffer =>

@@ -70,6 +70,35 @@ jobs:
             playwright-report
           retention-days: 7
 
+  e2e-browsers:
+    name: end-to-end (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [firefox, webkit]
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: dienst, POSTGRES_PASSWORD: dienst, POSTGRES_DB: dienst_test }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U dienst" --health-interval 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+      - run: BROWSERS=all pnpm e2e --project=${{ matrix.browser }}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: e2e/test-results
+
   containers:
     name: images, smoke tests, backups, SBOM, scan
     runs-on: ubuntu-latest

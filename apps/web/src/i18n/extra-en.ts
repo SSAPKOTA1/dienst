@@ -1,5 +1,19 @@
 /** English strings for keys that are not in design/i18n-de-en.json. The German text is the key itself. */
 export const extraEn: Record<string, string> = {
+  Sicherheit: 'Security',
+  'Sicherheitsschlüssel und Passkeys': 'Security keys and passkeys',
+  'Mit einem Sicherheitsschlüssel oder Passkey meldest du dich ohne Code aus der Authenticator-App an. Er funktioniert nur auf dieser Webadresse und kann nicht auf eine gefälschte Seite hereinfallen.':
+    'With a security key or passkey you sign in without a code from the authenticator app. It only works on this web address and cannot be tricked by a fake page.',
+  'Noch kein Schlüssel eingerichtet.': 'No key set up yet.',
+  Hinzugefügt: 'Added',
+  'Name des Schlüssels': 'Name of the key',
+  'z. B. Büro-Schlüssel': 'e.g. office key',
+  'Schlüssel hinzufügen': 'Add key',
+  Sicherheitsschlüssel: 'Security key',
+  'Sicherheitsschlüssel hinzugefügt.': 'Security key added.',
+  'Dieser Browser unterstützt keine Sicherheitsschlüssel.': 'This browser does not support security keys.',
+  'Mit Sicherheitsschlüssel anmelden': 'Sign in with a security key',
+  'Anmeldung mit Sicherheitsschlüssel abgebrochen.': 'Sign-in with the security key was cancelled.',
   'Meine Daten': 'My data',
   'Alle Daten, die über dich gespeichert sind, als Datei herunterladen.':
     'Download everything stored about you as a file.',

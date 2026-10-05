@@ -22,6 +22,7 @@ const OpenShifts = lazy(() => import('./pages/OpenShifts').then((m) => ({ defaul
 const Announcements = lazy(() => import('./pages/Announcements').then((m) => ({ default: m.Announcements })));
 const PortalTeam = lazy(() => import('./pages/PortalTeam').then((m) => ({ default: m.PortalTeam })));
 const MonthOverview = lazy(() => import('./pages/MonthOverview').then((m) => ({ default: m.MonthOverview })));
+const Security = lazy(() => import('./pages/Security').then((m) => ({ default: m.Security })));
 const Compliance = lazy(() => import('./pages/Compliance').then((m) => ({ default: m.Compliance })));
 const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.Analytics })));
 const VacationRoutes = lazy(() => import('./pages/Vacation').then((m) => ({ default: m.VacationRoutes })));
@@ -95,6 +96,7 @@ export function App() {
                 <Route path="/compliance" element={<Compliance />} />
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/requests" element={<Requests />} />
+                <Route path="/security" element={<Security />} />
                 <Route path="/staff" element={<Staff />} />
                 <Route path="/staff/new" element={<StaffNew />} />
                 <Route path="/staff/import" element={<StaffImport />} />

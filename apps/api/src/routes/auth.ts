@@ -10,6 +10,7 @@ import { signAccessToken } from '../lib/jwt';
 import { actorOf, getPrincipal, requirePreOrAccess, requireRole } from '../lib/auth';
 import { audit } from '../lib/audit';
 import { loginFailures } from '../lib/metrics';
+import { authenticationOptions, verifyAuthentication } from '../lib/webauthn';
 import { assertSameOrigin, readCookie, removeCookie, writeCookie } from '../lib/cookies';
 import { buildPrincipal, roleToActorType } from '../lib/scope';
 import { loadAvailableRoles } from '../services/accounts';
@@ -89,11 +90,17 @@ export async function authRoutes(app: FastifyInstance) {
           login: z.string().min(1).max(255),
           password: z.string().min(1).max(200),
           totp: z.string().optional(),
+          webauthn: z
+            .object({
+              challengeToken: z.string().min(10).max(2000),
+              response: z.object({ id: z.string(), rawId: z.string() }).passthrough(),
+            })
+            .optional(),
         }),
       },
     },
     async (req, reply) => {
-      const { login, password, totp } = req.body;
+      const { login, password, totp, webauthn } = req.body;
       const now = app.clock();
       const user = await app.db
         .selectFrom('user_account')
@@ -141,11 +148,37 @@ export async function authRoutes(app: FastifyInstance) {
       const { roles, name } = await loadAvailableRoles(app.db, user.id);
       if (!roles.length) return fail('no_role', user.id);
       const staffAdmin = isStaffAdmin(roles);
-      if (staffAdmin && user.totp_enabled) {
-        if (!totp)
-          throw new AppError('UNAUTHENTICATED', 'Authentication code required', { totpRequired: true });
-        const secret = app.keys.openText('totp', user.totp_secret_enc as Buffer);
-        if (!authenticator.check(totp, secret)) return fail('bad_totp', user.id);
+      const keys = staffAdmin
+        ? await app.db
+            .selectFrom('webauthn_credential')
+            .select(['credential_id', 'public_key', 'counter', 'transports'])
+            .where('user_id', '=', user.id)
+            .execute()
+        : [];
+      if (staffAdmin && (user.totp_enabled || keys.length)) {
+        if (webauthn && keys.length) {
+          const used = await verifyAuthentication(
+            app,
+            user.id,
+            webauthn.challengeToken,
+            webauthn.response as never,
+            keys,
+          );
+          if (!used) return fail('bad_webauthn', user.id);
+          await app.db
+            .updateTable('webauthn_credential')
+            .set({ counter: used.counter, last_used_at: now })
+            .where('credential_id', '=', used.credentialId)
+            .execute();
+        } else if (totp && user.totp_enabled) {
+          const secret = app.keys.openText('totp', user.totp_secret_enc as Buffer);
+          if (!authenticator.check(totp, secret)) return fail('bad_totp', user.id);
+        } else {
+          throw new AppError('UNAUTHENTICATED', 'Second factor required', {
+            totpRequired: user.totp_enabled,
+            ...(keys.length ? { webauthn: await authenticationOptions(app, user.id, keys) } : {}),
+          });
+        }
       }
       await app.db.transaction().execute(async (trx) => {
         await trx
@@ -163,7 +196,7 @@ export async function authRoutes(app: FastifyInstance) {
           },
         );
       });
-      const twoFactorSetupRequired = staffAdmin && !user.totp_enabled;
+      const twoFactorSetupRequired = staffAdmin && !user.totp_enabled && !keys.length;
       const base = { availableRoles: roles, displayName: name };
       if (roles.length === 1 && !twoFactorSetupRequired) {
         const only = roles[0];
@@ -198,7 +231,13 @@ export async function authRoutes(app: FastifyInstance) {
         .select('totp_enabled')
         .where('id', '=', userId)
         .executeTakeFirstOrThrow();
-      if (!u.totp_enabled)
+      const hasKey = await app.db
+        .selectFrom('webauthn_credential')
+        .select('id')
+        .where('user_id', '=', userId)
+        .limit(1)
+        .executeTakeFirst();
+      if (!u.totp_enabled && !hasKey)
         throw new AppError('FORBIDDEN_SCOPE', 'Two-factor setup required', { twoFactorSetupRequired: true });
     }
     if (switching) {

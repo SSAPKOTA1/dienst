@@ -508,3 +508,11 @@ export interface LiveClockedInDto {
   plannedEnd: string | null;
   flags: string[];
 }
+
+export interface WebauthnKeyDto {
+  id: number;
+  name: string;
+  transports: string[];
+  createdAt: string;
+  lastUsedAt: string | null;
+}

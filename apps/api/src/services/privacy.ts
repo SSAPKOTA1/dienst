@@ -255,6 +255,7 @@ export async function anonymiseEmployee(
       .execute();
     await trx.deleteFrom('refresh_token').where('user_id', '=', e.user_id).execute();
     await trx.deleteFrom('sso_identity').where('user_id', '=', e.user_id).execute();
+    await trx.deleteFrom('webauthn_credential').where('user_id', '=', e.user_id).execute();
     await trx
       .updateTable('feed_post')
       .set({ author_name: 'Gelöscht' })

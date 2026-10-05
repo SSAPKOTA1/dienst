@@ -798,6 +798,18 @@ export interface VacationNotice {
   year: number;
 }
 
+export interface WebauthnCredential {
+  id: Generated<number>;
+  user_id: number;
+  credential_id: string;
+  public_key: Buffer;
+  counter: Generated<Int8>;
+  transports: string[] | null;
+  name: string;
+  created_at: Generated<Timestamp>;
+  last_used_at: Timestamp | null;
+}
+
 export interface DB {
   absence_blackout: AbsenceBlackout;
   absence_type: AbsenceType;
@@ -861,4 +873,5 @@ export interface DB {
   time_variation: TimeVariation;
   user_account: UserAccount;
   vacation_notice: VacationNotice;
+  webauthn_credential: WebauthnCredential;
 }
