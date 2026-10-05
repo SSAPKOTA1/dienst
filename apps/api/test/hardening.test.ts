@@ -14,8 +14,9 @@ describe('HTTP hardening', () => {
     expect(r.statusCode).toBe(200);
     expect(r.headers['x-content-type-options']).toBe('nosniff');
     expect(r.headers['x-frame-options']).toBeTruthy();
-    expect(r.headers['strict-transport-security']).toBeTruthy();
-    expect(r.headers['content-security-policy']).toContain("default-src 'self'");
+    // HSTS is production-only now (a localhost dev server must not pin https); see headers.test.ts
+    expect(r.headers['strict-transport-security']).toBeUndefined();
+    expect(r.headers['content-security-policy']).toContain("default-src 'none'");
     expect(r.headers['x-powered-by']).toBeUndefined();
   });
 
