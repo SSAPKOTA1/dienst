@@ -59,7 +59,8 @@ export async function seedPunches(db: Db, r: SeedResult, now: Date) {
             approved_at: e.planned_end,
           })
           .execute();
-      } else if (firstOpen) {
+      } else if (firstOpen && e.employee_id !== empIds.piotr) {
+        // Piotr's open record is the unplanned one below; two open punches per employee are not allowed
         firstOpen = false; // clocked in and still working
         await db
           .insertInto('punch_record')
