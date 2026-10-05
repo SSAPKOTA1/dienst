@@ -6,7 +6,6 @@ import { actorOf, getPrincipal, requireRole } from '../lib/auth';
 import { audit } from '../lib/audit';
 import { idParam } from '../lib/http';
 import { toCsv } from '../lib/csv';
-import { decryptSecret, encryptSecret } from '../lib/security';
 import { sendInvitationMail } from '../services/accounts';
 import {
   COLUMNS,
@@ -109,7 +108,7 @@ export async function importRoutes(app: FastifyInstance) {
         finished_at: app.clock(),
         ...(out.slips.length
           ? {
-              credentials_enc: encryptSecret(JSON.stringify(out.slips), app.cfg.TOTP_ENC_KEY),
+              credentials_enc: app.keys.seal('import-credentials', JSON.stringify(out.slips)),
               credentials_expires_at: new Date(now.getTime() + CREDENTIAL_HOURS * 3600e3),
             }
           : {}),
@@ -200,7 +199,7 @@ export async function importRoutes(app: FastifyInstance) {
         if (j.dry_run) throw notFound('Credentials');
         if (!j.credentials_enc || !j.credentials_expires_at || j.credentials_expires_at <= now)
           throw new AppError('CONFLICT', 'The credentials sheet was already downloaded or has expired');
-        const slips = JSON.parse(decryptSecret(j.credentials_enc, app.cfg.TOTP_ENC_KEY)) as Slip[];
+        const slips = JSON.parse(app.keys.openText('import-credentials', j.credentials_enc)) as Slip[];
         const buf = await credentialsPdf(slips, `Zugangsdaten Import ${j.id}`);
         await trx
           .updateTable('import_job')

@@ -3,7 +3,8 @@ import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../src/app';
 import { createDb, type Db } from '../src/db';
 import { authenticator } from 'otplib';
-import { encryptSecret, hashSecret } from '../src/lib/security';
+import { hashSecret } from '../src/lib/security';
+import { Keys } from '../src/lib/keys';
 import { loadConfig } from '../src/config';
 
 const TOTP_SECRETS = new Map<string, string>();
@@ -13,7 +14,7 @@ export async function enableTotp(db: Db, userId: number): Promise<string> {
   const secret = authenticator.generateSecret();
   await db
     .updateTable('user_account')
-    .set({ totp_enabled: true, totp_secret_enc: encryptSecret(secret, loadConfig().TOTP_ENC_KEY) })
+    .set({ totp_enabled: true, totp_secret_enc: new Keys(loadConfig()).seal('totp', secret) })
     .where('id', '=', userId)
     .execute();
   const u = await db

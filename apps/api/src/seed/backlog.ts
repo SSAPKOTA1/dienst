@@ -1,7 +1,8 @@
 import { addDays } from '@dienst/rules';
 import type { Db } from '../db';
 import { loadConfig } from '../config';
-import { badgeHash, encryptBytes, sha256 } from '../lib/security';
+import { Keys } from '../lib/keys';
+import { sha256 } from '../lib/security';
 import { zonedInstant } from '../lib/time';
 import { DEMO_API_KEY, DEMO_BADGE, DEMO_BERLIN_KIOSK_TOKEN } from './sample';
 import type { SeedResult } from './index';
@@ -17,7 +18,7 @@ const TINY_PDF = Buffer.from(
  * flows used by the end-to-end suite stay as they are; the administrator sees both hotels.
  */
 export async function seedBacklog(db: Db, r: SeedResult, now: Date) {
-  const cfg = loadConfig();
+  const keys = new Keys(loadConfig());
   const today: string = r.today;
   const hotels: Record<string, number> = r.ids.hotels;
   const shifts: Record<string, number> = r.ids.shifts;
@@ -60,7 +61,7 @@ export async function seedBacklog(db: Db, r: SeedResult, now: Date) {
     .execute();
   await db
     .updateTable('employee')
-    .set({ badge_hash: badgeHash(cfg.TOTP_ENC_KEY, DEMO_BADGE) })
+    .set({ badge_hash: keys.badgeHashes(DEMO_BADGE)[0] })
     .where('employee_id', '=', emp.clara)
     .execute();
   await db
@@ -193,7 +194,7 @@ export async function seedBacklog(db: Db, r: SeedResult, now: Date) {
       file_name: 'belehrung.pdf',
       mime: 'application/pdf',
       size_bytes: TINY_PDF.length,
-      content_enc: encryptBytes(TINY_PDF, cfg.TOTP_ENC_KEY),
+      content_enc: keys.seal('documents', TINY_PDF),
       valid_until: d(25),
       visible_to_employee: true,
       uploaded_by_user_id: adUser,

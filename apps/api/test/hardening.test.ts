@@ -78,7 +78,7 @@ describe('rate limits and configuration', () => {
       loadConfig({
         NODE_ENV: 'production',
         JWT_SECRET: 'x'.repeat(40),
-        TOTP_ENC_KEY: 'ab'.repeat(32),
+        DATA_KEY: 'ab'.repeat(32),
         COOKIE_SECURE: 'false',
       } as NodeJS.ProcessEnv),
     ).toThrow(/COOKIE_SECURE/);
@@ -86,7 +86,7 @@ describe('rate limits and configuration', () => {
       loadConfig({
         NODE_ENV: 'production',
         JWT_SECRET: 'x'.repeat(40),
-        TOTP_ENC_KEY: 'ab'.repeat(32),
+        DATA_KEY: 'ab'.repeat(32),
         COOKIE_SECURE: 'true',
       } as NodeJS.ProcessEnv).NODE_ENV,
     ).toBe('production');

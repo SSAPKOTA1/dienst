@@ -51,3 +51,17 @@ Note: `add_header` in a `location` replaces the server-level headers, so repeat 
 
 ## Environment
 `NODE_ENV=production`, `COOKIE_SECURE=true`, `WEB_ORIGIN=https://dienst.example.com`, and `TRUST_PROXY=true` only when the API is reachable through the proxy alone (the web punch network check and rate limits use the client address). Production refuses the development secrets.
+
+## Keys and secrets
+
+| Value | Used for | Notes |
+|---|---|---|
+| `JWT_SECRET` | master for signing keys | HKDF derives one key each for sessions (`access`), tablet references and confirmations (`kiosk`) and the SSO login flow (`sso`), so a token of one kind is never accepted as another |
+| `DATA_KEY` | master for data at rest | HKDF derives one key each for TOTP secrets, documents, import credential sheets, SSO client secrets and the badge hash |
+| `TOTP_ENC_KEY` | legacy only | the raw key older databases were written with; still read as a fallback, never used for new data; leave it unset on new installs |
+
+Generate with `openssl rand -hex 32` (`DATA_KEY` needs 64 hex characters, `JWT_SECRET` at least 32 characters). Production refuses the development values and requires `JWT_SECRET` and `DATA_KEY` to differ (and `DATA_KEY` to differ from the legacy key).
+
+**Upgrading an existing database:** set `DATA_KEY`, keep the old `TOTP_ENC_KEY` for now, restart, then run `pnpm security:rekey` once (it re-encrypts everything that an older key still opens and can be re-run safely). Badge hashes move to the new key the first time a badge is used. After that the legacy key can be removed. All sessions are signed out once, because session tokens now use a derived key.
+
+**Rotating:** put the old value into `JWT_SECRET_PREVIOUS` / `DATA_KEY_PREVIOUS` (comma separated for several), set the new value, restart, run `pnpm security:rekey`, and drop the previous value once no old tokens or data remain (access tokens live 15 minutes, refresh tokens are not affected because they are random values stored hashed).

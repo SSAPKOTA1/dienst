@@ -17,7 +17,8 @@
     "e2e": "playwright test -c e2e/playwright.config.ts",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "security:rekey": "pnpm --filter @dienst/api security:rekey"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
