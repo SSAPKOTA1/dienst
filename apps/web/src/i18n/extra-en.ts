@@ -855,4 +855,10 @@ export const extraEn: Record<string, string> = {
   'Veröffentlichte Dienstpläne': 'Published schedules',
   'Freigegebene Arbeitszeiten': 'Approved working hours',
   'Genehmigte Abwesenheiten': 'Approved absences',
+  'Integrität prüfen': 'Check integrity',
+  'Protokoll unverändert.': 'Log unchanged.',
+  'Protokoll weicht ab!': 'Log does not match!',
+  '{{n}} Einträge in {{c}} Ketten geprüft.': '{{n}} entries in {{c}} chains checked.',
+  'Kette {{k}}: erste Abweichung bei Eintrag {{id}}': 'Chain {{k}}: first mismatch at entry {{id}}',
+  '{{n}} ältere Einträge sind nicht prüfbar.': '{{n}} older entries cannot be verified.',
 };
