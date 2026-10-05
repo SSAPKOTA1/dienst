@@ -125,3 +125,56 @@ describe('wishConflicts', () => {
     ).toEqual([]);
   });
 });
+
+import { availabilityConflicts, qualificationIssue, type AvailabilityRule } from '../src';
+
+describe('availabilityConflicts', () => {
+  // 2027-02-08 is a Monday
+  const mon: AvailabilityRule = {
+    weekday: 1,
+    fromMin: 600,
+    toMin: 720,
+    kind: 'unavailable',
+    validFrom: '2027-01-01',
+    validTo: null,
+    note: 'course',
+  };
+  const entry = { localDate: '2027-02-08', startLocalMin: 660, endLocalMin: 900 };
+
+  it('needs a reason when the entry overlaps an unavailable window', () => {
+    const v = availabilityConflicts(entry, [mon]);
+    expect(v).toHaveLength(1);
+    expect(v[0]).toMatchObject({ code: 'UNAVAILABLE', severity: 'needs_reason' });
+    expect(v[0]!.details).toMatchObject({ date: '2027-02-08', note: 'course' });
+  });
+  it('ignores preferred windows, other weekdays, touching times and expired windows', () => {
+    expect(availabilityConflicts(entry, [{ ...mon, kind: 'preferred' }])).toEqual([]);
+    expect(availabilityConflicts(entry, [{ ...mon, weekday: 2 }])).toEqual([]);
+    expect(availabilityConflicts({ ...entry, startLocalMin: 720 }, [mon])).toEqual([]);
+    expect(availabilityConflicts(entry, [{ ...mon, validTo: '2027-02-01' }])).toEqual([]);
+    expect(availabilityConflicts(entry, [{ ...mon, validFrom: '2027-03-01' }])).toEqual([]);
+  });
+  it('checks the next day for an entry that runs past midnight', () => {
+    const tue: AvailabilityRule = { ...mon, weekday: 2, fromMin: 0, toMin: 120, note: null };
+    const v = availabilityConflicts({ localDate: '2027-02-08', startLocalMin: 1320, endLocalMin: 1500 }, [
+      tue,
+    ]);
+    expect(v).toHaveLength(1);
+    expect(v[0]!.details).toMatchObject({ date: '2027-02-09', note: null });
+  });
+});
+
+describe('qualificationIssue', () => {
+  it('passes without a requirement or with a valid qualification', () => {
+    expect(qualificationIssue(null, [], '2027-02-08')).toEqual([]);
+    expect(qualificationIssue(3, [{ id: 3, validUntil: null }], '2027-02-08')).toEqual([]);
+    expect(qualificationIssue(3, [{ id: 3, validUntil: '2027-02-08' }], '2027-02-08')).toEqual([]);
+  });
+  it('warns when it is missing or expired', () => {
+    const missing = qualificationIssue(3, [], '2027-02-08');
+    expect(missing[0]).toMatchObject({ code: 'QUALIFICATION_MISSING', severity: 'warn' });
+    expect(missing[0]!.details).toMatchObject({ expired: false });
+    const expired = qualificationIssue(3, [{ id: 3, validUntil: '2027-02-07' }], '2027-02-08');
+    expect(expired[0]!.details).toMatchObject({ expired: true, validUntil: '2027-02-07' });
+  });
+});

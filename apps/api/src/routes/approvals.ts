@@ -1,3 +1,5 @@
+import type { DB } from '../db';
+import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -396,7 +398,7 @@ export async function approvalRoutes(app: FastifyInstance) {
   );
 
   // ------------------------------------------------------------------ payroll periods (month close)
-  const periodOut = (x: any) => ({
+  const periodOut = (x: Selectable<DB['payroll_period']>) => ({
     id: x.id,
     companyId: x.company_id,
     hotelId: x.hotel_id,
@@ -645,7 +647,23 @@ export async function approvalRoutes(app: FastifyInstance) {
       if (q.entity) qb = qb.where('a.entity_type', '=', q.entity);
       if (q.from) qb = qb.where('a.created_at', '>=', new Date(`${q.from}T00:00:00Z`));
       if (q.to) qb = qb.where('a.created_at', '<', new Date(Date.parse(`${q.to}T00:00:00Z`) + 86400000));
-      const out = (a: any) => ({
+      const out = (
+        a: Pick<
+          Selectable<DB['audit_log']>,
+          | 'id'
+          | 'created_at'
+          | 'actor_id'
+          | 'actor_type'
+          | 'action'
+          | 'entity_type'
+          | 'entity_id'
+          | 'company_id'
+          | 'hotel_id'
+          | 'old_values'
+          | 'new_values'
+          | 'reason'
+        > & { actor_email?: string | null; actor_username?: string | null },
+      ) => ({
         id: Number(a.id),
         at: a.created_at?.toISOString() ?? null,
         actorId: a.actor_id,

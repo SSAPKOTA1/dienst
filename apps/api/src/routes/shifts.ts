@@ -1,3 +1,5 @@
+import type { DB } from '../db';
+import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -13,7 +15,7 @@ const SA = 'superAdmin' as const;
 const AD = 'admin' as const;
 const MG = 'manager' as const;
 
-const shiftOut = (s: any) => ({
+const shiftOut = (s: Selectable<DB['shift']>) => ({
   id: s.id,
   hotelId: s.hotel_id,
   departmentId: s.department_id,

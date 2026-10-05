@@ -1,3 +1,5 @@
+import type { DB } from '../db';
+import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -247,7 +249,7 @@ export async function selfRoutes(app: FastifyInstance) {
         );
     });
 
-  const correctionOut = (c: any) => ({
+  const correctionOut = (c: Selectable<DB['time_correction_request']>) => ({
     id: c.id,
     type: c.correction_type,
     punchRecordId: c.punch_record_id,
@@ -331,7 +333,7 @@ export async function selfRoutes(app: FastifyInstance) {
   });
 
   // ------------------------------------------------------------------ vacation requests (SPEC 4.19)
-  const requestOut = (t: any) => ({
+  const requestOut = (t: Selectable<DB['time_off']>) => ({
     id: t.id,
     from: t.start_date,
     to: t.end_date,

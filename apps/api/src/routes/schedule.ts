@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import {
@@ -79,7 +79,7 @@ export async function scheduleRoutes(app: FastifyInstance) {
   const r = app.withTypeProvider<ZodTypeProvider>();
   const db = app.db;
 
-  const withCtx = <T>(req: any, fn: (ctx: Ctx) => Promise<T>): Promise<T> =>
+  const withCtx = <T>(req: FastifyRequest, fn: (ctx: Ctx) => Promise<T>): Promise<T> =>
     db
       .transaction()
       .execute((trx) => fn({ trx, principal: getPrincipal(req), actor: actorOf(req), now: app.clock() }));

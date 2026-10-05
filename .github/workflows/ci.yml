@@ -40,7 +40,7 @@ jobs:
       - run: pnpm audit --audit-level=high
       - run: pnpm lint
       - run: pnpm typecheck
-      - run: pnpm test
+      - run: pnpm test:coverage
 
   e2e:
     name: end-to-end (Playwright, accessibility)

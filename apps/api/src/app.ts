@@ -1,6 +1,13 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import { sql } from 'kysely';
-import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fastify-type-provider-zod';
+import { requireRole } from './lib/auth';
+import swagger from '@fastify/swagger';
+import {
+  jsonSchemaTransform,
+  serializerCompiler,
+  validatorCompiler,
+  type ZodTypeProvider,
+} from 'fastify-type-provider-zod';
 import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
 import { Keys } from './lib/keys';
@@ -17,6 +24,7 @@ import { Mailer } from './lib/mail';
 import { authRoutes } from './routes/auth';
 import { meRoutes } from './routes/me';
 import { organisationRoutes } from './routes/organisation';
+import { departmentRoutes } from './routes/organisationDevices';
 import { employeeRoutes } from './routes/employees';
 import { setupRoutes } from './routes/setup';
 import { shiftRoutes } from './routes/shifts';
@@ -34,8 +42,10 @@ import { importRoutes } from './routes/imports';
 import { leaveRoutes } from './routes/leave';
 import { hoursRoutes } from './routes/hours';
 import { swapRoutes } from './routes/swaps';
+import { openShiftRoutes } from './routes/openShifts';
 import { peopleRoutes } from './routes/people';
 import { commsRoutes } from './routes/comms';
+import { feedRoutes } from './routes/feed';
 import { startJobs } from './jobs/scheduler';
 
 declare module 'fastify' {
@@ -138,6 +148,16 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       }
     });
   }
+  // internal API description generated from the zod schemas of the routes (`GET /api/v1/openapi.json`, admins only)
+  await app.register(swagger, {
+    openapi: {
+      openapi: '3.0.3',
+      info: { title: 'Dienst internal API', version: '1.0.0' },
+      components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' } } },
+      security: [{ bearer: [] }],
+    },
+    transform: jsonSchemaTransform,
+  });
   await app.register(rateLimit, { global: true, max: cfg.RATE_LIMIT_GLOBAL, timeWindow: '1 minute' });
   await app.register(cookie);
   await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 10 } });
@@ -212,6 +232,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       await api.register(ssoRoutes);
       await api.register(meRoutes);
       await api.register(organisationRoutes);
+      await api.register(departmentRoutes);
       await api.register(employeeRoutes);
       await api.register(setupRoutes);
       await api.register(shiftRoutes);
@@ -228,14 +249,21 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       await api.register(leaveRoutes);
       await api.register(hoursRoutes);
       await api.register(swapRoutes);
+      await api.register(openShiftRoutes);
       await api.register(peopleRoutes);
       await api.register(commsRoutes);
+      await api.register(feedRoutes);
       api.get('/health', { config: { rateLimit: false } }, async () => {
         await sql`select 1`.execute(db);
         return { status: 'ok', time: app.clock().toISOString() };
       });
     },
     { prefix: '/api/v1' },
+  );
+  app.get(
+    '/api/v1/openapi.json',
+    { preValidation: requireRole('superAdmin', 'admin'), schema: { hide: true } },
+    async () => app.swagger(),
   );
   await app.register(publicApiRoutes, { prefix: '/api/public/v1' });
   void r;

@@ -11,7 +11,8 @@
     "db:codegen": "kysely-codegen --dialect postgres --date-parser string --numeric-parser number --out-file src/db/types.ts --env-file ../../.env",
     "typecheck": "tsc -p .",
     "test": "vitest run",
-    "security:rekey": "tsx --env-file-if-exists=../../.env src/db/rekey.ts"
+    "security:rekey": "tsx --env-file-if-exists=../../.env src/db/rekey.ts",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@dienst/rules": "workspace:*",
@@ -21,6 +22,7 @@
     "@fastify/helmet": "^13.0.0",
     "@fastify/multipart": "^9.0.0",
     "@fastify/rate-limit": "^10.0.0",
+    "@fastify/swagger": "^9.9.1",
     "argon2": "^0.44.0",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",

@@ -23,7 +23,7 @@ export default tseslint.config(
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
     rules: {
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
-      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-empty-object-type': 'off',
     },
   },
@@ -31,5 +31,10 @@ export default tseslint.config(
     files: ['apps/web/**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooks },
     rules: { 'react-hooks/rules-of-hooks': 'error', 'react-hooks/exhaustive-deps': 'warn' },
+  },
+  {
+    // test code builds ad-hoc payloads and reads untyped JSON; the rule is for production code
+    files: ['**/test/**', 'e2e/**', '**/*.test.ts', '**/*.spec.ts'],
+    rules: { '@typescript-eslint/no-explicit-any': 'off' },
   },
 );

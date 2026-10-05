@@ -130,3 +130,13 @@ export async function notifyEmp(
 }
 
 export const blocking = (v: Violation[]) => v.filter((x) => x.severity === 'block');
+
+/** The employee record of the selected employee role. */
+export const myEmployee = async (d: Db | Trx, p: Principal) => {
+  if (!p.employeeId) throw new AppError('FORBIDDEN_SCOPE', 'No employee role selected');
+  return d
+    .selectFrom('employee')
+    .selectAll()
+    .where('employee_id', '=', p.employeeId)
+    .executeTakeFirstOrThrow();
+};

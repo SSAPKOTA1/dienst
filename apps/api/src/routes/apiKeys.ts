@@ -1,3 +1,5 @@
+import type { DB } from '../db';
+import type { Selectable } from 'kysely';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -36,7 +38,7 @@ export async function apiKeyRoutes(app: FastifyInstance) {
   const r = app.withTypeProvider<ZodTypeProvider>();
   const db = app.db;
   const tx = <T>(fn: (trx: Trx) => Promise<T>) => db.transaction().execute(fn);
-  const out = (k: any) => ({
+  const out = (k: Selectable<DB['api_key']>) => ({
     id: k.id,
     companyId: k.company_id,
     hotelId: k.hotel_id,
