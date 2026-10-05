@@ -60,3 +60,17 @@ groups:
         expr: time() - dienst_backup_last_success_timestamp_seconds > 129600
         labels: { severity: critical }
         annotations: { summary: 'No successful backup for 36 hours' }
+
+      - alert: DienstBackupMetricMissing
+        expr: absent(dienst_backup_last_success_timestamp_seconds)
+        for: 1h
+        labels: { severity: warning }
+        annotations:
+          {
+            summary: 'No backup metric at all: the node_exporter textfile is missing or the backup never ran',
+          }
+
+      - alert: DienstServerErrorsBurst
+        expr: increase(server_errors_total[10m]) > 20
+        labels: { severity: warning }
+        annotations: { summary: 'More than 20 unhandled server errors in 10 minutes' }

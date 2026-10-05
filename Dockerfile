@@ -33,8 +33,23 @@ HEALTHCHECK --interval=15s --timeout=3s --start-period=20s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:3000/api/v1/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 CMD ["node", "apps/api/dist/server.mjs"]
 
-FROM nginx:1.27-alpine AS web
+# the unprivileged variant runs as user 101 and listens on 8080 (needed for a read-only, non-root pod)
+FROM nginxinc/nginx-unprivileged:1.27-alpine AS web
 COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
 COPY deploy/security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --from=build /app/apps/web/dist /usr/share/nginx/html
 EXPOSE 8080
+
+# Backups and restore drills: pg_dump / pg_restore 16, age, the scripts of scripts/ops, and the node runtime plus the
+# bundled drill (data checks run through the application code). Debian based like the api image, so native modules match.
+FROM postgres:16 AS ops
+RUN apt-get update && apt-get install -y --no-install-recommends age && rm -rf /var/lib/apt/lists/*
+COPY --from=node:22-slim /usr/local/bin/node /usr/local/bin/node
+COPY --from=build /deploy/node_modules /app/node_modules
+COPY --from=build /app/apps/api/dist/drill.mjs /app/apps/api/dist/drill.mjs
+COPY --from=build /deploy/package.json /app/package.json
+COPY scripts/ops/backup.sh scripts/ops/restore.sh scripts/ops/restore-drill.sh /opt/ops/
+RUN chmod +x /opt/ops/*.sh
+ENV DRILL_SCRIPT=/app/apps/api/dist/drill.mjs
+USER postgres
+ENTRYPOINT ["/opt/ops/backup.sh"]

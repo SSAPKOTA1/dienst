@@ -1,0 +1,11 @@
+[Unit]
+Description=Dienst database backup
+After=docker.service
+
+[Service]
+Type=oneshot
+User=dienst
+EnvironmentFile=/opt/dienst/.env.backup
+Environment=BACKUP_DIR=/var/backups/dienst
+Environment=BACKUP_METRICS_FILE=/var/lib/node_exporter/dienst_backup.prom
+ExecStart=/opt/dienst/scripts/ops/backup.sh

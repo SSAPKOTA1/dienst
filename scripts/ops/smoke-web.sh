@@ -8,7 +8,7 @@ PORT="${SMOKE_WEB_PORT:-18080}"
 trap 'docker rm -f "$NAME" >/dev/null 2>&1 || true' EXIT
 fail() { echo "FAIL: $*" >&2; exit 1; }
 docker run -d --name "$NAME" --add-host api:127.0.0.1 -p "$PORT:8080" "$IMAGE" >/dev/null
-for i in $(seq 1 30); do curl -fs "http://127.0.0.1:$PORT/healthz" >/dev/null 2>&1 && break; sleep 0.5; done
+for _ in $(seq 1 30); do curl -fs "http://127.0.0.1:$PORT/healthz" >/dev/null 2>&1 && break; sleep 0.5; done
 ASSET="$(curl -s "http://127.0.0.1:$PORT/" | grep -o '/assets/[^"]*\.js' | head -1)"
 [[ -n "$ASSET" ]] || fail "no asset in index.html"
 for path in / /me/schedule /index.html /sw.js "$ASSET" /healthz /does/not/exist.png; do

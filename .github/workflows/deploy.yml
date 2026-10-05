@@ -1,0 +1,75 @@
+name: deploy
+# Manual. Pick the environment and a released version; the environment's protection rules (required reviewers) apply.
+# Needs per environment: secret KUBE_CONFIG (base64 kubeconfig of a namespace-scoped service account) and variable BASE_URL.
+on:
+  workflow_dispatch:
+    inputs:
+      environment: { description: 'Target', type: choice, options: [staging, production], required: true }
+      version: { description: 'Released version, e.g. 1.4.0', type: string, required: true }
+permissions:
+  contents: read
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ inputs.environment }}
+    env:
+      OWNER: ${{ github.repository_owner }}
+      VERSION: ${{ inputs.version }}
+      OVERLAY: deploy/k8s/overlays/${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate the version string
+        run: '[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]'
+      - name: Install tools
+        run: scripts/ci/install-infra-tools.sh /usr/local/bin
+      - uses: sigstore/cosign-installer@v3
+      - name: Verify that the images were built and signed by the release workflow
+        run: |
+          for n in api web ops; do
+            cosign verify "ghcr.io/${OWNER}/dienst-$n:$VERSION" \
+              --certificate-identity-regexp "^https://github.com/${GITHUB_REPOSITORY}/\.github/workflows/release\.yml@refs/tags/v" \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com >/dev/null
+          done
+      - name: Cluster access
+        env: { KUBE_CONFIG: '${{ secrets.KUBE_CONFIG }}' }
+        run: |
+          mkdir -p ~/.kube && echo "$KUBE_CONFIG" | base64 -d > ~/.kube/config && chmod 600 ~/.kube/config
+      - name: Set image tags
+        working-directory: ${{ env.OVERLAY }}
+        run: |
+          kustomize edit set image \
+            "ghcr.io/ssapkota1/dienst-api=ghcr.io/${OWNER}/dienst-api:${VERSION}" \
+            "ghcr.io/ssapkota1/dienst-web=ghcr.io/${OWNER}/dienst-web:${VERSION}" \
+            "ghcr.io/ssapkota1/dienst-ops=ghcr.io/${OWNER}/dienst-ops:${VERSION}"
+      - name: Validate
+        run: kustomize build "$OVERLAY" | kubeconform -strict -summary -
+      - name: Remember what runs now (for the rollback)
+        run: kubectl -n dienst get deploy dienst-api dienst-web dienst-worker -o jsonpath='{range .items[*]}{.metadata.name}={.spec.template.spec.containers[0].image}{"\n"}{end}' | tee previous.txt || true
+      - name: Migrate (a failing migration stops the deployment before any pod changes)
+        run: |
+          kubectl -n dienst delete job dienst-migrate --ignore-not-found
+          kustomize build "$OVERLAY" | kubectl apply -f - --selector dienst.io/phase=migrate
+          kubectl -n dienst wait --for=condition=complete job/dienst-migrate --timeout=300s
+          kustomize build "$OVERLAY" | kubectl apply -f -
+      - name: Roll out
+        run: |
+          for d in dienst-api dienst-worker dienst-web; do kubectl -n dienst rollout status deploy/$d --timeout=300s; done
+      - name: Smoke test through the public URL
+        env: { BASE_URL: '${{ vars.BASE_URL }}' }
+        run: |
+          for _ in $(seq 1 12); do
+            curl -fsS --max-time 5 "$BASE_URL/api/v1/health/ready" && ok=1 && break
+            sleep 5
+          done
+          [[ "${ok:-}" == 1 ]]
+          curl -fsS --max-time 5 "$BASE_URL/" -o /dev/null
+      - name: Roll back on failure
+        if: failure()
+        run: |
+          for d in dienst-api dienst-worker dienst-web; do kubectl -n dienst rollout undo deploy/$d || true; done
+          echo "::error::Deployment of $VERSION failed and was rolled back; the migration Job is NOT undone (see docs/RUNBOOK.md)"

@@ -26,7 +26,7 @@ docker run --rm "${NET[@]}" "${ENVS[@]}" "$IMAGE" node apps/api/dist/migrate.mjs
 
 echo "2. the API starts read-only, as a non-root user, with an init process"
 docker run -d --name "$NAME" --init --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges:true "${NET[@]}" "${ENVS[@]}" "$IMAGE" >/dev/null
-for i in $(seq 1 40); do curl -fs "http://127.0.0.1:$PORT/api/v1/health/live" >/dev/null 2>&1 && break; sleep 0.5; done
+for _ in $(seq 1 40); do curl -fs "http://127.0.0.1:$PORT/api/v1/health/live" >/dev/null 2>&1 && break; sleep 0.5; done
 curl -fs "http://127.0.0.1:$PORT/api/v1/health/live" | grep -q live || fail "not live"
 [[ "$(docker exec "$NAME" id -u)" != "0" ]] || fail "runs as root"
 

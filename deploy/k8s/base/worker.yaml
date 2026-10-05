@@ -1,0 +1,34 @@
+# Exactly one process runs the background jobs (an advisory lock guards against a second one during a rollout).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dienst-worker
+spec:
+  replicas: 1
+  strategy: { type: Recreate }
+  selector:
+    matchLabels: { app.kubernetes.io/name: dienst-worker }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: dienst-worker }
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: worker
+          image: ghcr.io/ssapkota1/dienst-api
+          command: ['node', 'apps/api/dist/worker.mjs']
+          envFrom:
+            - configMapRef: { name: dienst-config }
+            - secretRef: { name: dienst-secrets }
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 384Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: { medium: Memory, sizeLimit: 64Mi } }]

@@ -1,0 +1,9 @@
+# TLS terminates here (automatic Let's Encrypt). DIENST_DOMAIN comes from /opt/dienst/.env.production.
+{$DIENST_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy web:8080
+	log {
+		output stdout
+		format json
+	}
+}

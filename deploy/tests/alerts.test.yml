@@ -1,0 +1,92 @@
+# promtool test rules deploy/tests/alerts.test.yml
+rule_files: [../alerts.yml]
+evaluation_interval: 1m
+tests:
+  - interval: 1m
+    input_series:
+      - { series: 'up{job="dienst-api"}', values: '1 1 0 0 0 0 0' }
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: DienstApiDown
+        exp_alerts: []
+      - eval_time: 6m
+        alertname: DienstApiDown
+        exp_alerts:
+          - exp_labels: { severity: critical, job: dienst-api }
+            exp_annotations: { summary: 'The API does not answer the metrics scrape' }
+
+  - interval: 1m
+    input_series:
+      - { series: 'http_request_duration_seconds_count{status="5xx",route="/x"}', values: '0+5x20' }
+      - { series: 'http_request_duration_seconds_count{status="2xx",route="/x"}', values: '0+100x20' }
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: DienstApiErrors
+        exp_alerts:
+          - exp_labels: { severity: critical }
+            exp_annotations: { summary: 'More than 2 % of requests fail with 5xx' }
+
+  - interval: 1m
+    input_series:
+      - { series: 'http_request_duration_seconds_count{status="5xx",route="/x"}', values: '0+1x20' }
+      - { series: 'http_request_duration_seconds_count{status="2xx",route="/x"}', values: '0+1000x20' }
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: DienstApiErrors
+        exp_alerts: []
+
+  - interval: 1m
+    input_series:
+      - { series: 'job_last_success_timestamp_seconds{job="auto_checkout"}', values: '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0' }
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: DienstJobStale
+        exp_alerts: []
+      - eval_time: 19m
+        alertname: DienstJobStale
+        exp_alerts:
+          - exp_labels: { severity: critical, job: auto_checkout }
+            exp_annotations: { summary: 'Auto-checkout has not run for 10 minutes: open time records stay open' }
+
+  - interval: 1m
+    input_series:
+      - { series: 'db_pool_waiting_requests', values: '0 0 3 3 3 3 3 3 3' }
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: DienstDbPoolExhausted
+        exp_alerts: []
+      - eval_time: 9m
+        alertname: DienstDbPoolExhausted
+        exp_alerts:
+          - exp_labels: { severity: warning }
+            exp_annotations: { summary: 'Requests wait for a database connection (raise DB_POOL_MAX or find the slow query)' }
+
+  - interval: 1m
+    input_series:
+      - { series: 'login_failures_total', values: '0+10x15' }
+    alert_rule_test:
+      - eval_time: 14m
+        alertname: DienstLoginFailures
+        exp_alerts:
+          - exp_labels: { severity: warning }
+            exp_annotations: { summary: 'Many failed logins in 10 minutes (guessing attack or a broken single sign-on)' }
+
+  - interval: 1h
+    input_series:
+      - { series: 'dienst_backup_last_success_timestamp_seconds', values: '0+0x45' }
+    alert_rule_test:
+      - eval_time: 40h
+        alertname: DienstBackupTooOld
+        exp_alerts:
+          - exp_labels: { severity: critical }
+            exp_annotations: { summary: 'No successful backup for 36 hours' }
+
+  - interval: 1m
+    input_series:
+      - { series: 'unrelated_metric', values: '1+0x80' }
+    alert_rule_test:
+      - eval_time: 75m
+        alertname: DienstBackupMetricMissing
+        exp_alerts:
+          - exp_labels: { severity: warning }
+            exp_annotations: { summary: 'No backup metric at all: the node_exporter textfile is missing or the backup never ran' }

@@ -1,0 +1,85 @@
+# Nightly encrypted backup and a weekly restore drill (scripts/ops, docs/RUNBOOK.md). Secret "dienst-backup" holds
+# DATABASE_URL, BACKUP_AGE_RECIPIENT (public key) and, for the drill only, BACKUP_AGE_IDENTITY (path of a mounted private
+# key; keep it off the backup volume). The drill creates and drops a temporary database next to DATABASE_URL (CREATEDB).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: dienst-backup
+spec:
+  schedule: '15 2 * * *'
+  timeZone: Europe/Berlin
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 70
+            fsGroup: 70
+            seccompProfile: { type: RuntimeDefault }
+          containers:
+            - name: backup
+              image: ghcr.io/ssapkota1/dienst-ops
+              envFrom: [{ secretRef: { name: dienst-backup } }]
+              env: [{ name: BACKUP_DIR, value: /backups }]
+              resources:
+                requests: { cpu: 50m, memory: 128Mi }
+                limits: { memory: 512Mi }
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities: { drop: [ALL] }
+              volumeMounts: [{ name: backups, mountPath: /backups }]
+          volumes:
+            - name: backups
+              persistentVolumeClaim: { claimName: dienst-backups }
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: dienst-restore-drill
+spec:
+  schedule: '30 4 * * 0'
+  timeZone: Europe/Berlin
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 70
+            fsGroup: 70
+            seccompProfile: { type: RuntimeDefault }
+          containers:
+            - name: drill
+              image: ghcr.io/ssapkota1/dienst-ops
+              command: ['/opt/ops/restore-drill.sh']
+              envFrom: [{ secretRef: { name: dienst-backup } }]
+              env: [{ name: BACKUP_DIR, value: /backups }]
+              resources:
+                requests: { cpu: 100m, memory: 256Mi }
+                limits: { memory: 1Gi }
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities: { drop: [ALL] }
+              volumeMounts: [{ name: backups, mountPath: /backups }]
+          volumes:
+            - name: backups
+              persistentVolumeClaim: { claimName: dienst-backups }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dienst-backups
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: { requests: { storage: 20Gi } }

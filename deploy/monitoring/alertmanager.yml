@@ -1,0 +1,18 @@
+# Replace the receiver with your e-mail / chat / pager. Criticals repeat hourly until resolved.
+route:
+  receiver: ops
+  group_by: [alertname]
+  group_wait: 30s
+  repeat_interval: 4h
+  routes:
+    - matchers: [severity="critical"]
+      receiver: ops
+      repeat_interval: 1h
+    - matchers: [severity="info"]
+      receiver: ops
+      repeat_interval: 24h
+receivers:
+  - name: ops
+    webhook_configs:
+      - url: http://ops-webhook.invalid/alerts # CHANGE ME
+        send_resolved: true

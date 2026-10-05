@@ -76,3 +76,7 @@ The web punch network check, the per-address rate limits and the audit trail use
 
 ## Cookies
 With `COOKIE_SECURE=true` (required in production) the session cookie is named `__Secure-rt` and is only accepted by browsers when set over https; it is `HttpOnly`, `SameSite=Strict` and limited to `/api/v1/auth`. Sessions from before this change keep working: the old `rt` cookie is read once, replaced by the new one and cleared. If you serve the API on a different site than the web app, the strict flag blocks the cookie, so keep both under one site (for example `app.example.com` and `api.example.com`) or use the same host with `/api` as shown above.
+
+## Infrastructure as code
+
+Kubernetes manifests, the single-VM bootstrap, monitoring, the release and deploy pipelines are described in [INFRASTRUCTURE.md](INFRASTRUCTURE.md).
