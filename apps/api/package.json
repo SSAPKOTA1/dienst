@@ -11,6 +11,7 @@
     "db:codegen": "kysely-codegen --dialect postgres --date-parser string --numeric-parser number --out-file src/db/types.ts --env-file ../../.env",
     "typecheck": "tsc -p .",
     "test": "vitest run",
+    "docs:api": "tsx --env-file-if-exists=../../.env src/docs/export.ts",
     "security:rekey": "tsx --env-file-if-exists=../../.env src/db/rekey.ts",
     "test:coverage": "vitest run --coverage"
   },
