@@ -50,7 +50,12 @@ export default defineConfig({
       timeout: 60_000,
       cwd: '..',
       // many logins from one IP in a minute: raise the production limits for the test server
-      env: { RATE_LIMIT_AUTH: '1000', RATE_LIMIT_KIOSK: '1000', RATE_LIMIT_GLOBAL: '100000' },
+      env: {
+        RATE_LIMIT_AUTH: '1000',
+        RATE_LIMIT_KIOSK: '1000',
+        RATE_LIMIT_GLOBAL: '100000',
+        DATABASE_URL: process.env.DATABASE_URL || 'postgres://dienst:dienst@localhost:5432/dienst_test',
+      },
     },
     {
       command: 'pnpm --filter @dienst/web dev',

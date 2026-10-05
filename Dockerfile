@@ -20,6 +20,9 @@ RUN pnpm --filter @dienst/api --prod deploy --legacy /deploy
 
 FROM node:22-slim AS api
 ENV NODE_ENV=production MIGRATIONS_DIR=/app/db/migrations
+# the runtime only runs `node`; the package managers bundled in the base image are unused attack surface (and what image scans flag)
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+  /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /opt/yarn-*
 WORKDIR /app
 COPY --from=build /deploy/node_modules ./node_modules
 COPY --from=build /app/apps/api/dist ./apps/api/dist
