@@ -4,7 +4,7 @@ import { localDate, zonedInstant } from '../lib/time';
 import { paidFor } from '../services/kiosk';
 import type { SeedResult } from './index';
 
-/** Live view content (today's punches), one unplanned open record and the prototype's two correction requests. */
+/** Live view content (finished shifts of today), one unplanned open record and the prototype's two correction requests. */
 export async function seedPunches(db: Db, r: SeedResult, now: Date) {
   const hotels: Record<string, number> = r.ids.hotels;
   const empIds: Record<string, number> = r.ids.empIds;
@@ -15,7 +15,6 @@ export async function seedPunches(db: Db, r: SeedResult, now: Date) {
   const min = (n: number) => n * 60e3;
 
   // ---- today's published entries
-  let firstOpen = true;
   for (const [, hotelId] of Object.entries(hotels)) {
     const today = localDate(now, tz.get(hotelId)!);
     const entries = await db
@@ -59,28 +58,8 @@ export async function seedPunches(db: Db, r: SeedResult, now: Date) {
             approved_at: e.planned_end,
           })
           .execute();
-      } else if (firstOpen && e.employee_id !== empIds.piotr) {
-        // Piotr's open record is the unplanned one below; two open punches per employee are not allowed
-        firstOpen = false; // clocked in and still working
-        await db
-          .insertInto('punch_record')
-          .values({
-            employee_id: e.employee_id,
-            hotel_id: hotelId,
-            schedule_id: e.id,
-            shift_date: today,
-            source: 'kiosk',
-            kiosk_device_id: device.id,
-            planned_start: e.planned_start,
-            planned_end: e.planned_end,
-            actual_punch_in: inAt,
-            paid_start: e.planned_start,
-            start_variation_minutes: 2,
-            approval_status: 'pending',
-          })
-          .execute();
       }
-      // every other started entry stays without a punch: it shows up as expected / no-show
+      // a started shift that is still running gets no punch: tests clock people in, so it must not depend on the time of day
     }
   }
   // ---- an unplanned open record (Piotr helps out)
