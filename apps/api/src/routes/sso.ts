@@ -48,7 +48,7 @@ export async function ssoRoutes(app: FastifyInstance) {
   const r = app.withTypeProvider<ZodTypeProvider>();
   const db = app.db;
   const tx = <T>(fn: (trx: Trx) => Promise<T>) => db.transaction().execute(fn);
-  const prod = app.cfg.NODE_ENV === 'production';
+  const policy = { allowPrivate: app.cfg.OUTBOUND_ALLOW_PRIVATE };
   const redirectUri = `${app.cfg.WEB_ORIGIN.replace(/\/+$/, '')}/api/v1/auth/sso/callback`;
   const webUrl = (path: string) => `${app.cfg.WEB_ORIGIN.replace(/\/+$/, '')}${path}`;
   const authLimit = { rateLimit: { max: app.cfg.RATE_LIMIT_AUTH, timeWindow: '1 minute' } };
@@ -95,8 +95,8 @@ export async function ssoRoutes(app: FastifyInstance) {
       const p = getPrincipal(req);
       const b = req.body;
       p.scope.assertCompany(b.companyId);
-      assertIssuer(b.issuer, prod);
-      await discover(b.issuer); // refuse a configuration that cannot work
+      assertIssuer(b.issuer, policy);
+      await discover(b.issuer, policy); // refuse a configuration that cannot work
       return tx(async (trx) => {
         const old = await trx
           .selectFrom('sso_provider')
@@ -185,7 +185,7 @@ export async function ssoRoutes(app: FastifyInstance) {
       if (!p) return failRedirect(reply, 'not_configured');
       let d;
       try {
-        d = await discover(p.issuer);
+        d = await discover(p.issuer, policy);
       } catch {
         return failRedirect(reply, 'idp_unreachable');
       }
@@ -245,8 +245,8 @@ export async function ssoRoutes(app: FastifyInstance) {
       if (!p) return failRedirect(reply, 'not_configured');
       let claims;
       try {
-        const d = await discover(p.issuer);
-        claims = await redeemCode(d, {
+        const d = await discover(p.issuer, policy);
+        claims = await redeemCode(d, policy, {
           clientId: p.client_id,
           clientSecret: app.keys.openText('sso-client-secret', p.client_secret_enc),
           code: req.query.code,
