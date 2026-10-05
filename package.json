@@ -12,13 +12,14 @@
     "db:seed": "pnpm --filter @dienst/api db:seed",
     "db:codegen": "pnpm --filter @dienst/api db:codegen",
     "dev": "pnpm --parallel --filter @dienst/api --filter @dienst/web dev",
-    "build": "pnpm --filter @dienst/web build",
+    "build": "pnpm --filter @dienst/web build && node scripts/build-api.mjs",
     "test": "pnpm -r --workspace-concurrency=1 test",
     "e2e": "playwright test -c e2e/playwright.config.ts",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "pnpm -r typecheck",
-    "security:rekey": "pnpm --filter @dienst/api security:rekey"
+    "security:rekey": "pnpm --filter @dienst/api security:rekey",
+    "build:api": "node scripts/build-api.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
@@ -29,7 +30,8 @@
     "globals": "^16.0.0",
     "prettier": "^3.6.0",
     "typescript": "~5.9.3",
-    "typescript-eslint": "^8.46.0"
+    "typescript-eslint": "^8.46.0",
+    "esbuild": "^0.28.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

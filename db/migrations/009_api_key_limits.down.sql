@@ -1,0 +1,1 @@
+ALTER TABLE api_key DROP COLUMN IF EXISTS expires_at, DROP COLUMN IF EXISTS scopes, DROP COLUMN IF EXISTS allowed_cidrs, DROP COLUMN IF EXISTS last_used_ip;

@@ -1,3 +1,5 @@
+> Containers: `Dockerfile` (targets `api` and `web`), `docker-compose.prod.yml` and `.env.production.example` run the whole stack; day-to-day operation (deploy, roll back, backups, monitoring, incidents) is in `docs/RUNBOOK.md`. The nginx configuration of the web image is `deploy/nginx.conf` and `deploy/security-headers.conf`.
+
 # Deployment notes: security headers and reverse proxy
 
 The API sets its own security headers (`apps/api/src/lib/securityHeaders.ts`). The web app is a static single-page app, so whatever serves `apps/web/dist` must send the web headers. `vite build` writes them to `dist/_headers` (Netlify/Cloudflare format); the same list lives in `apps/web/security-headers.ts`.

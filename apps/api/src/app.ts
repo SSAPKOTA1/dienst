@@ -4,6 +4,9 @@ import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fas
 import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
 import { Keys } from './lib/keys';
+import { migrationFiles } from './db/migrate';
+import { registerObservability, requestIdFrom, type Lifecycle } from './lib/observability';
+import { trackJob } from './lib/metrics';
 import { registerSecurityHeaders } from './lib/securityHeaders';
 import multipart from '@fastify/multipart';
 import { ZodError } from 'zod';
@@ -56,11 +59,16 @@ export interface AppOptions {
   db?: Db;
   /** run the auto-checkout job every minute (the server enables it; tests call runAutoCheckout directly) */
   autoCheckout?: boolean;
+  /** shared with the server so SIGTERM can flip readiness before the process stops */
+  lifecycle?: Lifecycle;
 }
 
 export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> {
   const cfg = loadConfig({ ...process.env, ...(opts.config as NodeJS.ProcessEnv | undefined) });
   const app = Fastify({
+    genReqId: (req) => requestIdFrom(req),
+    requestIdHeader: false,
+    forceCloseConnections: 'idle',
     // a hop count N means: the N nearest hops are our own proxies, the next address is the client. (Fastify's own
     // number option counts differently, so spell it out as a function: hop 0 is the TCP peer.)
     trustProxy:
@@ -90,7 +98,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   app.decorate('cfg', cfg);
   app.decorate('keys', new Keys(cfg));
   app.decorate('clock', opts.clock ?? (() => new Date()));
-  const db = opts.db ?? createDb(cfg.DATABASE_URL);
+  const db = opts.db ?? createDb(cfg.DATABASE_URL, { max: cfg.DB_POOL_MAX });
   app.decorate('db', db);
   app.addHook('onClose', async () => {
     if (!opts.db) await db.destroy();
@@ -110,20 +118,35 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   if (opts.autoCheckout) {
     const timer = setInterval(
       () =>
-        void Promise.all([
-          runDailyOnce('vacation', app.clock(), (n) => runVacationJobs(db, n)),
-          runDailyOnce('reminders', app.clock(), (n) => runReminders(db, n)),
-          runDailyOnce('offboarding', app.clock(), (n) => runOffboarding(db, n)),
-          runAutoCheckout(db, app.clock()),
-          wipeExpiredCredentials(db, app.clock()),
-          expireSwaps(db, app.clock()),
-        ]).catch((e) => app.log.error({ err: (e as Error).message }, 'background job failed')),
+        void Promise.allSettled(
+          (
+            [
+              ['vacation', () => runDailyOnce('vacation', app.clock(), (n) => runVacationJobs(db, n))],
+              ['reminders', () => runDailyOnce('reminders', app.clock(), (n) => runReminders(db, n))],
+              ['offboarding', () => runDailyOnce('offboarding', app.clock(), (n) => runOffboarding(db, n))],
+              ['auto_checkout', () => runAutoCheckout(db, app.clock())],
+              ['credential_wipe', () => wipeExpiredCredentials(db, app.clock())],
+              ['swap_expiry', () => expireSwaps(db, app.clock())],
+            ] as Array<[string, () => Promise<unknown>]>
+          ).map(([job, run]) =>
+            trackJob(job, run).catch((e) =>
+              app.log.error({ job, err: (e as Error).message }, 'background job failed'),
+            ),
+          ),
+        ),
       60_000,
     );
     app.addHook('onClose', async () => clearInterval(timer));
   }
 
   await registerSecurityHeaders(app, cfg.NODE_ENV === 'production');
+  const life = opts.lifecycle ?? { shuttingDown: false };
+  registerObservability(app, cfg, db, life, async () => {
+    const done = new Set(
+      (await sql<{ name: string }>`select name from schema_migrations`.execute(db)).rows.map((r) => r.name),
+    );
+    return migrationFiles().every((f) => done.has(f));
+  });
 
   // a proxy header that nobody trusts is almost always a misconfiguration: the web punch network check and the
   // rate limits would then see the proxy instead of the client. Say so once.
