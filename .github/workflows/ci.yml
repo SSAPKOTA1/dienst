@@ -1,8 +1,26 @@
 name: ci
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# least privilege: the workflows only read the repository
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DATABASE_URL: postgres://dienst:dienst@localhost:5432/dienst_test
+  TEST_DATABASE_URL: postgres://dienst:dienst@localhost:5432/dienst_test
+
 jobs:
-  test:
+  check:
+    name: lint, types, tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16
@@ -10,17 +28,85 @@ jobs:
         ports: ['5432:5432']
         options: >-
           --health-cmd "pg_isready -U dienst" --health-interval 5s --health-retries 10
-    env:
-      TEST_DATABASE_URL: postgres://dienst:dienst@localhost:5432/dienst_test
-      DATABASE_URL: postgres://dienst:dienst@localhost:5432/dienst_test
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
-      # fail on known vulnerabilities in runtime packages (dev-only tooling is reported, not blocking)
+      # known vulnerabilities: production packages must be clean, development tooling too (one reviewed exception
+      # is listed in package.json under pnpm.auditConfig with its reason in docs/DECISIONS.md)
       - run: pnpm audit --prod --audit-level=moderate
+      - run: pnpm audit --audit-level=high
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+
+  e2e:
+    name: end-to-end (Playwright, accessibility)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: dienst, POSTGRES_PASSWORD: dienst, POSTGRES_DB: dienst_test }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U dienst" --health-interval 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            e2e/test-results
+            playwright-report
+          retention-days: 7
+
+  containers:
+    name: images, smoke tests, backups, SBOM, scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: dienst, POSTGRES_PASSWORD: dienst, POSTGRES_DB: dienst_test }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U dienst" --health-interval 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client age
+      # the full Dockerfile, including the dependency stage that cannot run in every sandbox
+      - run: docker build --target api -t dienst-api:ci .
+      - run: docker build --target web -t dienst-web:ci .
+      - run: scripts/ops/smoke-container.sh dienst-api:ci postgres://dienst:dienst@localhost:5432/postgres
+      - run: scripts/ops/smoke-web.sh dienst-web:ci
+      # backup, restore, drill and tamper detection against a migrated and seeded database
+      - run: pnpm db:migrate && pnpm db:seed
+      - run: node scripts/build-api.mjs && scripts/ops/test-backup.sh
+      - name: Software bill of materials
+        uses: anchore/sbom-action@v0
+        with:
+          image: dienst-api:ci
+          format: cyclonedx-json
+          artifact-name: sbom-api.cdx.json
+      - name: Scan the API image for known vulnerabilities
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: dienst-api:ci
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '1'
+          vuln-type: library

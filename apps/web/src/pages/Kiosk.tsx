@@ -940,7 +940,11 @@ function PinStep({
         <div style={{ marginTop: 'auto', fontSize: 20, fontWeight: 600 }}>
           {t('Gib deine {{n}}-stellige PIN ein', { n: pinLength })}
         </div>
-        <div style={{ display: 'flex', gap: 'var(--space-3)' }} aria-label={`${pin.length}/${pinLength}`}>
+        <div
+          style={{ display: 'flex', gap: 'var(--space-3)' }}
+          role="img"
+          aria-label={`${pin.length}/${pinLength}`}
+        >
           {Array.from({ length: pinLength }).map((_, i) =>
             i < pin.length ? (
               <span key={i} style={{ width: 28, height: 28, background: 'var(--color-text)' }} />

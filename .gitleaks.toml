@@ -1,0 +1,20 @@
+# Secret scanning configuration (gitleaks). The default rules stay on; only known development placeholders are
+# allowed, with the reason next to each. Real secrets never belong in the repository (use .env, git-ignored).
+title = "dienst"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "development placeholders and test fixtures"
+paths = [
+  '''\.env\.example$''',                  # documented placeholders
+  '''\.env\.production\.example$''',
+  '''apps/api/src/config\.ts$''',          # the development defaults that production refuses to start with
+  '''apps/api/test/.*''',                 # test keys
+  '''scripts/ops/smoke-container\.sh$''', # throwaway tokens of the smoke test
+  '''apps/api/src/seed/sample\.ts$''',    # demo token and demo API key printed by the seed (development only)
+  '''docs/.*''',
+  '''README\.md$''',
+  '''pnpm-lock\.yaml$''',
+]

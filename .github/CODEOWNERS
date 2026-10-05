@@ -1,0 +1,8 @@
+# Code owners are requested automatically on pull requests that touch these paths.
+*                       @SSAPKOTA1
+/db/migrations/         @SSAPKOTA1
+/apps/api/src/lib/      @SSAPKOTA1
+/packages/rules/        @SSAPKOTA1
+/.github/               @SSAPKOTA1
+/Dockerfile             @SSAPKOTA1
+/scripts/ops/           @SSAPKOTA1

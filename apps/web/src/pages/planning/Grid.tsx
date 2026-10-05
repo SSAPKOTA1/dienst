@@ -697,6 +697,7 @@ function DayHeader({ data, lead, trail }: { data: GridData; lead: string; trail?
       role="row"
     >
       <div
+        role="columnheader"
         style={{
           padding: '6px var(--space-4)',
           fontSize: 11,
@@ -714,6 +715,7 @@ function DayHeader({ data, lead, trail }: { data: GridData; lead: string; trail?
           <div
             key={d.date}
             className="pl-head"
+            role="columnheader"
             style={{
               background: today ? 'var(--color-accent-100)' : d.past ? 'var(--color-neutral-200)' : undefined,
             }}

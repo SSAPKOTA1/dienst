@@ -5,7 +5,7 @@
   --color-bg: #f3f2f2;
   --color-surface: #eae9e9;
   --color-text: #201e1d;
-  --color-accent: #ec3013;
+  --color-accent: #d4290f;
   --color-accent-2: #e15b47;
   --color-divider: color-mix(in srgb, #201e1d 40%, transparent);
 
@@ -218,7 +218,7 @@ figcaption {
   background: color-mix(in srgb, var(--color-text) 14%, transparent);
 }
 .btn-ghost {
-  color: var(--color-accent);
+  color: var(--color-accent-700); /* AA contrast on every row and hover background */
   padding-inline: var(--space-1);
 }
 .btn-ghost:hover {
@@ -437,7 +437,7 @@ textarea.input {
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+  color: color-mix(in srgb, var(--color-text) 72%, transparent);
   padding: var(--space-2);
   border-bottom: 2px solid var(--color-divider);
 }
