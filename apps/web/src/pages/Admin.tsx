@@ -169,6 +169,8 @@ export function AdminOverview() {
                 background: 'var(--color-neutral-300)',
               }}
               role="progressbar"
+              aria-label={t('Einrichtung')}
+              aria-valuemin={0}
               aria-valuenow={doneN}
               aria-valuemax={steps.length}
             >

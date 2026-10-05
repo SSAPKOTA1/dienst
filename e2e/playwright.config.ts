@@ -1,4 +1,10 @@
+import { existsSync } from 'node:fs';
 import { defineConfig } from '@playwright/test';
+
+// the sandbox ships its own Chromium; CI and laptops use the one `playwright install` downloads
+const chromium =
+  process.env.CHROMIUM_PATH ??
+  (existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined);
 
 export default defineConfig({
   testDir: './tests',
@@ -14,7 +20,7 @@ export default defineConfig({
     timezoneId: 'Europe/Berlin',
     viewport: { width: 1440, height: 1000 },
     acceptDownloads: true,
-    launchOptions: { executablePath: process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium' },
+    launchOptions: chromium ? { executablePath: chromium } : {},
     trace: 'retain-on-failure',
   },
   webServer: [
