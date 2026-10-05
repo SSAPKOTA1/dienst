@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { createRemoteJWKSet, jwtVerify } from 'jose';
+import { createLocalJWKSet, jwtVerify, type JSONWebKeySet } from 'jose';
 import { AppError } from './errors';
+import { assertOutboundUrl, safeRequest, type OutboundPolicy } from './ssrf';
 
 // Minimal OpenID Connect relying party: authorization code flow with PKCE and client_secret_post.
 
@@ -11,26 +12,25 @@ export interface Discovery {
   jwks_uri: string;
 }
 
-const TIMEOUT_MS = 5000;
-
-/** The issuer must be https; plain http is only accepted outside production (tests, local IdPs). */
-export function assertIssuer(issuer: string, production: boolean): URL {
-  let u: URL;
-  try {
-    u = new URL(issuer);
-  } catch {
-    throw new AppError('VALIDATION', 'The issuer is not a valid URL');
-  }
-  if (u.protocol !== 'https:' && !(u.protocol === 'http:' && !production))
-    throw new AppError('VALIDATION', 'The issuer must use https');
-  return u;
+/** The issuer must be https (plain http only where private addresses are allowed: development and tests). */
+export function assertIssuer(issuer: string, policy: OutboundPolicy): URL {
+  return assertOutboundUrl(issuer, policy);
 }
 
-export async function discover(issuer: string): Promise<Discovery> {
+async function getJson<T>(url: string, policy: OutboundPolicy): Promise<T> {
+  const res = await safeRequest(url, policy, { headers: { accept: 'application/json' } });
+  if (res.status < 200 || res.status >= 300)
+    throw new AppError('CONFLICT', 'The identity provider could not be reached');
+  try {
+    return JSON.parse(res.body) as T;
+  } catch {
+    throw new AppError('CONFLICT', 'The identity provider metadata is invalid');
+  }
+}
+
+export async function discover(issuer: string, policy: OutboundPolicy): Promise<Discovery> {
   const url = `${issuer.replace(/\/+$/, '')}/.well-known/openid-configuration`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
-  if (!res.ok) throw new AppError('CONFLICT', 'The identity provider could not be reached');
-  const d = (await res.json()) as Partial<Discovery>;
+  const d = await getJson<Partial<Discovery>>(url, policy);
   if (
     !d.authorization_endpoint ||
     !d.token_endpoint ||
@@ -38,6 +38,9 @@ export async function discover(issuer: string): Promise<Discovery> {
     (d.issuer ?? '').replace(/\/+$/, '') !== issuer.replace(/\/+$/, '')
   )
     throw new AppError('CONFLICT', 'The identity provider metadata is invalid');
+  // the endpoints the server will call must pass the same rules as the issuer
+  assertOutboundUrl(d.token_endpoint, policy);
+  assertOutboundUrl(d.jwks_uri, policy);
   return d as Discovery;
 }
 
@@ -73,6 +76,7 @@ export interface IdClaims {
 
 export async function redeemCode(
   d: Discovery,
+  policy: OutboundPolicy,
   p: {
     clientId: string;
     clientSecret: string;
@@ -82,7 +86,7 @@ export async function redeemCode(
     nonce: string;
   },
 ): Promise<IdClaims> {
-  const res = await fetch(d.token_endpoint, {
+  const res = await safeRequest(d.token_endpoint, policy, {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
     body: new URLSearchParams({
@@ -92,14 +96,20 @@ export async function redeemCode(
       client_id: p.clientId,
       client_secret: p.clientSecret,
       code_verifier: p.verifier,
-    }),
-    signal: AbortSignal.timeout(TIMEOUT_MS),
+    }).toString(),
   });
-  if (!res.ok) throw new AppError('UNAUTHENTICATED', 'The identity provider rejected the login');
-  const tok = (await res.json()) as { id_token?: string };
-  if (!tok.id_token) throw new AppError('UNAUTHENTICATED', 'The identity provider sent no ID token');
+  if (res.status < 200 || res.status >= 300)
+    throw new AppError('UNAUTHENTICATED', 'The identity provider rejected the login');
+  let tok: { id_token?: string };
   try {
-    const { payload } = await jwtVerify(tok.id_token, createRemoteJWKSet(new URL(d.jwks_uri)), {
+    tok = JSON.parse(res.body) as { id_token?: string };
+  } catch {
+    throw new AppError('UNAUTHENTICATED', 'The identity provider sent no ID token');
+  }
+  if (!tok.id_token) throw new AppError('UNAUTHENTICATED', 'The identity provider sent no ID token');
+  const jwks = await getJson<JSONWebKeySet>(d.jwks_uri, policy);
+  try {
+    const { payload } = await jwtVerify(tok.id_token, createLocalJWKSet(jwks), {
       issuer: d.issuer,
       audience: p.clientId,
     });

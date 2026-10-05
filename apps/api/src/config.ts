@@ -34,9 +34,16 @@ const schema = z.object({
     .default('false')
     .transform((v) => v === 'true' || v === '1'),
   NODE_ENV: z.string().default('development'),
+  /**
+   * Whether the server may call private and loopback addresses when it fetches an administrator-supplied
+   * URL (SSO). Default: only outside production. Set to true in production only for an identity provider
+   * inside the same network, and know that this widens what an administrator can make the server reach.
+   */
+  OUTBOUND_ALLOW_PRIVATE: z.enum(['true', 'false']).optional(),
 });
 
-export type Config = z.infer<typeof schema>;
+type Parsed = z.infer<typeof schema>;
+export type Config = Omit<Parsed, 'OUTBOUND_ALLOW_PRIVATE'> & { OUTBOUND_ALLOW_PRIVATE: boolean };
 
 const DEV_SECRETS = new Set([
   'dev-only-secret-change-me-please-0123456789',
@@ -66,5 +73,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   } else if (!cfg.TOTP_ENC_KEY) {
     cfg.TOTP_ENC_KEY = DEV_LEGACY_KEY; // development databases written before DATA_KEY existed stay readable
   }
-  return cfg;
+  return {
+    ...cfg,
+    OUTBOUND_ALLOW_PRIVATE:
+      (cfg.OUTBOUND_ALLOW_PRIVATE ?? (cfg.NODE_ENV === 'production' ? 'false' : 'true')) === 'true',
+  };
 }
