@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 // the sandbox ships its own Chromium; CI and laptops use the one `playwright install` downloads
 const chromium =
@@ -20,9 +20,28 @@ export default defineConfig({
     timezoneId: 'Europe/Berlin',
     viewport: { width: 1440, height: 1000 },
     acceptDownloads: true,
-    launchOptions: chromium ? { executablePath: chromium } : {},
     trace: 'retain-on-failure',
   },
+  // Chromium always; BROWSERS=all adds Firefox and WebKit (the CI matrix runs those; the sandbox has Chromium only)
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1440, height: 1000 },
+        launchOptions: chromium ? { executablePath: chromium } : {},
+      },
+    },
+    ...(process.env.BROWSERS === 'all'
+      ? [
+          {
+            name: 'firefox',
+            use: { ...devices['Desktop Firefox'], viewport: { width: 1440, height: 1000 } },
+          },
+          { name: 'webkit', use: { ...devices['Desktop Safari'], viewport: { width: 1440, height: 1000 } } },
+        ]
+      : []),
+  ],
   webServer: [
     {
       command: 'pnpm --filter @dienst/api start',

@@ -1,0 +1,27 @@
+name: Mutation testing
+# The legal rules (packages/rules) are mutated line by line; a change the tests do not notice is a gap in the tests.
+# Takes about 2 minutes. The score must stay at or above 90 %.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '41 3 * * 1'
+  pull_request:
+    paths: ['packages/rules/**']
+
+permissions:
+  contents: read
+
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm mutation
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: mutation-report, path: packages/rules/reports/mutation }
