@@ -73,6 +73,7 @@ export async function seedBacklog(db: Db, r: SeedResult, now: Date) {
       key_prefix: DEMO_API_KEY.slice(0, 10),
       key_hash: sha256(DEMO_API_KEY),
       created_by_user_id: adUser,
+      expires_at: new Date(now.getTime() + 365 * 86400e3),
     })
     .execute();
 

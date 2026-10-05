@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { call, ctxHolder, planFixture, startApp, stopApp, type PlanFx, type TestCtx } from './helpers';
 
+const ALL = ['hotels:read', 'employees:read', 'schedule:read', 'attendance:read', 'absences:read'];
 let ctx: TestCtx;
 let fx: PlanFx;
 let key: string;
@@ -63,6 +64,7 @@ describe('key management', () => {
     const mk = await call(ctx, 'POST', '/api-keys', fx.adminA.token, {
       companyId: fx.companyA,
       name: 'Payroll',
+      scopes: ALL,
     });
     expect(mk.status).toBe(201);
     key = mk.body.key;
@@ -75,10 +77,22 @@ describe('key management', () => {
     expect(JSON.stringify(list.body)).not.toContain(key);
     expect((await call(ctx, 'GET', '/api-keys', fx.adminB.token)).body.items).toHaveLength(0);
     expect(
-      (await call(ctx, 'POST', '/api-keys', fx.mgrA1.token, { companyId: fx.companyA, name: 'x' })).status,
+      (
+        await call(ctx, 'POST', '/api-keys', fx.mgrA1.token, {
+          companyId: fx.companyA,
+          name: 'x',
+          scopes: ALL,
+        })
+      ).status,
     ).toBe(403);
     expect(
-      (await call(ctx, 'POST', '/api-keys', fx.adminA.token, { companyId: fx.companyB, name: 'x' })).status,
+      (
+        await call(ctx, 'POST', '/api-keys', fx.adminA.token, {
+          companyId: fx.companyB,
+          name: 'x',
+          scopes: ALL,
+        })
+      ).status,
     ).toBe(403);
     expect(
       (
@@ -86,6 +100,7 @@ describe('key management', () => {
           companyId: fx.companyA,
           hotelId: fx.hotelB1,
           name: 'x',
+          scopes: ALL,
         })
       ).status,
     ).toBe(403);
@@ -93,6 +108,7 @@ describe('key management', () => {
       companyId: fx.companyA,
       hotelId: fx.hotelA1,
       name: 'Hotel 1',
+      scopes: ALL,
     });
     hotelKey = hk.body.key;
     expect(
@@ -189,5 +205,94 @@ describe('public API', () => {
     expect((await call(ctx, 'DELETE', `/api-keys/${id}`, fx.adminA.token)).status).toBe(204); // idempotent
     expect((await pub('/hotels')).status).toBe(401);
     expect((await pub('/hotels', hotelKey)).status).toBe(200);
+  });
+});
+
+describe('expiry, scopes and network allowlist', () => {
+  const mk = async (over: Record<string, unknown> = {}) =>
+    call(ctx, 'POST', '/api-keys', fx.adminA.token, {
+      companyId: fx.companyA,
+      name: 'K',
+      scopes: ALL,
+      ...over,
+    });
+  const useKey = (k: string, url: string, ip = '127.0.0.1') =>
+    ctx.app
+      .inject({ method: 'GET', url: `/api/public/v1${url}`, headers: { 'x-api-key': k }, remoteAddress: ip })
+      .then((r) => ({ status: r.statusCode, body: r.json() as any }));
+
+  it('validates what a key is created with', async () => {
+    expect((await mk({ scopes: [] })).status).toBe(400);
+    expect((await mk({ scopes: ['admin:write'] })).status).toBe(400);
+    expect((await mk({ scopes: undefined })).status).toBe(400);
+    expect((await mk({ expiresInDays: 0 })).status).toBe(400);
+    expect((await mk({ expiresInDays: 731 })).status).toBe(400);
+    expect((await mk({ allowedCidrs: ['nope'] })).status).toBe(400);
+    const ok = await mk({ scopes: ['hotels:read', 'hotels:read'], expiresInDays: 30 });
+    expect(ok.status).toBe(201);
+    expect(ok.body.scopes).toEqual(['hotels:read']);
+    const days = (Date.parse(ok.body.expiresAt) - ctx.now.value.getTime()) / 86400e3;
+    expect(days).toBeCloseTo(30, 1);
+    expect(Math.round((Date.parse((await mk()).body.expiresAt) - ctx.now.value.getTime()) / 86400e3)).toBe(
+      365,
+    ); // default
+  });
+
+  it('lets a key read only what its scopes allow', async () => {
+    const k = (await mk({ scopes: ['hotels:read', 'schedule:read'] })).body.key;
+    expect((await useKey(k, '/hotels')).status).toBe(200);
+    expect((await useKey(k, '/schedule?from=2026-10-01&to=2026-10-02')).status).toBe(200);
+    for (const [url, scope] of [
+      ['/employees', 'employees:read'],
+      ['/attendance?from=2026-10-01&to=2026-10-02', 'attendance:read'],
+      ['/absences?from=2026-10-01&to=2026-10-02', 'absences:read'],
+    ] as const) {
+      const r = await useKey(k, url);
+      expect(r.status, url).toBe(403);
+      expect(r.body.error.details.requiredScope).toBe(scope);
+    }
+  });
+
+  it('stops working at expiry', async () => {
+    const k = (await mk({ expiresInDays: 2 })).body.key;
+    expect((await useKey(k, '/hotels')).status).toBe(200);
+    ctx.now.value = new Date(ctx.now.value.getTime() + 3 * 86400e3);
+    const r = await useKey(k, '/hotels');
+    expect(r.status).toBe(401);
+    expect(r.body.error.message).toMatch(/expired/);
+    ctx.now.value = new Date(ctx.now.value.getTime() - 3 * 86400e3);
+  });
+
+  it('can be limited to network ranges and remembers the last address', async () => {
+    const k = (await mk({ allowedCidrs: ['203.0.113.0/24', '2001:db8::/32'] })).body.key;
+    expect((await useKey(k, '/hotels', '203.0.113.50')).status).toBe(200);
+    expect((await useKey(k, '/hotels', '2001:db8::5')).status).toBe(200);
+    const bad = await useKey(k, '/hotels', '198.51.100.9');
+    expect(bad.status).toBe(403);
+    const list = await call(ctx, 'GET', '/api-keys', fx.adminA.token);
+    const row = list.body.items.find((x: any) => x.allowedCidrs.length === 2);
+    expect(row.lastUsedIp).toBeTruthy();
+    expect(row.scopes).toEqual(ALL);
+  });
+
+  it('reminds the creator and the administrators 14 and 3 days before expiry, once each', async () => {
+    const { runReminders } = await import('../src/services/reminders');
+    const k = (await mk({ name: 'Soon', expiresInDays: 10 })).body;
+    const kind = () =>
+      ctx.db.selectFrom('notification').select('payload').where('kind', '=', 'api_key_expiring').execute();
+    const before = (await kind()).length;
+    expect(await runReminders(ctx.db, ctx.now.value)).toBeGreaterThan(0);
+    const after14 = (await kind()).filter((n: any) => n.payload.keyId === k.id);
+    expect(after14.length).toBeGreaterThan(0);
+    expect(before).toBeLessThanOrEqual((await kind()).length);
+    const count = (await kind()).length;
+    await runReminders(ctx.db, ctx.now.value); // a repeat does not duplicate
+    expect((await kind()).length).toBe(count);
+    ctx.now.value = new Date(ctx.now.value.getTime() + 8 * 86400e3); // 2 days left: the 3-day reminder
+    await runReminders(ctx.db, ctx.now.value);
+    expect(
+      (await kind()).filter((n: any) => n.payload.keyId === k.id && n.payload.days <= 3).length,
+    ).toBeGreaterThan(0);
+    ctx.now.value = new Date(ctx.now.value.getTime() - 8 * 86400e3);
   });
 });

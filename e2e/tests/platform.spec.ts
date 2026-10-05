@@ -18,7 +18,7 @@ test.describe('Plattform', () => {
 
     await page.goto('/admin/integrations');
     await page.getByRole('button', { name: 'Schlüssel anlegen' }).click();
-    await page.getByLabel('Name').fill('e2e payroll');
+    await page.getByLabel('Name', { exact: true }).fill('e2e payroll');
     await page.getByRole('button', { name: 'Anlegen', exact: true }).click();
     await expect(page.getByTestId('api-key-shown')).toContainText('dk_');
     await page.getByRole('button', { name: 'Fertig' }).click();
