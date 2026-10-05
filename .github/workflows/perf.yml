@@ -1,0 +1,49 @@
+name: Performance
+# Load test against a synthetic database (3,000 employees, 750,000 schedule entries and punch records).
+# Not part of every push (it needs a minute of seeding and a quiet machine); runs weekly, on demand and on main.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 4 * * 1'
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: dienst, POSTGRES_PASSWORD: dienst, POSTGRES_DB: dienst_perf }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U dienst" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://dienst:dienst@localhost:5432/dienst_perf
+      PGPASSWORD: dienst
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:migrate
+      - run: psql -h localhost -U dienst -d dienst_perf -q -f scripts/perf/seed.sql
+      - run: psql -h localhost -U dienst -d dienst_perf -q -c "analyze"
+      - run: node scripts/perf/prepare.mjs
+      - name: Start the API
+        run: |
+          RATE_LIMIT_GLOBAL=1000000 RATE_LIMIT_KIOSK=1000000 RATE_LIMIT_AUTH=1000 LOG_LEVEL=warn \
+            nohup pnpm --filter @dienst/api start > api.log 2>&1 &
+          for i in $(seq 1 60); do curl -fs localhost:3000/api/v1/health && break; sleep 1; done
+      - name: Query plans
+        run: scripts/perf/run.sh dienst_perf
+      - name: Load test (budgets are for a laptop; shared runners are slower, hence the factor)
+        run: BUDGET_FACTOR=3 DURATION=8 node scripts/perf/load.mjs | tee load.txt
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: load-test, path: "load.txt\napi.log" }

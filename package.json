@@ -28,6 +28,7 @@
     "@playwright/test": "^1.56.0",
     "@types/node": "^22.20.0",
     "@vitest/coverage-v8": "4.1.11",
+    "autocannon": "^8.0.0",
     "esbuild": "^0.28.0",
     "eslint": "^9.39.0",
     "eslint-plugin-react-hooks": "^5.2.0",

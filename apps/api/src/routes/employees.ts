@@ -20,7 +20,8 @@ import {
   insertContract,
   weeklyTarget,
 } from '../services/employees';
-import { vacationSummary } from '../services/vacation';
+import { remainingDays, vacationSummary } from '../services/vacation';
+import { mapLimit } from '../lib/concurrency';
 import { deactivateEmployee } from '../services/offboarding';
 import { logPersonalDataView } from '../services/privacy';
 import { computeTimeAccount } from '../services/timeAccount';
@@ -316,8 +317,50 @@ export async function employeeRoutes(app: FastifyInstance) {
         .offset((page - 1) * pageSize)
         .execute();
       const year = Number(app.clock().toISOString().slice(0, 4));
-      const items = [];
       const todayStr = localDate(app.clock(), 'Europe/Berlin');
+      // one lookup per hotel instead of per person, and the contract and vacation rows of the whole page in two queries
+      const todays = new Map<number, string>();
+      for (const hid of new Set(rows.map((e) => e.primary_hotel_id))) todays.set(hid, await todayFor(hid));
+      const visible = rows.filter((e) => p.role !== 'manager' || p.scope.canHotel(e.primary_hotel_id));
+      const ids = visible.map((e) => e.employee_id);
+      const contracts = new Map<number, Awaited<ReturnType<typeof currentContract>>>();
+      if (ids.length) {
+        const dates = [...new Set(visible.map((e) => todays.get(e.primary_hotel_id)!))];
+        for (const date of dates) {
+          const forDate = visible
+            .filter((e) => todays.get(e.primary_hotel_id) === date)
+            .map((e) => e.employee_id);
+          const found = await db
+            .selectFrom('employee_contract')
+            .selectAll()
+            .where('employee_id', 'in', forDate)
+            .where('valid_from', '<=', date)
+            .orderBy('employee_id')
+            .orderBy('valid_from', 'desc')
+            .execute();
+          for (const c of found) if (!contracts.has(c.employee_id)) contracts.set(c.employee_id, c);
+        }
+      }
+      const allowances = new Map<number, number>();
+      if (ids.length) {
+        const have = await db
+          .selectFrom('employee_vacation_allowance')
+          .selectAll()
+          .where('employee_id', 'in', ids)
+          .where('year', '=', year)
+          .execute();
+        for (const a of have) allowances.set(a.employee_id, remainingDays(a));
+        for (const id of ids)
+          if (!allowances.has(id)) allowances.set(id, (await vacationSummary(db, id, year)).remaining);
+      }
+      const accounts = new Map<number, number | null>();
+      await mapLimit(visible, 6, async (e) => {
+        accounts.set(
+          e.employee_id,
+          await computeTimeAccount(db, e.employee_id, todays.get(e.primary_hotel_id)!),
+        );
+      });
+      const items: EmployeeSummaryDto[] = [];
       for (const e of rows) {
         const fullView = p.role !== 'manager' || p.scope.canHotel(e.primary_hotel_id);
         const item: EmployeeSummaryDto = {
@@ -332,13 +375,12 @@ export async function employeeRoutes(app: FastifyInstance) {
           view: fullView ? (p.role === 'manager' ? 'home' : 'full') : 'reduced',
         };
         if (fullView) {
-          const today = await todayFor(e.primary_hotel_id);
-          const c = await currentContract(db, e.employee_id, today);
+          const c = contracts.get(e.employee_id);
           const w = c ? weeklyTarget(c.target_hours_per_week, c.target_hours_per_month) : null;
           item.targetHoursPerWeek = w != null ? Math.round(w * 100) / 100 : null;
           item.employmentType = c?.employment_type ?? null;
-          item.vacationRemaining = (await vacationSummary(db, e.employee_id, year)).remaining;
-          item.timeAccount = await computeTimeAccount(db, e.employee_id, today);
+          item.vacationRemaining = allowances.get(e.employee_id) ?? 0;
+          item.timeAccount = accounts.get(e.employee_id) ?? null;
           if (p.role !== 'manager') {
             item.firstName = e.first_name;
             item.lastName = e.last_name;

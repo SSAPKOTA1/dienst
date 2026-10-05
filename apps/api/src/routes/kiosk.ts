@@ -1,3 +1,5 @@
+import { localDate } from '../lib/time';
+import { addDays } from '@dienst/rules';
 import type { DB } from '../db';
 import type { Selectable } from 'kysely';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
@@ -46,13 +48,17 @@ export async function kioskRoutes(app: FastifyInstance) {
     if (typeof tok !== 'string' || !tok) throw new AppError('DEVICE_INVALID', 'Unknown device');
     const d = await db
       .selectFrom('kiosk_device')
-      .select(['id', 'hotel_id', 'name', 'status'])
+      .select(['id', 'hotel_id', 'name', 'status', 'last_seen_at'])
       .where('token_hash', '=', sha256(tok))
       .executeTakeFirst();
     if (!d || d.status !== 'active')
       throw new AppError('DEVICE_INVALID', 'Device is not registered or was revoked');
     req.device = { id: d.id, hotelId: d.hotel_id, name: d.name };
-    await db.updateTable('kiosk_device').set({ last_seen_at: app.clock() }).where('id', '=', d.id).execute();
+    // "online" means seen within three minutes, so writing the timestamp more often than every 30 s only adds load
+    // (every tap and every roster poll used to update the same row)
+    const now = app.clock();
+    if (!d.last_seen_at || Math.abs(now.getTime() - new Date(d.last_seen_at).getTime()) >= 30_000)
+      await db.updateTable('kiosk_device').set({ last_seen_at: now }).where('id', '=', d.id).execute();
   }
   const limit = {
     rateLimit: {
@@ -63,8 +69,25 @@ export async function kioskRoutes(app: FastifyInstance) {
   };
   const route = { preValidation: kioskAuth, config: limit };
 
-  const ref = (device: Device, empId: number) =>
-    signPayload(app.keys.signing('kiosk'), { kind: 'empref', emp: empId, dev: device.id }, TTL);
+  // The roster is polled every 20 s per tablet and carries one signed reference per person. A reference stays valid
+  // for 5 minutes, so one that still has more than two minutes left is reused instead of signed again.
+  const REF_REUSE_MS = 2 * 60_000;
+  const REF_LIFETIME_MS = 5 * 60_000;
+  const refCache = new Map<string, { token: string; until: number }>();
+  const ref = async (device: Device, empId: number) => {
+    const key = `${device.id}:${empId}`;
+    const nowMs = app.clock().getTime();
+    const hit = refCache.get(key);
+    if (hit && hit.until - nowMs > REF_REUSE_MS) return hit.token;
+    const token = await signPayload(
+      app.keys.signing('kiosk'),
+      { kind: 'empref', emp: empId, dev: device.id },
+      TTL,
+    );
+    if (refCache.size > 20_000) refCache.clear();
+    refCache.set(key, { token, until: nowMs + REF_LIFETIME_MS });
+    return token;
+  };
   async function readRef(device: Device, token: string): Promise<number> {
     const c = await verifyToken<{ kind?: string; emp?: number; dev?: number }>(
       app.keys.verifying('kiosk'),
@@ -114,6 +137,9 @@ export async function kioskRoutes(app: FastifyInstance) {
       .where('e.status', '=', 'active')
       .where('s.planned_start', '<=', hi)
       .where('s.planned_end', '>=', lo)
+      // narrows the scan to a few days of this hotel (an entry that overlaps the window starts yesterday at the earliest)
+      .where('s.shift_date', '>=', addDays(localDate(lo, tz), -1))
+      .where('s.shift_date', '<=', addDays(localDate(hi, tz), 1))
       .execute();
     const open = await db
       .selectFrom('punch_record as p')
@@ -176,11 +202,12 @@ export async function kioskRoutes(app: FastifyInstance) {
         state,
       });
     }
-    const items = [];
-    for (const v of byEmp.values()) {
-      const { employeeId, ...rest } = v;
-      items.push({ employeeRef: await ref(dev, employeeId), ...rest });
-    }
+    const items = await Promise.all(
+      [...byEmp.values()].map(async ({ employeeId, ...rest }) => ({
+        employeeRef: await ref(dev, employeeId),
+        ...rest,
+      })),
+    );
     items.sort(
       (a, b) =>
         (a.plannedStart ?? '').localeCompare(b.plannedStart ?? '') ||
