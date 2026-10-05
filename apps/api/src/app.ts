@@ -6,7 +6,6 @@ import cors from '@fastify/cors';
 import { Keys } from './lib/keys';
 import { migrationFiles } from './db/migrate';
 import { registerObservability, requestIdFrom, type Lifecycle } from './lib/observability';
-import { trackJob } from './lib/metrics';
 import { registerSecurityHeaders } from './lib/securityHeaders';
 import multipart from '@fastify/multipart';
 import { ZodError } from 'zod';
@@ -37,10 +36,7 @@ import { hoursRoutes } from './routes/hours';
 import { swapRoutes } from './routes/swaps';
 import { peopleRoutes } from './routes/people';
 import { commsRoutes } from './routes/comms';
-import { expireSwaps, runAutoCheckout, wipeExpiredCredentials } from './jobs/autoCheckout';
-import { runVacationJobs } from './services/vacationJobs';
-import { runDailyOnce } from './jobs/daily';
-import { runOffboarding, runReminders } from './services/reminders';
+import { startJobs } from './jobs/scheduler';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -116,27 +112,8 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   );
 
   if (opts.autoCheckout) {
-    const timer = setInterval(
-      () =>
-        void Promise.allSettled(
-          (
-            [
-              ['vacation', () => runDailyOnce('vacation', app.clock(), (n) => runVacationJobs(db, n))],
-              ['reminders', () => runDailyOnce('reminders', app.clock(), (n) => runReminders(db, n))],
-              ['offboarding', () => runDailyOnce('offboarding', app.clock(), (n) => runOffboarding(db, n))],
-              ['auto_checkout', () => runAutoCheckout(db, app.clock())],
-              ['credential_wipe', () => wipeExpiredCredentials(db, app.clock())],
-              ['swap_expiry', () => expireSwaps(db, app.clock())],
-            ] as Array<[string, () => Promise<unknown>]>
-          ).map(([job, run]) =>
-            trackJob(job, run).catch((e) =>
-              app.log.error({ job, err: (e as Error).message }, 'background job failed'),
-            ),
-          ),
-        ),
-      60_000,
-    );
-    app.addHook('onClose', async () => clearInterval(timer));
+    const stop = startJobs(db, app.clock, app.log);
+    app.addHook('onClose', async () => stop());
   }
 
   await registerSecurityHeaders(app, cfg.NODE_ENV === 'production');

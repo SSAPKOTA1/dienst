@@ -17,6 +17,7 @@ const external = {
 await build({
   entryPoints: {
     server: 'apps/api/src/server.ts',
+    worker: 'apps/api/src/worker.ts',
     migrate: 'apps/api/src/db/migrate-cli.ts',
     rekey: 'apps/api/src/db/rekey.ts',
     drill: 'apps/api/src/db/drill.ts',

@@ -39,6 +39,7 @@ services:
       COOKIE_SECURE: 'true'
       WEB_ORIGIN: ${WEB_ORIGIN:?set WEB_ORIGIN}
       TRUST_PROXY: '1'
+      RUN_JOBS: 'false'
       METRICS_TOKEN: ${METRICS_TOKEN:-}
       ERROR_WEBHOOK_URL: ${ERROR_WEBHOOK_URL:-}
       SMTP_HOST: ${SMTP_HOST:-localhost}
@@ -62,6 +63,25 @@ services:
     tmpfs: ['/tmp']
     cap_drop: [ALL]
     security_opt: ['no-new-privileges:true']
+    networks: [internal]
+
+  worker:
+    build: { context: ., target: api }
+    command: ['node', 'apps/api/dist/worker.mjs']
+    healthcheck: { disable: true }
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://dienst:${POSTGRES_PASSWORD}@db:5432/dienst
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      DATA_KEY: ${DATA_KEY:?set DATA_KEY}
+      WEB_ORIGIN: ${WEB_ORIGIN:?set WEB_ORIGIN}
+      SMTP_HOST: ${SMTP_HOST:-localhost}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      MAIL_FROM: ${MAIL_FROM:-Dienstplan <noreply@dienst.local>}
+    depends_on:
+      migrate: { condition: service_completed_successfully }
     networks: [internal]
 
   web:

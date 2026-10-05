@@ -4,7 +4,7 @@ import type { Lifecycle } from './lib/observability';
 
 const cfg = loadConfig();
 const life: Lifecycle = { shuttingDown: false };
-const app = await buildApp({ autoCheckout: true, lifecycle: life });
+const app = await buildApp({ autoCheckout: cfg.RUN_JOBS, lifecycle: life });
 
 /**
  * Stops cleanly on SIGTERM/SIGINT (deploys, scaling): readiness turns 503 first so the balancer stops sending

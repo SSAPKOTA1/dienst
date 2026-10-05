@@ -39,4 +39,8 @@ Every audited write used to take one global advisory lock and read the newest en
 ## Costs and limits
 - Each index makes writes a little slower and takes disk space; the partial ones are small. Every index here has a query in `queries.sql` that uses it.
 - On a large live table create the indexes with `CREATE INDEX CONCURRENTLY` (outside the migration runner's transaction) to avoid blocking writes.
-- Not done, and worth measuring before doing: caching the permission lookup that every authenticated request performs (about five small queries), moving PDF/Excel exports and daily jobs to a worker process, code splitting of the web bundle, and a load test of the kiosk endpoints (`/kiosk/roster` signs one token per person and is polled every 20 seconds per tablet).
+- Done afterwards: the permission lookup is cached per process for `PRINCIPAL_CACHE_MS` (default 5 s; role, hotel-scope and account-status changes reach a running process after at most that long; set 0 to turn it off); background jobs can run in their own process (`RUN_JOBS=false` on API processes, `node apps/api/dist/worker.mjs` for the jobs) and a database advisory lock lets only one process run a tick, so two API instances no longer duplicate jobs; every web page is its own chunk (lazy routes), so a phone loads the portal only.
+- Not done: moving PDF/Excel generation itself off the API process, and a roster cache (`/kiosk/roster` signs one token per person and is polled every 20 seconds per tablet; measure with `scripts/perf/load.js` first).
+
+## Load test
+`k6 run -e BASE=http://localhost:3000 -e LOGIN=... -e PASSWORD=... scripts/perf/load.js` (k6 is not in the repo's dependencies). It logs in, then polls `/me` (the authentication path every request pays) at a steady rate and fails the run when p95 is above 300 ms or more than 1 % of requests fail. Run it against a seeded copy, not production.
