@@ -516,3 +516,45 @@ describe('unplanned punches, auto checkout and the live board', () => {
     expect(r2.actual_punch_out!.toISOString()).toBe('2026-10-20T14:00:00.000Z'); // in + 8 h
   });
 });
+
+describe('tablet bookkeeping', () => {
+  let fresh: string;
+  beforeAll(async () => {
+    const d = await call(ctx, 'POST', '/kiosk-devices', fx.adminA.token, {
+      hotelId: fx.hotelA1,
+      name: 'Bookkeeping',
+    });
+    fresh = d.body.token;
+  });
+  it('writes the last-seen time at most every 30 seconds, but always shows the tablet as online', async () => {
+    const seen = async () =>
+      (
+        await ctx.db
+          .selectFrom('kiosk_device')
+          .select('last_seen_at')
+          .where('hotel_id', '=', fx.hotelA1)
+          .where('name', '=', 'Bookkeeping')
+          .executeTakeFirstOrThrow()
+      ).last_seen_at as Date;
+    at('2026-10-20T10:00:00Z');
+    await k('GET', '/kiosk/roster', undefined, fresh);
+    const first = (await seen()).getTime();
+    at('2026-10-20T10:00:20Z');
+    await k('GET', '/kiosk/roster', undefined, fresh);
+    expect((await seen()).getTime()).toBe(first); // 20 s later: not written again
+    at('2026-10-20T10:00:40Z');
+    await k('GET', '/kiosk/roster', undefined, fresh);
+    expect((await seen()).getTime()).toBe(new Date('2026-10-20T10:00:40Z').getTime());
+  });
+  it('reuses the signed person references of the roster while they stay valid', async () => {
+    at('2026-10-12T04:00:00Z');
+    const a = (await k('GET', '/kiosk/roster', undefined, fresh)).body.items.map(
+      (i: { employeeRef: string }) => i.employeeRef,
+    );
+    at('2026-10-12T04:01:00Z');
+    const b = (await k('GET', '/kiosk/roster', undefined, fresh)).body.items.map(
+      (i: { employeeRef: string }) => i.employeeRef,
+    );
+    expect(b.sort()).toEqual(a.sort());
+  });
+});

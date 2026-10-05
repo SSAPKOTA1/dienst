@@ -37,7 +37,7 @@ export async function ensureAllowance(
   const wd = c?.work_days_per_week ?? 5;
   const statutory = Math.min(total, 4 * wd);
   const allocated = opts.allocated ?? proratedVacationDays(total, emp.contract_start_date, year);
-  return db
+  const inserted = await db
     .insertInto('employee_vacation_allowance')
     .values({
       employee_id: employeeId,
@@ -48,7 +48,16 @@ export async function ensureAllowance(
       allocated_days: allocated,
       used_days: opts.used ?? 0,
     })
+    // two requests may create the row at the same moment (first read of a year): the loser reads the winner's row
+    .onConflict((oc) => oc.columns(['employee_id', 'year']).doNothing())
     .returningAll()
+    .executeTakeFirst();
+  if (inserted) return inserted;
+  return db
+    .selectFrom('employee_vacation_allowance')
+    .selectAll()
+    .where('employee_id', '=', employeeId)
+    .where('year', '=', year)
     .executeTakeFirstOrThrow();
 }
 

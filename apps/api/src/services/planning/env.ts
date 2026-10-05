@@ -1,3 +1,4 @@
+import { sql } from 'kysely';
 import {
   addDays,
   aggregate,
@@ -298,13 +299,24 @@ export class PlanEnv {
     if (ids.length) {
       const yearFrom = addDays(opts.from, -366);
       const yearTo = addDays(opts.to, 366);
+      // the calendar only feeds the Sunday and night-work statistics: skip day shifts on weekdays in the database
+      // (a night shift needs two hours between 23:00 and 06:00, so it starts before 06:00, ends after 23:00 or runs past midnight)
       const hist = await db
-        .selectFrom('schedule')
-        .select(['id', 'employee_id', 'hotel_id', 'shift_date', 'planned_start', 'planned_end'])
-        .where('employee_id', 'in', ids)
-        .where('status', '<>', 'cancelled')
-        .where('shift_date', '>=', yearFrom)
-        .where('shift_date', '<=', yearTo)
+        .selectFrom('schedule as s')
+        .innerJoin('hotel as ht', 'ht.id', 's.hotel_id')
+        .select(['s.id', 's.employee_id', 's.hotel_id', 's.shift_date', 's.planned_start', 's.planned_end'])
+        .where('s.employee_id', 'in', ids)
+        .where('s.status', '<>', 'cancelled')
+        .where('s.shift_date', '>=', yearFrom)
+        .where('s.shift_date', '<=', yearTo)
+        .where(
+          sql<boolean>`(
+            extract(isodow from s.shift_date) = 7
+            or (s.planned_start at time zone ht.timezone)::time < time '06:00'
+            or (s.planned_end at time zone ht.timezone)::time > time '23:00'
+            or (s.planned_end at time zone ht.timezone)::date > (s.planned_start at time zone ht.timezone)::date
+          )`,
+        )
         .execute();
       for (const h of hist) {
         const l = env.slotLocal(h.hotel_id, h.planned_start.getTime(), h.planned_end.getTime());
