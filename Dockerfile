@@ -42,7 +42,7 @@ EXPOSE 8080
 
 # Backups and restore drills: pg_dump / pg_restore 16, age, the scripts of scripts/ops, and the node runtime plus the
 # bundled drill (data checks run through the application code). Debian based like the api image, so native modules match.
-FROM postgres:16 AS ops
+FROM postgres:18 AS ops
 RUN apt-get update && apt-get install -y --no-install-recommends age && rm -rf /var/lib/apt/lists/*
 COPY --from=node:22-slim /usr/local/bin/node /usr/local/bin/node
 COPY --from=build /deploy/node_modules /app/node_modules
