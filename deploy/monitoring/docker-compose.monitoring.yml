@@ -1,0 +1,40 @@
+# Prometheus + Alertmanager + Grafana + node_exporter beside the application stack:
+#   docker compose -f docker-compose.prod.yml -f deploy/monitoring/docker-compose.monitoring.yml --env-file .env.production up -d
+# Put the METRICS_TOKEN value into deploy/monitoring/metrics-token (git-ignored, no trailing newline).
+services:
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    restart: unless-stopped
+    volumes:
+      - ./deploy/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - ./deploy/monitoring/metrics-token:/etc/prometheus/metrics-token:ro
+      - promdata:/prometheus
+    networks: [internal]
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    restart: unless-stopped
+    volumes: ['./deploy/monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro']
+    networks: [internal]
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    restart: unless-stopped
+    command: ['--collector.textfile.directory=/textfile']
+    volumes: ['/var/lib/node_exporter:/textfile:ro']
+    networks: [internal]
+  grafana:
+    image: grafana/grafana:11.3.0
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+    ports: ['127.0.0.1:3001:3000'] # reach it through an SSH tunnel or your VPN
+    volumes:
+      - ./deploy/grafana/dienst-dashboard.json:/var/lib/grafana/dashboards/dienst-dashboard.json:ro
+      - ./deploy/monitoring/grafana-provisioning.yml:/etc/grafana/provisioning/dashboards/dienst.yml:ro
+      - ./deploy/monitoring/grafana-datasource.yml:/etc/grafana/provisioning/datasources/prometheus.yml:ro
+      - grafanadata:/var/lib/grafana
+    networks: [internal]
+volumes:
+  promdata:
+  grafanadata:

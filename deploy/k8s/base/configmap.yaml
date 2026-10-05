@@ -1,0 +1,12 @@
+# Non-secret settings. Secrets (DATABASE_URL, JWT_SECRET, DATA_KEY, METRICS_TOKEN, SMTP_*) live in the Secret "dienst-secrets";
+# see secret.example.yaml. Create it out of band (sealed-secrets, external-secrets or kubectl), never commit real values.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dienst-config
+data:
+  NODE_ENV: production
+  COOKIE_SECURE: 'true'
+  TRUST_PROXY: '1'
+  WEB_ORIGIN: https://dienst.example.com
+  MAIL_FROM: Dienstplan <noreply@example.com>

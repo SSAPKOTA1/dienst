@@ -1,0 +1,10 @@
+[Unit]
+Description=Dienst restore drill (restores the newest backup into a temporary database)
+After=docker.service
+
+[Service]
+Type=oneshot
+User=dienst
+EnvironmentFile=/opt/dienst/.env.backup
+# the drill needs node (it runs the application's data checks), so it runs in the ops image
+ExecStart=/usr/bin/docker run --rm --network dienst_internal --env-file /opt/dienst/.env.backup -e BACKUP_DIR=/backups -v /var/backups/dienst:/backups:ro --user postgres --entrypoint /opt/ops/restore-drill.sh ghcr.io/ssapkota1/dienst-ops:latest

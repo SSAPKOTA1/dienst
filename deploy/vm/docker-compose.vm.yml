@@ -1,0 +1,18 @@
+# Layered over docker-compose.prod.yml on a single VM:
+#   docker compose -f docker-compose.prod.yml -f deploy/vm/docker-compose.vm.yml --env-file .env.production up -d
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      DIENST_DOMAIN: ${DIENST_DOMAIN:?set DIENST_DOMAIN}
+    ports: ['80:80', '443:443']
+    volumes:
+      - ./deploy/vm/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [web]
+    networks: [internal, default]
+volumes:
+  caddy_data:
+  caddy_config:

@@ -39,7 +39,7 @@ jobs:
         run: |
           RATE_LIMIT_GLOBAL=1000000 RATE_LIMIT_KIOSK=1000000 RATE_LIMIT_AUTH=1000 LOG_LEVEL=warn \
             nohup pnpm --filter @dienst/api start > api.log 2>&1 &
-          for i in $(seq 1 60); do curl -fs localhost:3000/api/v1/health && break; sleep 1; done
+          for _ in $(seq 1 60); do curl -fs localhost:3000/api/v1/health && break; sleep 1; done
       - name: Query plans
         run: scripts/perf/run.sh dienst_perf
       - name: Load test (budgets are for a laptop; shared runners are slower, hence the factor)

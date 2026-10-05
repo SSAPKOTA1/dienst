@@ -120,6 +120,9 @@ jobs:
       # the full Dockerfile, including the dependency stage that cannot run in every sandbox
       - run: docker build --target api -t dienst-api:ci .
       - run: docker build --target web -t dienst-web:ci .
+      - run: docker build --target ops -t dienst-ops:ci .
+      - name: The ops image has what the cron jobs need
+        run: docker run --rm --entrypoint sh dienst-ops:ci -c 'pg_dump --version && age --version && node --version && test -f /app/apps/api/dist/drill.mjs'
       - run: scripts/ops/smoke-container.sh dienst-api:ci postgres://dienst:dienst@localhost:5432/postgres
       - run: scripts/ops/smoke-web.sh dienst-web:ci
       # backup, restore, drill and tamper detection against a migrated and seeded database
@@ -139,3 +142,33 @@ jobs:
           ignore-unfixed: true
           exit-code: '1'
           vuln-type: library
+
+  infra:
+    name: infrastructure code
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install validators
+        run: scripts/ci/install-infra-tools.sh /usr/local/bin
+      - name: Kubernetes manifests (both overlays) against the schemas
+        run: |
+          for o in staging production; do
+            kustomize build deploy/k8s/overlays/$o | kubeconform -strict -summary -
+          done
+      - name: Prometheus rules and their unit tests
+        run: |
+          promtool check rules deploy/alerts.yml
+          promtool test rules deploy/tests/alerts.test.yml
+          promtool check config --syntax-only deploy/monitoring/prometheus.yml
+      - name: Dashboard is valid JSON
+        run: jq -e '.panels | length > 0' deploy/grafana/dienst-dashboard.json
+      - name: Compose files render
+        run: |
+          export POSTGRES_PASSWORD=x JWT_SECRET=x DATA_KEY=x WEB_ORIGIN=https://x DIENST_DOMAIN=x GRAFANA_ADMIN_PASSWORD=x
+          docker compose -f docker-compose.prod.yml -f deploy/vm/docker-compose.vm.yml config -q
+          docker compose -f docker-compose.prod.yml -f deploy/monitoring/docker-compose.monitoring.yml config -q
+      - name: Shell scripts and workflows
+        run: |
+          shellcheck scripts/ops/*.sh scripts/ci/*.sh deploy/vm/bootstrap.sh
+          actionlint

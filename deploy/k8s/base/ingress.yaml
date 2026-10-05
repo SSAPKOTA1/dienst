@@ -1,0 +1,16 @@
+# The web container (nginx) proxies /api to the api Service, so the ingress only needs to point at dienst-web.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dienst
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    nginx.ingress.kubernetes.io/proxy-body-size: 12m
+spec:
+  ingressClassName: nginx
+  tls: [{ hosts: [dienst.example.com], secretName: dienst-tls }]
+  rules:
+    - host: dienst.example.com
+      http:
+        paths:
+          - { path: /, pathType: Prefix, backend: { service: { name: dienst-web, port: { name: http } } } }

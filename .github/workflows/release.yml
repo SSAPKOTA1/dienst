@@ -1,0 +1,88 @@
+name: release
+# Tag vX.Y.Z -> build three images, push to GHCR, SBOM + provenance, keyless signature, scan gate, GitHub Release.
+on:
+  push:
+    tags: ['v*.*.*']
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write # the GitHub Release
+      packages: write # push to GHCR
+      id-token: write # keyless signing and provenance
+      attestations: write
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { name: api, target: api }
+          - { name: web, target: web }
+          - { name: ops, target: ops }
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/dienst-${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: '${{ github.actor }}', password: '${{ secrets.GITHUB_TOKEN }}' }
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+      - name: Build for the scan (not pushed yet)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: ${{ matrix.target }}
+          load: true
+          tags: scan:${{ matrix.name }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+      - name: Scan gate (critical and high findings with a fix block the release)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: scan:${{ matrix.name }}
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '1'
+      - name: Push
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: ${{ matrix.target }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          provenance: mode=max
+          sbom: true
+          cache-from: type=gha,scope=${{ matrix.name }}
+      - uses: sigstore/cosign-installer@v3
+      - name: Sign the image (keyless, bound to this workflow)
+        run: cosign sign --yes "$IMAGE@${{ steps.push.outputs.digest }}"
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+  release:
+    needs: images
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/checkout@v4
+      - name: GitHub Release with generated notes
+        env: { GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
+        run: gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag
