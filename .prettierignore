@@ -15,3 +15,4 @@ playwright-report
 apps/web/src/styles/tokens.css
 apps/web/src/i18n/de.json
 apps/web/src/i18n/en.json
+coverage
