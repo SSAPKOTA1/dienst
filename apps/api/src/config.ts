@@ -25,6 +25,16 @@ const schema = z.object({
     .transform((v) => v === 'true'),
   LOG_LEVEL: z.string().default('info'),
   MAIL_MODE: z.enum(['smtp', 'json']).default('smtp'),
+  /** maximum database connections of this process */
+  DB_POOL_MAX: z.coerce.number().int().min(1).max(100).default(10),
+  /** wait this long after SIGTERM before closing the listener (the balancer notices the readiness change) */
+  SHUTDOWN_DRAIN_MS: z.coerce.number().int().min(0).max(60000).default(2000),
+  /** hard limit for a clean shutdown */
+  SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120000).default(25000),
+  /** bearer token for GET /metrics (required in production; without it the endpoint is off) */
+  METRICS_TOKEN: z.string().min(16).optional(),
+  /** optional: JSON about server errors is POSTed here (Slack/Teams relay, Sentry-compatible relay, own service) */
+  ERROR_WEBHOOK_URL: z.string().url().optional(),
   RATE_LIMIT_AUTH: z.coerce.number().default(10),
   RATE_LIMIT_KIOSK: z.coerce.number().default(60),
   /** requests per minute and client for every other route */

@@ -9,6 +9,7 @@ import { assertPasswordPolicy, hashSecret, randomToken, sha256, verifySecret } f
 import { signAccessToken } from '../lib/jwt';
 import { actorOf, getPrincipal, requirePreOrAccess, requireRole } from '../lib/auth';
 import { audit } from '../lib/audit';
+import { loginFailures } from '../lib/metrics';
 import { readCookie, removeCookie, writeCookie } from '../lib/cookies';
 import { buildPrincipal, roleToActorType } from '../lib/scope';
 import { loadAvailableRoles } from '../services/accounts';
@@ -105,6 +106,7 @@ export async function authRoutes(app: FastifyInstance) {
         )
         .executeTakeFirst();
       const fail = async (reason: string, userId?: number) => {
+        loginFailures.inc();
         await audit(
           app.db,
           { userId: userId ?? null, type: 'system', ip: req.ip, userAgent: req.headers['user-agent'] },

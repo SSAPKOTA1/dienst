@@ -1,0 +1,62 @@
+# Prometheus alert rules for the metrics the API exposes (see docs/RUNBOOK.md). Scrape /metrics with the bearer token.
+groups:
+  - name: dienst
+    rules:
+      - alert: DienstApiDown
+        expr: up{job="dienst-api"} == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations: { summary: 'The API does not answer the metrics scrape' }
+
+      - alert: DienstApiErrors
+        expr: sum(rate(http_request_duration_seconds_count{status="5xx"}[5m])) / sum(rate(http_request_duration_seconds_count[5m])) > 0.02
+        for: 5m
+        labels: { severity: critical }
+        annotations: { summary: 'More than 2 % of requests fail with 5xx' }
+
+      - alert: DienstSlowRequests
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{route!~"/api/v1/(exports|import).*"}[5m]))) > 1
+        for: 10m
+        labels: { severity: warning }
+        annotations: { summary: '95th percentile of API requests is above 1 s' }
+
+      - alert: DienstLoginFailures
+        expr: increase(login_failures_total[10m]) > 50
+        labels: { severity: warning }
+        annotations:
+          { summary: 'Many failed logins in 10 minutes (guessing attack or a broken single sign-on)' }
+
+      - alert: DienstJobFailing
+        expr: increase(job_runs_total{outcome="error"}[30m]) > 2
+        labels: { severity: warning }
+        annotations: { summary: 'Background job {{ $labels.job }} keeps failing' }
+
+      - alert: DienstJobStale
+        expr: time() - job_last_success_timestamp_seconds{job="auto_checkout"} > 600
+        for: 5m
+        labels: { severity: critical }
+        annotations: { summary: 'Auto-checkout has not run for 10 minutes: open time records stay open' }
+
+      - alert: DienstDailyJobStale
+        expr: time() - job_last_success_timestamp_seconds{job=~"vacation|reminders|offboarding"} > 90000
+        labels: { severity: warning }
+        annotations: { summary: 'Daily job {{ $labels.job }} has not succeeded for more than 25 hours' }
+
+      - alert: DienstDbPoolExhausted
+        expr: db_pool_waiting_requests > 0
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          { summary: 'Requests wait for a database connection (raise DB_POOL_MAX or find the slow query)' }
+
+      - alert: DienstTabletOffline
+        expr: increase(punches_total{source="kiosk_offline"}[1h]) > 0
+        labels: { severity: info }
+        annotations: { summary: "A tablet punched offline: check the tablet's network" }
+
+      # backups: write the unix time of the last good backup/drill into a node_exporter textfile, e.g.
+      #   echo "dienst_backup_last_success_timestamp_seconds $(date +%s)" > /var/lib/node_exporter/dienst_backup.prom
+      - alert: DienstBackupTooOld
+        expr: time() - dienst_backup_last_success_timestamp_seconds > 129600
+        labels: { severity: critical }
+        annotations: { summary: 'No successful backup for 36 hours' }

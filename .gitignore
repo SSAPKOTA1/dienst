@@ -8,3 +8,4 @@ test-results
 .vite
 apps/web/dist
 .DS_Store
+backups

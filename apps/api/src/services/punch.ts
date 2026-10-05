@@ -2,6 +2,7 @@ import { variationMinutes, withinGrace } from '@dienst/rules';
 import type { Trx } from '../db';
 import { AppError } from '../lib/errors';
 import { audit, type Actor } from '../lib/audit';
+import { punches } from '../lib/metrics';
 import { localDate } from '../lib/time';
 import { computeClose, matchSchedule, paidFor } from './kiosk';
 
@@ -146,6 +147,7 @@ export async function punchIn(
       ...(p.ip ? { ip: p.ip } : {}),
     },
   });
+  punches.inc({ source: p.source, action: 'in', outcome: 'ok' });
   return { rec, duplicate: false };
 }
 
@@ -285,6 +287,7 @@ export async function closePunch(
     },
     reason,
   });
+  punches.inc({ source: p.source ?? 'kiosk', action: 'out', outcome: flagged ? 'review' : 'ok' });
   return {
     status: under ? 'clocked_out_with_warning' : 'clocked_out',
     paidHours: hours,

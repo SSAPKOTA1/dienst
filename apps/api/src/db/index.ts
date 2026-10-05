@@ -10,10 +10,16 @@ export type Db = Kysely<DB>;
 export type Trx = Transaction<DB>;
 export type DbOrTrx = Db | Trx;
 
-export function createDb(connectionString: string): Db {
-  return new Kysely<DB>({
-    dialect: new PostgresDialect({ pool: new pg.Pool({ connectionString, max: 10 }) }),
-  });
+const pools = new WeakMap<object, pg.Pool>();
+
+export function createDb(connectionString: string, opts: { max?: number } = {}): Db {
+  const pool = new pg.Pool({ connectionString, max: opts.max ?? 10 });
+  const db = new Kysely<DB>({ dialect: new PostgresDialect({ pool }) });
+  pools.set(db, pool);
+  return db;
 }
+
+/** The connection pool behind a database handle (for metrics); undefined for transactions. */
+export const poolOf = (db: object): pg.Pool | undefined => pools.get(db);
 
 export type { DB };

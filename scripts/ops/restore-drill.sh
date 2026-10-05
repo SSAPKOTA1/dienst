@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Proves that a backup can be restored: restores the newest backup into a temporary database on the same server,
+# checks the data (tables, migrations, audit hash chains) and drops the database again. Run it regularly (weekly)
+# and after every change to the backup setup. The time it takes is your restore time.
+#
+#   DATABASE_URL  server and credentials; the temporary database is created next to it (needs CREATEDB)
+#   BACKUP_DIR    where the backups are (default ./backups)
+set -euo pipefail
+: "${DATABASE_URL:?DATABASE_URL is required}"
+DIR="${BACKUP_DIR:-./backups}"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+LATEST="$(ls -1t "$DIR"/dienst-*.dump "$DIR"/dienst-*.dump.age 2>/dev/null | head -1 || true)"
+[[ -n "$LATEST" ]] || { echo "no backup found in $DIR" >&2; exit 2; }
+
+DRILL_DB="dienst_drill_$(date -u +%H%M%S)"
+ADMIN_URL="${DATABASE_URL%/*}/postgres"
+DRILL_URL="${DATABASE_URL%/*}/$DRILL_DB"
+cleanup() { psql "$ADMIN_URL" -qc "drop database if exists $DRILL_DB" >/dev/null 2>&1 || true; }
+trap cleanup EXIT
+
+START=$(date +%s)
+psql "$ADMIN_URL" -qc "create database $DRILL_DB"
+"$HERE/restore.sh" "$LATEST" "$DRILL_URL"
+RESTORED=$(date +%s)
+
+# data checks (tables, migrations, audit chains) run through the application's own code
+DATABASE_URL="$DRILL_URL" node "${DRILL_SCRIPT:-$HERE/../../apps/api/dist/drill.mjs}"
+echo "restore drill passed: $(basename "$LATEST"), restore took $((RESTORED - START)) s, total $(( $(date +%s) - START )) s"
