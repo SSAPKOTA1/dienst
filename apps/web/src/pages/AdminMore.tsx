@@ -18,6 +18,7 @@ import {
   PayrollExport,
   QualificationManager,
   RuleLimitsEditor,
+  SeverityEditor,
   TeamVisibility,
 } from './AdminRulesEditor';
 
@@ -210,14 +211,14 @@ const RULES: Array<[string, string, string]> = [
     'Höchstarbeitszeit pro Tag',
     'über 10 h gesperrt, Notfall-Ausnahme nur Administration mit Begründung',
   ],
-  ['DAILY_OVER_8H', 'Mehr als 8 h pro Tag', 'Warnung'],
+  ['DAILY_OVER_8H', 'Mehr als 8 h pro Tag', 'Warnung, einstellbar (weich oder hart)'],
   ['MINOR_NIGHT', 'Jugendliche: Nachtruhe', 'keine Schicht zwischen 20:00 und 06:00 Uhr'],
   ['MINOR_DAILY', 'Jugendliche: Tagesarbeitszeit', 'über 8 h gesperrt'],
   ['MINOR_REST', 'Jugendliche: Ruhezeit', 'unter 12 h gesperrt, Notfall-Ausnahme mit Begründung'],
   ['OVERLAP', 'Überschneidung', 'gesperrt, auch über mehrere Hotels'],
   ['PAST_DAY', 'Vergangene Tage', 'Arbeitsschichten gesperrt'],
   ['PERIOD_CLOSED', 'Abgeschlossener Monat', 'gesperrt bis zur Wiedereröffnung'],
-  ['MONTHLY_CAP', 'Monatliche Stundengrenze', 'Warnung'],
+  ['MONTHLY_CAP', 'Monatliche Stundengrenze', 'Warnung, einstellbar (weich oder hart)'],
 ];
 const KIOSK_RULES: Array<[string, string]> = [
   ['Toleranz beim Einstempeln', '±7 Minuten, innerhalb wird die geplante Zeit bezahlt'],
@@ -242,6 +243,7 @@ export function AdminRules() {
         {t('Die eingebauten Regeln gelten für alle Hotels. Die Grenzen unten dürfen nur verschärft werden.')}
       </div>
       <RuleLimitsEditor />
+      <SeverityEditor />
       <HourCategories />
       <FeatureToggles />
       <TeamVisibility />

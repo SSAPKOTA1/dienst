@@ -6,7 +6,7 @@ import { fnum } from '../../lib/format';
 import { Dialog } from '../../components/ui';
 import { WarnIcon } from './Grid';
 import type { GridEntry, GridRow } from './types';
-import { OVERRIDABLE, violationText, type Violation } from './util';
+import { isOverridable, violationText, type Violation } from './util';
 
 export interface ReasonState {
   violations: Violation[];
@@ -20,7 +20,7 @@ export function ReasonDialog({ state, onClose }: { state: ReasonState; onClose: 
   const [reason, setReason] = useState('');
   const [emergency, setEmergency] = useState(state.emergency);
   const ok = reason.trim().length >= 5 && reason.trim().length <= 300;
-  const overridable = state.violations.filter((v) => v.severity === 'block' && OVERRIDABLE.has(v.code));
+  const overridable = state.violations.filter(isOverridable);
   return (
     <Dialog
       title={t('Begründung erforderlich')}

@@ -35,6 +35,22 @@ export interface StaffRolesDto {
   admin: { companyIds: number[]; hotelIds: number[] } | null;
   manager: { hotelIds: number[] } | null;
 }
+/** Soft or hard per configurable planning restriction (company or hotel rule profile). */
+export interface SeveritySettingsDto {
+  companyId: number;
+  hotelId: number | null;
+  /** a profile with its own choices applies (otherwise everything is at its default) */
+  customised: boolean;
+  restrictions: Array<{
+    code: string;
+    /** the levels that may be chosen: soft = warning, reason = needs a written reason, hard = not possible */
+    levels: Array<'soft' | 'reason' | 'hard'>;
+    default: 'soft' | 'reason' | 'hard';
+    level: 'soft' | 'reason' | 'hard';
+  }>;
+  /** statutory and technical restrictions: always hard, not configurable */
+  locked: string[];
+}
 export interface HotelSettingsDto {
   hotelId: number;
   employeeHoursVisibility: string;

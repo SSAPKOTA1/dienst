@@ -1,6 +1,7 @@
 // Planning rule checks (SPEC 4.3). Pure: callers load the data, nothing here reads a clock or a database.
 import { isoWeekday } from './basics';
 import { DEFAULT_LIMITS, type RuleLimits } from './profile';
+import { applySeverities, type SeverityConfig } from './severity';
 import { isNightWork, sundaysInYear } from './hours';
 import { ageOn, overlapsNightWindow } from './minors';
 import {
@@ -61,6 +62,8 @@ export interface CheckInput {
   qualification?: { requiredId: number | null; held: Array<{ id: number; validUntil: string | null }> };
   /** limits of the company / hotel rule profile (stricter than the statutory defaults only) */
   limits?: Partial<RuleLimits>;
+  /** soft or hard per configurable restriction (company / hotel rule profile); unset keeps the defaults */
+  severities?: SeverityConfig;
   /** Sunday and night statistics of the employee from all other entries (backlog) */
   calendar?: {
     /** distinct local dates of other entries that start on a Sunday in the same calendar year */
@@ -216,7 +219,7 @@ export function checkEntry(i: CheckInput): Violation[] {
       i.wishes.leave,
     ))
       add(w);
-  return out;
+  return applySeverities(out, i.severities);
 }
 
 export type Aggregate = 'ok' | 'needs_reason' | 'blocked';
@@ -235,7 +238,8 @@ export function aggregate(violations: Violation[], opts: AggregateOptions) {
   const canOverride = !!opts.emergencyOverride && (opts.role === 'admin' || opts.role === 'superAdmin');
   const overridden: string[] = [];
   const list = violations.map((x) => {
-    if (canOverride && x.severity === 'block' && OVERRIDABLE.has(x.code)) {
+    // a restriction the admin set to hard is not part of the emergency override
+    if (canOverride && x.severity === 'block' && OVERRIDABLE.has(x.code) && !x.details.configuredHard) {
       overridden.push(x.code);
       return { ...x, severity: 'needs_reason' as Severity };
     }

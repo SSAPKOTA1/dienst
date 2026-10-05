@@ -350,6 +350,8 @@ const rows: Row[] = [
   { method: 'GET', url: () => '/settings/rules', allow: ['SA', 'AD', 'MG'] },
   { method: 'PUT', url: () => '/settings/rules', body: () => ({}), allow: ['SA', 'AD'] },
   { method: 'DELETE', url: () => '/settings/rules', allow: ['SA', 'AD'] },
+  { method: 'GET', url: () => '/settings/severities', allow: ['SA', 'AD', 'MG'] },
+  { method: 'PUT', url: () => '/settings/severities', body: () => ({ severities: {} }), allow: ['SA', 'AD'] },
   { method: 'GET', url: () => '/settings/features', allow: ['SA', 'AD', 'MG'] },
   { method: 'PUT', url: () => '/settings/features', body: () => ({}), allow: ['SA', 'AD'] },
   { method: 'GET', url: () => '/me/features', allow: ['SA', 'AD', 'MG', 'EM'] },

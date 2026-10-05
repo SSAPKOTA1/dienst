@@ -46,7 +46,7 @@ import type {
   ShiftTpl,
 } from './types';
 import {
-  OVERRIDABLE,
+  isOverridable,
   addDaysIso,
   dayNum,
   hmTz,
@@ -207,7 +207,7 @@ export function Planning() {
         } else if (
           err.code === 'RULE_BLOCKED' &&
           canEmergency &&
-          vs.filter((v) => v.severity === 'block').every((v) => OVERRIDABLE.has(v.code)) &&
+          vs.filter((v) => v.severity === 'block').every(isOverridable) &&
           vs.length > 0 &&
           op.path.startsWith('/schedule/') &&
           !op.path.includes('absence')

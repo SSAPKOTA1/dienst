@@ -607,6 +607,7 @@ export interface RuleProfile {
   kind: string;
   name: string;
   rules: Json;
+  severities: Generated<Json>;
   valid_from: Generated<string>;
 }
 
