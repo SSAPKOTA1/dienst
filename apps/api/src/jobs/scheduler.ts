@@ -5,6 +5,7 @@ import { runDailyOnce } from './daily';
 import { expireSwaps, runAutoCheckout, wipeExpiredCredentials } from './autoCheckout';
 import { runVacationJobs } from '../services/vacationJobs';
 import { runOffboarding, runReminders } from '../services/reminders';
+import { runRetention } from '../services/privacy';
 
 /** Advisory lock id of the job leader (migrations use 7002). */
 const JOBS_LOCK = 7003;
@@ -19,6 +20,7 @@ export async function runJobsOnce(db: Db, clock: () => Date, log: Log): Promise<
     ['vacation', () => runDailyOnce('vacation', clock(), (n) => runVacationJobs(db, n))],
     ['reminders', () => runDailyOnce('reminders', clock(), (n) => runReminders(db, n))],
     ['offboarding', () => runDailyOnce('offboarding', clock(), (n) => runOffboarding(db, n))],
+    ['retention', () => runDailyOnce('retention', clock(), (n) => runRetention(db, n))],
     ['auto_checkout', () => runAutoCheckout(db, clock())],
     ['credential_wipe', () => wipeExpiredCredentials(db, clock())],
     ['swap_expiry', () => expireSwaps(db, clock())],

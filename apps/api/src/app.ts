@@ -45,6 +45,7 @@ import { swapRoutes } from './routes/swaps';
 import { openShiftRoutes } from './routes/openShifts';
 import { peopleRoutes } from './routes/people';
 import { commsRoutes } from './routes/comms';
+import { privacyRoutes } from './routes/privacy';
 import { feedRoutes } from './routes/feed';
 import { startJobs } from './jobs/scheduler';
 
@@ -252,6 +253,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       await api.register(openShiftRoutes);
       await api.register(peopleRoutes);
       await api.register(commsRoutes);
+      await api.register(privacyRoutes);
       await api.register(feedRoutes);
       api.get('/health', { config: { rateLimit: false } }, async () => {
         await sql`select 1`.execute(db);
