@@ -10,6 +10,7 @@ import { createEmployee } from '../services/employees';
 import { holidaysFor } from './holidays';
 import { seedSchedule } from './schedule';
 import { seedPunches } from './punches';
+import { seedBacklog } from './backlog';
 import {
   DEMO_KIOSK_TOKEN,
   DEMO_PASSWORD,
@@ -318,5 +319,6 @@ export async function runSeed(db: Db, now: Date): Promise<SeedResult> {
   void addDays;
   await seedSchedule(db, result, now);
   await seedPunches(db, result, now);
+  await seedBacklog(db, result, now);
   return result;
 }

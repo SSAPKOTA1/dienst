@@ -34,6 +34,8 @@ TOTP secret for `sa@` and `admin@` (add it to any authenticator app): `JBSWY3DPE
 
 Tablet (kiosk): open `/kiosk` on the tablet, the demo device token is `kd_demo_frankfurt_4f1c9a7e2b6d8035a1e94c7b02d6f83a` (in a real setup an admin pairs a tablet under Admin > Tablets and enters the one-time code shown there). Demo PINs (6 digits): Maria 482915, Jon 736204, Aylin 159357, Lena 864219, Piotr 297031, Fatima 513684, Sven 640872, Elena 925461, Tom 371596, Clara 708342, Ömer 246813, Hannah 581927, Dmitri 439065, Sophie 862710, Nina 195837. Sven has no e-mail: the seed prints his activation code (use it with his username at `/accept-invitation`).
 
+Backlog demo data (mostly in the Berlin hotel, which the admin sees): Berlin tablet token `kd_demo_berlin_8b2e5d1c7a9f4630c2e81d5b9a7f3e04` (break start/stop, badge + PIN), badge of Clara Neumann `B-DEMO-CLARA-0001`, web punch allowed from `10.0.0.0/8`, read-only public API key `dk_demo_readonly_5c8e2a9f1b7d4630a2e91c5d8b7f3a06` (see `docs/PUBLIC-API.md`). The seed also creates occupancy forecasts and staffing rules, a blackout period, leave and shift wishes, qualifications (one expiring), an availability window, a hygiene document, an open shift with an application, a swap offer, announcements (one needs read confirmation), a feed post and a question to management. SSO is not seeded because it needs a reachable identity provider.
+
 ## Commands
 
 ```bash

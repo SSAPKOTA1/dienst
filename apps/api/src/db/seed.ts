@@ -1,7 +1,7 @@
 import { createDb } from './index';
 import { loadConfig } from '../config';
 import { resetAll, runSeed } from '../seed';
-import { DEMO_PASSWORD } from '../seed/sample';
+import { DEMO_API_KEY, DEMO_BADGE, DEMO_BERLIN_KIOSK_TOKEN, DEMO_PASSWORD } from '../seed/sample';
 
 if (process.env.NODE_ENV === 'production') {
   console.error('Refusing to seed in production.');
@@ -23,7 +23,11 @@ try {
       `  ${e.name.padEnd(16)} ${(e.username ?? '').padEnd(18)} ${(e.email ?? '(no e-mail)').padEnd(28)} PIN ${e.pin}  ${e.personnelNumber}  ${e.hotel}${e.activationCode ? `  activation code ${e.activationCode}` : ''}`,
     );
   }
-  console.log(`\nKiosk device token (Frankfurt reception tablet): ${r.kioskToken}\n`);
+  console.log(`\nKiosk device token (Frankfurt reception tablet): ${r.kioskToken}`);
+  console.log('\nBacklog demo (Berlin hotel: break start/stop, badge + PIN, web punch from 10.0.0.0/8)');
+  console.log(`  Kiosk device token (Berlin): ${DEMO_BERLIN_KIOSK_TOKEN}`);
+  console.log(`  Badge of Clara Neumann: ${DEMO_BADGE}`);
+  console.log(`  Public API key (read only): ${DEMO_API_KEY}\n`);
 } finally {
   await db.destroy();
 }

@@ -60,3 +60,7 @@ export const DEMO_PINS = [
 export const DEMO_PASSWORD = 'Demo!2345';
 export const DEMO_KIOSK_TOKEN = 'kd_demo_frankfurt_4f1c9a7e2b6d8035a1e94c7b02d6f83a';
 export const DEMO_TOTP_SECRET = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP';
+/** Demo values of the backlog features (printed by the seed). */
+export const DEMO_BERLIN_KIOSK_TOKEN = 'kd_demo_berlin_8b2e5d1c7a9f4630c2e81d5b9a7f3e04';
+export const DEMO_BADGE = 'B-DEMO-CLARA-0001';
+export const DEMO_API_KEY = 'dk_demo_readonly_5c8e2a9f1b7d4630a2e91c5d8b7f3a06';
