@@ -1,0 +1,312 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Dienstplan public API",
+    "version": "1.0.0",
+    "description": "Read-only. Keys are created by administrators, expire (at most 2 years), are bound to a company and optionally one hotel, carry scopes (hotels:read, employees:read, schedule:read, attendance:read, absences:read) and can be limited to network ranges. Only published shifts and approved hours are returned. No wages, no health data."
+  },
+  "servers": [
+    {
+      "url": "/api/public/v1"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Also accepted as `Authorization: Bearer <key>`."
+      }
+    }
+  },
+  "paths": {
+    "/hotels": {
+      "get": {
+        "summary": "Hotels of the key",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "A page of items: { items: [...] }"
+          },
+          "401": {
+            "description": "Missing, revoked or expired key"
+          },
+          "403": {
+            "description": "Hotel outside this key, scope missing, or address not allowed"
+          },
+          "429": {
+            "description": "Rate limit: 120 requests per minute and key"
+          }
+        }
+      }
+    },
+    "/employees": {
+      "get": {
+        "summary": "Employees (personnel number, name, department, status)",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "hotelId",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of items: { items: [...] }"
+          },
+          "401": {
+            "description": "Missing, revoked or expired key"
+          },
+          "403": {
+            "description": "Hotel outside this key, scope missing, or address not allowed"
+          },
+          "429": {
+            "description": "Rate limit: 120 requests per minute and key"
+          }
+        }
+      }
+    },
+    "/schedule": {
+      "get": {
+        "summary": "Published shifts in a date range (max 366 days)",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "hotelId",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of items: { items: [...] }"
+          },
+          "401": {
+            "description": "Missing, revoked or expired key"
+          },
+          "403": {
+            "description": "Hotel outside this key, scope missing, or address not allowed"
+          },
+          "429": {
+            "description": "Rate limit: 120 requests per minute and key"
+          }
+        }
+      }
+    },
+    "/attendance": {
+      "get": {
+        "summary": "Approved worked time in a date range (max 366 days)",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "hotelId",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of items: { items: [...] }"
+          },
+          "401": {
+            "description": "Missing, revoked or expired key"
+          },
+          "403": {
+            "description": "Hotel outside this key, scope missing, or address not allowed"
+          },
+          "429": {
+            "description": "Rate limit: 120 requests per minute and key"
+          }
+        }
+      }
+    },
+    "/absences": {
+      "get": {
+        "summary": "Approved absences; only vacation is named, everything else is \"absence\"",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "hotelId",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of items: { items: [...] }"
+          },
+          "401": {
+            "description": "Missing, revoked or expired key"
+          },
+          "403": {
+            "description": "Hotel outside this key, scope missing, or address not allowed"
+          },
+          "429": {
+            "description": "Rate limit: 120 requests per minute and key"
+          }
+        }
+      }
+    }
+  }
+}

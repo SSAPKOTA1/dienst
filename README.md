@@ -85,6 +85,17 @@ Security headers, CORS and the reverse-proxy setup are described in `docs/DEPLOY
 - Configure SMTP (`SMTP_HOST`, `SMTP_PORT`, `MAIL_FROM`) for invitation and password-reset mails; with `MAIL_MODE=json` mails are only logged (development).
 - Build the web app with `pnpm build` and serve `apps/web/dist` behind the same host as `/api`.
 
+## Documentation
+
+| For | Where |
+|---|---|
+| Employees, tablet, managers | [docs/manual/benutzerhandbuch.de.md](docs/manual/benutzerhandbuch.de.md) / [user-manual.en.md](docs/manual/user-manual.en.md) |
+| Administrators | [docs/manual/administrationshandbuch.de.md](docs/manual/administrationshandbuch.de.md) / [admin-handbook.en.md](docs/manual/admin-handbook.en.md) |
+| API | [docs/api/REFERENCE.md](docs/api/REFERENCE.md), [docs/PUBLIC-API.md](docs/PUBLIC-API.md) |
+| Developers | [docs/DEVELOPER.md](docs/DEVELOPER.md), [CONTRIBUTING.md](CONTRIBUTING.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| Operations | [docs/RUNBOOK.md](docs/RUNBOOK.md), [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md), [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md) |
+| Privacy | [docs/privacy/README.md](docs/privacy/README.md) |
+
 ## Source documents
 
 `SPEC.md` (behaviour) > `design/DESIGN.md` and `design/prototype.html` (UI) > `db/schema_v1.sql` > `tests/` (rule vectors) > `docs/full-spec.md` (backlog reference only). `CLAUDE.md` holds the project rules.

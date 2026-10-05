@@ -41,6 +41,12 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test:coverage
+      - run: node scripts/docs/check-links.mjs
+      - name: API reference is up to date (pnpm docs:api)
+        env: { DATABASE_URL: 'postgres://dienst:dienst@localhost:5432/dienst_test' }
+        run: |
+          pnpm docs:api >/dev/null
+          git diff --exit-code docs/api || { echo "::error::run pnpm docs:api and commit docs/api"; exit 1; }
 
   e2e:
     name: end-to-end (Playwright, accessibility)
