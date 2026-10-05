@@ -20,7 +20,7 @@ test.describe('Anträge', () => {
     const worked = page.getByTestId('worked-row');
     await expect(worked.filter({ hasText: 'Auto-Ausstempeln' }).getByRole('checkbox')).toBeDisabled();
     const n = await worked.count();
-    await worked.filter({ hasText: 'Abweichung' }).getByRole('button', { name: 'Anpassen' }).click();
+    await worked.filter({ hasText: 'Abweichung' }).first().getByRole('button', { name: 'Anpassen' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Freigeben' }).click();
     await expect(worked).toHaveCount(n - 1);
 

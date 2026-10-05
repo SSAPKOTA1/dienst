@@ -1,3 +1,4 @@
+import { AppError } from './errors';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 /**
@@ -34,4 +35,15 @@ export function writeCookie(
 export function removeCookie(reply: FastifyReply, secure: boolean, base: string, path: string) {
   reply.clearCookie(cookieName(secure, base), { path, secure, httpOnly: true });
   if (secure) reply.clearCookie(base, { path });
+}
+
+/**
+ * Cookie-authenticated endpoints (refresh, logout) only accept requests that a browser sends from the web app's own
+ * origin. Browsers always add `Origin` to a POST; a foreign value means another site (or a sibling subdomain, which
+ * SameSite does not stop) is driving the cookie. Requests without `Origin` (scripts, tests) are not browsers and pass.
+ */
+export function assertSameOrigin(req: { headers: Record<string, unknown> }, webOrigin: string): void {
+  const origin = req.headers.origin;
+  if (typeof origin === 'string' && origin !== webOrigin)
+    throw new AppError('FORBIDDEN_SCOPE', 'Foreign origin');
 }
