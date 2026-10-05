@@ -5,5 +5,5 @@ import { fileURLToPath } from 'node:url';
 // Every run starts from the demo seed (relative to today) so that dates and PINs are known.
 export default function setup() {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-  execSync('pnpm db:migrate && pnpm db:seed', { cwd: root, stdio: 'ignore' });
+  execSync('pnpm db:migrate && pnpm db:seed', { cwd: root, stdio: 'inherit' });
 }
