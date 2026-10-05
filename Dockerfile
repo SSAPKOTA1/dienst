@@ -34,7 +34,7 @@ HEALTHCHECK --interval=15s --timeout=3s --start-period=20s --retries=3 \
 CMD ["node", "apps/api/dist/server.mjs"]
 
 # the unprivileged variant runs as user 101 and listens on 8080 (needed for a read-only, non-root pod)
-FROM nginxinc/nginx-unprivileged:1.27-alpine AS web
+FROM nginxinc/nginx-unprivileged:1.29-alpine AS web
 COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
 COPY deploy/security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --from=build /app/apps/web/dist /usr/share/nginx/html
