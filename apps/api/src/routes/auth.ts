@@ -10,7 +10,7 @@ import { signAccessToken } from '../lib/jwt';
 import { actorOf, getPrincipal, requirePreOrAccess, requireRole } from '../lib/auth';
 import { audit } from '../lib/audit';
 import { loginFailures } from '../lib/metrics';
-import { readCookie, removeCookie, writeCookie } from '../lib/cookies';
+import { assertSameOrigin, readCookie, removeCookie, writeCookie } from '../lib/cookies';
 import { buildPrincipal, roleToActorType } from '../lib/scope';
 import { loadAvailableRoles } from '../services/accounts';
 import { resetMail } from '../lib/mail';
@@ -241,6 +241,7 @@ export async function authRoutes(app: FastifyInstance) {
 
   // ---- refresh / logout ---------------------------------------------------------------------
   r.post('/auth/refresh', { config: authLimit }, async (req, reply) => {
+    assertSameOrigin(req, app.cfg.WEB_ORIGIN);
     const raw = readCookie(req, app.cfg.COOKIE_SECURE, COOKIE);
     if (!raw) throw new AppError('UNAUTHENTICATED', 'No refresh token');
     const row = await app.db
@@ -273,6 +274,7 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   r.post('/auth/logout', async (req, reply) => {
+    assertSameOrigin(req, app.cfg.WEB_ORIGIN);
     const raw = readCookie(req, app.cfg.COOKIE_SECURE, COOKIE);
     if (raw) {
       const row = await app.db

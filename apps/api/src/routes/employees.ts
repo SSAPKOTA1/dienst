@@ -21,6 +21,7 @@ import {
 } from '../services/employees';
 import { vacationSummary } from '../services/vacation';
 import { deactivateEmployee } from '../services/offboarding';
+import { logPersonalDataView } from '../services/privacy';
 import { computeTimeAccount } from '../services/timeAccount';
 import { localDate } from '../lib/time';
 import type { Db, DbOrTrx, Trx } from '../db';
@@ -344,6 +345,8 @@ export async function employeeRoutes(app: FastifyInstance) {
     { preValidation: requireRole(AD, SA, MG), schema: { params: idParam } },
     async (req) => {
       const { e } = await employeeView(db, getPrincipal(req), req.params.id);
+      // reading a person's record is logged (one entry per reader and person within ten minutes)
+      if (req.principal!.employeeId !== e.employee_id) await logPersonalDataView(db, actorOf(req), e);
       const today = await todayFor(e.primary_hotel_id);
       return employeeDetail(db, getPrincipal(req), req.params.id, today, Number(today.slice(0, 4)));
     },

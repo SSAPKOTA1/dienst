@@ -178,6 +178,7 @@ export interface Department {
 }
 
 export interface Employee {
+  anonymised_at: Timestamp | null;
   badge_hash: string | null;
   company_id: number;
   contact_email: string | null;

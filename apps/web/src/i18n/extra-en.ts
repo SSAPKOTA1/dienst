@@ -1,5 +1,9 @@
 /** English strings for keys that are not in design/i18n-de-en.json. The German text is the key itself. */
 export const extraEn: Record<string, string> = {
+  'Meine Daten': 'My data',
+  'Alle Daten, die über dich gespeichert sind, als Datei herunterladen.':
+    'Download everything stored about you as a file.',
+  'Meine Daten herunterladen': 'Download my data',
   Hauptnavigation: 'Main navigation',
   Sprache: 'Language',
   'Anmelden…': 'Signing in…',

@@ -62,6 +62,26 @@ export function PortalAccount() {
         </div>
       </section>
       <PortalExtras />
+      <section style={card} aria-labelledby="mydata-h">
+        <h2 id="mydata-h" style={cardHead}>
+          {t('Meine Daten')}
+        </h2>
+        <div style={{ ...line, display: 'block', fontSize: 14 }}>
+          {t('Alle Daten, die über dich gespeichert sind, als Datei herunterladen.')}
+        </div>
+        <div style={{ padding: 'var(--space-3)' }}>
+          <button
+            className="btn btn-secondary"
+            onClick={() =>
+              void download('/me/data-export', {}, 'meine-daten.json').catch(() =>
+                toast(t('Export fehlgeschlagen')),
+              )
+            }
+          >
+            {t('Meine Daten herunterladen')}
+          </button>
+        </div>
+      </section>
       <section style={card}>
         <h2 style={cardHead}>{t('Profil')}</h2>
         <div style={line}>{me?.displayName}</div>

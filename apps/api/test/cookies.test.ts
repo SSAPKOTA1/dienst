@@ -168,3 +168,33 @@ describe('session cookie', () => {
     await app.close();
   });
 });
+
+describe('foreign origin on cookie endpoints', () => {
+  it('refuses refresh and logout when Origin is not the web origin, accepts the web origin and no Origin', async () => {
+    const c = await startApp();
+    try {
+      const evil = await c.app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/refresh',
+        headers: { origin: 'https://evil.example' },
+      });
+      expect(evil.statusCode).toBe(403);
+      const evilOut = await c.app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/logout',
+        headers: { origin: 'https://evil.example' },
+      });
+      expect(evilOut.statusCode).toBe(403);
+      const own = await c.app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/refresh',
+        headers: { origin: 'http://localhost:5173' },
+      });
+      expect(own.statusCode).toBe(401); // passes the origin check, then fails for lack of a cookie
+      const none = await c.app.inject({ method: 'POST', url: '/api/v1/auth/refresh' });
+      expect(none.statusCode).toBe(401);
+    } finally {
+      await stopApp(c);
+    }
+  });
+});
