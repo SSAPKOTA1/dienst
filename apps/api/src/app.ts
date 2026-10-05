@@ -3,6 +3,7 @@ import { sql } from 'kysely';
 import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fastify-type-provider-zod';
 import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
+import { Keys } from './lib/keys';
 import { registerSecurityHeaders } from './lib/securityHeaders';
 import multipart from '@fastify/multipart';
 import { ZodError } from 'zod';
@@ -42,6 +43,7 @@ declare module 'fastify' {
   interface FastifyInstance {
     db: Db;
     cfg: Config;
+    keys: Keys;
     clock: () => Date;
     mailer: Mailer;
   }
@@ -81,6 +83,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   app.setSerializerCompiler(serializerCompiler);
 
   app.decorate('cfg', cfg);
+  app.decorate('keys', new Keys(cfg));
   app.decorate('clock', opts.clock ?? (() => new Date()));
   const db = opts.db ?? createDb(cfg.DATABASE_URL);
   app.decorate('db', db);

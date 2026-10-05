@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { AppError } from '../lib/errors';
 import { actorOf, getPrincipal, requireRole } from '../lib/auth';
 import { audit } from '../lib/audit';
-import { decryptSecret, encryptSecret, randomToken } from '../lib/security';
+import { randomToken } from '../lib/security';
 import { signAccessToken, signPayload, verifyToken } from '../lib/jwt';
 import { assertIssuer, authorizationUrl, discover, pkcePair, redeemCode } from '../lib/oidc';
 import { loadAvailableRoles } from '../services/accounts';
@@ -105,7 +105,7 @@ export async function ssoRoutes(app: FastifyInstance) {
           .executeTakeFirst();
         if (!old && !b.clientSecret) throw new AppError('VALIDATION', 'The client secret is required');
         const enc = b.clientSecret
-          ? encryptSecret(b.clientSecret, app.cfg.TOTP_ENC_KEY)
+          ? app.keys.seal('sso-client-secret', b.clientSecret)
           : old!.client_secret_enc;
         const row = await trx
           .insertInto('sso_provider')
@@ -193,7 +193,7 @@ export async function ssoRoutes(app: FastifyInstance) {
       const state = randomToken();
       const nonce = randomToken();
       const txToken = await signPayload(
-        app.cfg.JWT_SECRET,
+        app.keys.signing('sso'),
         { kind: 'sso_tx', state, nonce, verifier, company: p.company_id },
         '10m',
       );
@@ -231,7 +231,7 @@ export async function ssoRoutes(app: FastifyInstance) {
             nonce?: string;
             verifier?: string;
             company?: number;
-          }>(app.cfg.JWT_SECRET, raw)
+          }>(app.keys.verifying('sso'), raw)
         : null;
       if (!c || c.kind !== 'sso_tx' || !c.company) return failRedirect(reply, 'expired');
       if (req.query.error || !req.query.code || req.query.state !== c.state)
@@ -248,7 +248,7 @@ export async function ssoRoutes(app: FastifyInstance) {
         const d = await discover(p.issuer);
         claims = await redeemCode(d, {
           clientId: p.client_id,
-          clientSecret: decryptSecret(p.client_secret_enc, app.cfg.TOTP_ENC_KEY),
+          clientSecret: app.keys.openText('sso-client-secret', p.client_secret_enc),
           code: req.query.code,
           redirectUri,
           verifier: c.verifier!,
@@ -319,7 +319,7 @@ export async function ssoRoutes(app: FastifyInstance) {
       if ('error' in result) return failRedirect(reply, result.error ?? 'no_account');
       const mfa = (claims.amr ?? []).some((a) => MFA_AMR.has(a));
       const ticket = await signPayload(
-        app.cfg.JWT_SECRET,
+        app.keys.signing('sso'),
         { kind: 'sso_ticket', uid: result.userId, mfa, jti: randomUUID() },
         '2m',
       );
@@ -334,7 +334,7 @@ export async function ssoRoutes(app: FastifyInstance) {
     { config: authLimit, schema: { body: z.object({ ticket: z.string().min(10).max(2000) }) } },
     async (req, reply) => {
       const c = await verifyToken<{ kind?: string; uid?: number; mfa?: boolean; jti?: string }>(
-        app.cfg.JWT_SECRET,
+        app.keys.verifying('sso'),
         req.body.ticket,
       );
       if (!c || c.kind !== 'sso_ticket' || !c.uid || !c.jti)
@@ -375,7 +375,7 @@ export async function ssoRoutes(app: FastifyInstance) {
         return { ...base, accessToken: s.accessToken };
       }
       const preToken = await signAccessToken(
-        app.cfg.JWT_SECRET,
+        app.keys.signing('access'),
         { sub: user.id, pre: true, ssoMfa: c.mfa === true },
         '10m',
       );

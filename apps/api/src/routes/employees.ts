@@ -7,7 +7,7 @@ import { AppError, notFound } from '../lib/errors';
 import { actorOf, getPrincipal, requireRole } from '../lib/auth';
 import { audit } from '../lib/audit';
 import QRCode from 'qrcode';
-import { badgeHash, generatePin, hashSecret, randomActivationCode } from '../lib/security';
+import { generatePin, hashSecret, randomActivationCode } from '../lib/security';
 import { csvIds, idParam, isoDate, pageQuery, paged } from '../lib/http';
 import { issueInvitation, sendInvitationMail } from '../services/accounts';
 import {
@@ -597,12 +597,13 @@ export async function employeeRoutes(app: FastifyInstance) {
       const out = await tx(async (trx) => {
         const { e } = await employeeView(trx, p, req.params.id);
         const badge = req.body.badge?.trim() || `B-${randomActivationCode()}${randomActivationCode()}`;
-        const hash = badgeHash(app.cfg.TOTP_ENC_KEY, badge);
+        const hashes = app.keys.badgeHashes(badge);
+        const hash = hashes[0]; // new badges always use the current key
         const dup = await trx
           .selectFrom('employee')
           .select('employee_id')
           .where('company_id', '=', e.company_id)
-          .where('badge_hash', '=', hash)
+          .where('badge_hash', 'in', hashes) // also finds a badge hashed with an older key
           .where('employee_id', '<>', e.employee_id)
           .executeTakeFirst();
         if (dup) throw new AppError('CONFLICT', 'This badge is already assigned');

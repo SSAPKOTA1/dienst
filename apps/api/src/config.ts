@@ -3,10 +3,16 @@ import { z } from 'zod';
 const schema = z.object({
   DATABASE_URL: z.string().default('postgres://dienst:dienst@localhost:5432/dienst'),
   JWT_SECRET: z.string().min(32).default('dev-only-secret-change-me-please-0123456789'),
-  TOTP_ENC_KEY: z
+  /** previous signing secrets (comma separated): tokens signed with them stay valid while rotating */
+  JWT_SECRET_PREVIOUS: z.string().optional(),
+  /** master key (64 hex) for data at rest; purpose keys are derived from it */
+  DATA_KEY: z
     .string()
-    .length(64)
-    .default('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'),
+    .regex(/^[0-9a-f]{64}$/i, 'DATA_KEY must be 64 hex characters')
+    .default('f0e1d2c3b4a5968778695a4b3c2d1e0ff0e1d2c3b4a5968778695a4b3c2d1e0f'),
+  DATA_KEY_PREVIOUS: z.string().optional(),
+  /** legacy raw key that data was encrypted with before DATA_KEY existed; only used to read old data */
+  TOTP_ENC_KEY: z.string().length(64).optional(),
   SMTP_HOST: z.string().default('localhost'),
   SMTP_PORT: z.coerce.number().default(1025),
   MAIL_FROM: z.string().default('Dienstplan <noreply@dienst.local>'),
@@ -35,14 +41,30 @@ export type Config = z.infer<typeof schema>;
 const DEV_SECRETS = new Set([
   'dev-only-secret-change-me-please-0123456789',
   '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+  'f0e1d2c3b4a5968778695a4b3c2d1e0ff0e1d2c3b4a5968778695a4b3c2d1e0f',
 ]);
+
+const DEV_LEGACY_KEY = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const cfg = schema.parse(env);
   if (cfg.NODE_ENV === 'production') {
-    if (DEV_SECRETS.has(cfg.JWT_SECRET) || DEV_SECRETS.has(cfg.TOTP_ENC_KEY))
-      throw new Error('Refusing to start in production with the development JWT_SECRET / TOTP_ENC_KEY');
+    if (
+      DEV_SECRETS.has(cfg.JWT_SECRET) ||
+      DEV_SECRETS.has(cfg.DATA_KEY) ||
+      (cfg.TOTP_ENC_KEY && DEV_SECRETS.has(cfg.TOTP_ENC_KEY))
+    )
+      throw new Error(
+        'Refusing to start in production with a development JWT_SECRET / DATA_KEY / TOTP_ENC_KEY',
+      );
+    // the keys must be independent: one leaked value must not open the other area
+    if (cfg.TOTP_ENC_KEY && cfg.DATA_KEY.toLowerCase() === cfg.TOTP_ENC_KEY.toLowerCase())
+      throw new Error('DATA_KEY must differ from the legacy TOTP_ENC_KEY');
+    if (cfg.JWT_SECRET.toLowerCase() === cfg.DATA_KEY.toLowerCase())
+      throw new Error('JWT_SECRET and DATA_KEY must be different values');
     if (!cfg.COOKIE_SECURE) throw new Error('COOKIE_SECURE must be true in production');
+  } else if (!cfg.TOTP_ENC_KEY) {
+    cfg.TOTP_ENC_KEY = DEV_LEGACY_KEY; // development databases written before DATA_KEY existed stay readable
   }
   return cfg;
 }

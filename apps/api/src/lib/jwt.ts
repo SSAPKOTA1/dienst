@@ -12,33 +12,34 @@ export interface TokenClaims {
   hotelIds?: number[];
 }
 
-const key = (secret: string) => new TextEncoder().encode(secret);
-
-export async function signAccessToken(secret: string, c: TokenClaims, ttl = '15m'): Promise<string> {
+export async function signAccessToken(key: Uint8Array, c: TokenClaims, ttl = '15m'): Promise<string> {
   const { sub, ...rest } = c;
   return new SignJWT({ ...rest })
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(String(sub))
     .setIssuedAt()
     .setExpirationTime(ttl)
-    .sign(key(secret));
+    .sign(key);
 }
 
 export async function verifyToken<T extends Record<string, unknown> = Record<string, unknown>>(
-  secret: string,
+  keys: Uint8Array[],
   token: string,
 ): Promise<(T & { sub: string }) | null> {
-  try {
-    const { payload } = await jwtVerify(token, key(secret), { algorithms: ['HS256'] });
-    return payload as unknown as T & { sub: string };
-  } catch {
-    return null;
+  for (const key of keys) {
+    try {
+      const { payload } = await jwtVerify(token, key, { algorithms: ['HS256'] });
+      return payload as unknown as T & { sub: string };
+    } catch {
+      /* wrong key (or a bad token): try the next secret of a rotation */
+    }
   }
+  return null;
 }
 
 /** Short-lived signed payload (kiosk employeeRef and confirmToken). */
 export async function signPayload(
-  secret: string,
+  key: Uint8Array,
   payload: Record<string, unknown>,
   ttl: string,
 ): Promise<string> {
@@ -46,5 +47,5 @@ export async function signPayload(
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(ttl)
-    .sign(key(secret));
+    .sign(key);
 }

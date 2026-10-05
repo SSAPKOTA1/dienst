@@ -5,7 +5,6 @@ import { AppError, notFound } from '../lib/errors';
 import { actorOf, getPrincipal, requireRole } from '../lib/auth';
 import { audit } from '../lib/audit';
 import { csvIds, hhmm, idParam, isoDate } from '../lib/http';
-import { decryptBytes, encryptBytes } from '../lib/security';
 import { localDate } from '../lib/time';
 import { addDays } from '@dienst/rules';
 import { requireFeature } from '../services/features';
@@ -492,7 +491,7 @@ export async function peopleRoutes(app: FastifyInstance) {
             file_name: file!.name.replace(/[^\w.\- ()äöüÄÖÜß]/g, '_').slice(0, 200),
             mime,
             size_bytes: file!.buf.length,
-            content_enc: encryptBytes(file!.buf, app.cfg.TOTP_ENC_KEY),
+            content_enc: app.keys.seal('documents', file!.buf),
             valid_until: meta.validUntil ?? null,
             visible_to_employee: meta.visibleToEmployee === 'true',
             uploaded_by_user_id: p.userId,
@@ -532,7 +531,7 @@ export async function peopleRoutes(app: FastifyInstance) {
       hotelId,
       companyId,
     });
-    const buf = decryptBytes(d.content_enc, app.cfg.TOTP_ENC_KEY);
+    const buf = app.keys.open('documents', d.content_enc);
     return reply
       .header('content-type', d.mime)
       .header('content-disposition', `attachment; filename="${d.file_name}"`)

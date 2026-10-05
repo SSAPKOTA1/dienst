@@ -44,7 +44,7 @@ describe('security headers', () => {
         NODE_ENV: 'production',
         COOKIE_SECURE: 'true',
         JWT_SECRET: 'p'.repeat(40),
-        TOTP_ENC_KEY: 'ab'.repeat(32),
+        DATA_KEY: 'ab'.repeat(32),
         MAIL_MODE: 'json',
       } as never,
       logger: false,

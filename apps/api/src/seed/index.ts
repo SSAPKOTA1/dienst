@@ -3,8 +3,9 @@ import { authenticator } from 'otplib';
 import { addDays, mondayOf } from '@dienst/rules';
 import type { Db } from '../db';
 import { buildPrincipal } from '../lib/scope';
-import { encryptSecret, hashSecret, sha256 } from '../lib/security';
+import { hashSecret, sha256 } from '../lib/security';
 import { loadConfig } from '../config';
+import { Keys } from '../lib/keys';
 import { audit } from '../lib/audit';
 import { createEmployee } from '../services/employees';
 import { holidaysFor } from './holidays';
@@ -56,7 +57,8 @@ export async function runSeed(db: Db, now: Date): Promise<SeedResult> {
   const today = now.toISOString().slice(0, 10);
   const week0 = mondayOf(today);
   const pw = await hashSecret(DEMO_PASSWORD);
-  const totp = encryptSecret(DEMO_TOTP_SECRET, cfg.TOTP_ENC_KEY);
+  const keys = new Keys(cfg);
+  const totp = keys.seal('totp', DEMO_TOTP_SECRET);
   void authenticator;
 
   const user = (email: string | null, username: string | null, withTotp = false) =>

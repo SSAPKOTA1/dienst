@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { withinGrace } from '@dienst/rules';
 import { AppError, notFound } from '../lib/errors';
 import { audit, type Actor } from '../lib/audit';
-import { badgeHash, sha256 } from '../lib/security';
+import { sha256 } from '../lib/security';
 import { signPayload, verifyToken } from '../lib/jwt';
 import { breakOptions, computeClose, graceOf, hotelTz, verifyPin, type Device } from '../services/kiosk';
 import { breakToggle, closePunch, punchIn, segmentMinutes, type BreakSegment } from '../services/punch';
@@ -53,9 +53,12 @@ export async function kioskRoutes(app: FastifyInstance) {
   const route = { preValidation: kioskAuth, config: limit };
 
   const ref = (device: Device, empId: number) =>
-    signPayload(app.cfg.JWT_SECRET, { kind: 'empref', emp: empId, dev: device.id }, TTL);
+    signPayload(app.keys.signing('kiosk'), { kind: 'empref', emp: empId, dev: device.id }, TTL);
   async function readRef(device: Device, token: string): Promise<number> {
-    const c = await verifyToken<{ kind?: string; emp?: number; dev?: number }>(app.cfg.JWT_SECRET, token);
+    const c = await verifyToken<{ kind?: string; emp?: number; dev?: number }>(
+      app.keys.verifying('kiosk'),
+      token,
+    );
     if (!c || c.kind !== 'empref' || c.dev !== device.id || !c.emp)
       throw new AppError('UNAUTHENTICATED', 'The selection expired. Please choose your name again.');
     return c.emp;
@@ -243,7 +246,11 @@ export async function kioskRoutes(app: FastifyInstance) {
       isUnplanned: rec.is_unplanned,
       variation: { minutes: minutes ?? 0, withinGrace: rec.is_unplanned ? false : within },
       reasonRequired: rec.is_unplanned || !within,
-      confirmToken: await signPayload(app.cfg.JWT_SECRET, { kind: 'in', rec: rec.id, dev: dev.id }, TTL),
+      confirmToken: await signPayload(
+        app.keys.signing('kiosk'),
+        { kind: 'in', rec: rec.id, dev: dev.id },
+        TTL,
+      ),
     };
   }
 
@@ -299,7 +306,7 @@ export async function kioskRoutes(app: FastifyInstance) {
     },
     async (req) => {
       const c = await verifyToken<{ kind?: string; rec?: number; dev?: number }>(
-        app.cfg.JWT_SECRET,
+        app.keys.verifying('kiosk'),
         req.body.confirmToken,
       );
       if (!c || c.kind !== 'in' || c.dev !== req.device!.id)
@@ -369,7 +376,7 @@ export async function kioskRoutes(app: FastifyInstance) {
     return {
       status: 'awaiting_break_confirmation',
       confirmToken: await signPayload(
-        app.cfg.JWT_SECRET,
+        app.keys.signing('kiosk'),
         { kind: 'out', rec: rec.id, dev: dev.id, outAt: now.toISOString() },
         TTL,
       ),
@@ -401,7 +408,7 @@ export async function kioskRoutes(app: FastifyInstance) {
       const dev = req.device!;
       const now = app.clock();
       const c = await verifyToken<{ kind?: string; rec?: number; dev?: number; outAt?: string }>(
-        app.cfg.JWT_SECRET,
+        app.keys.verifying('kiosk'),
         req.body.confirmToken,
       );
       if (!c || c.kind !== 'out' || c.dev !== dev.id || !c.rec || !c.outAt)
@@ -481,15 +488,23 @@ export async function kioskRoutes(app: FastifyInstance) {
         .where('id', '=', dev.hotelId)
         .executeTakeFirstOrThrow();
       if (h.kiosk_identification !== 'badge_pin') throw notFound('Badge');
+      const hashes = app.keys.badgeHashes(req.body.badge); // current key first, then older keys
       const e = await db
         .selectFrom('employee as e')
         .innerJoin('employee_hotel as eh', 'eh.employee_id', 'e.employee_id')
-        .select(['e.employee_id', 'e.display_name'])
-        .where('e.badge_hash', '=', badgeHash(app.cfg.TOTP_ENC_KEY, req.body.badge))
+        .select(['e.employee_id', 'e.display_name', 'e.badge_hash'])
+        .where('e.badge_hash', 'in', hashes)
         .where('eh.hotel_id', '=', dev.hotelId)
         .where('e.status', '=', 'active')
         .executeTakeFirst();
       if (!e) throw notFound('Badge');
+      if (e.badge_hash !== hashes[0])
+        // hashed with an older key: move it to the current one on first use
+        await db
+          .updateTable('employee')
+          .set({ badge_hash: hashes[0] })
+          .where('employee_id', '=', e.employee_id)
+          .execute();
       return { employeeRef: await ref(dev, e.employee_id), displayName: e.display_name };
     },
   );
@@ -536,7 +551,7 @@ export async function kioskRoutes(app: FastifyInstance) {
         rows.map(async (e) => ({
           displayName: e.display_name,
           offlineRef: await signPayload(
-            app.cfg.JWT_SECRET,
+            app.keys.signing('kiosk'),
             { kind: 'offref', emp: e.employee_id, dev: dev.id },
             OFFLINE_REF_TTL,
           ),
@@ -589,7 +604,7 @@ export async function kioskRoutes(app: FastifyInstance) {
               code: 'OFFLINE_EXPIRED',
             });
           const c = await verifyToken<{ kind?: string; emp?: number; dev?: number }>(
-            app.cfg.JWT_SECRET,
+            app.keys.verifying('kiosk'),
             it.offlineRef,
           );
           if (!c || c.kind !== 'offref' || c.dev !== dev.id || !c.emp)

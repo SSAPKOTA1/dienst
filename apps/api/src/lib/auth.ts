@@ -28,7 +28,7 @@ export function requireRole(...roles: RoleSpec[]): preValidationAsyncHookHandler
     const tok = bearer(req);
     if (!tok) throw new AppError('UNAUTHENTICATED', 'Missing access token');
     const claims = await verifyToken<{ role?: Role; pre?: boolean; employeeId?: number }>(
-      app.cfg.JWT_SECRET,
+      app.keys.verifying('access'),
       tok,
     );
     if (!claims || claims.pre || !claims.role)
@@ -54,7 +54,7 @@ export const requirePreOrAccess: preValidationAsyncHookHandler = async (req) => 
   const tok = bearer(req);
   if (!tok) throw new AppError('UNAUTHENTICATED', 'Missing token');
   const claims = await verifyToken<{ role?: Role; pre?: boolean; employeeId?: number; ssoMfa?: boolean }>(
-    app.cfg.JWT_SECRET,
+    app.keys.verifying('access'),
     tok,
   );
   // only real session tokens: other signed payloads (kiosk refs, SSO tickets) carry neither a role nor `pre`

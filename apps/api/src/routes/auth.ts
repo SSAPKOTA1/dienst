@@ -5,15 +5,7 @@ import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
 import type { Role } from '@dienst/shared';
 import { AppError } from '../lib/errors';
-import {
-  assertPasswordPolicy,
-  decryptSecret,
-  encryptSecret,
-  hashSecret,
-  randomToken,
-  sha256,
-  verifySecret,
-} from '../lib/security';
+import { assertPasswordPolicy, hashSecret, randomToken, sha256, verifySecret } from '../lib/security';
 import { signAccessToken } from '../lib/jwt';
 import { actorOf, getPrincipal, requirePreOrAccess, requireRole } from '../lib/auth';
 import { audit } from '../lib/audit';
@@ -61,7 +53,7 @@ export async function startSessionFor(
     path: '/api/v1/auth',
     maxAge: REFRESH_TTL_MS / 1000,
   });
-  const accessToken = await signAccessToken(app.cfg.JWT_SECRET, {
+  const accessToken = await signAccessToken(app.keys.signing('access'), {
     sub: userId,
     role,
     employeeId: principal.employeeId ?? undefined,
@@ -150,7 +142,7 @@ export async function authRoutes(app: FastifyInstance) {
       if (staffAdmin && user.totp_enabled) {
         if (!totp)
           throw new AppError('UNAUTHENTICATED', 'Authentication code required', { totpRequired: true });
-        const secret = decryptSecret(user.totp_secret_enc as Buffer, app.cfg.TOTP_ENC_KEY);
+        const secret = app.keys.openText('totp', user.totp_secret_enc as Buffer);
         if (!authenticator.check(totp, secret)) return fail('bad_totp', user.id);
       }
       await app.db.transaction().execute(async (trx) => {
@@ -176,7 +168,7 @@ export async function authRoutes(app: FastifyInstance) {
         const s = await startSession(req, reply, user.id, only.role, only.employeeId ?? null);
         return { ...base, accessToken: s.accessToken };
       }
-      const preToken = await signAccessToken(app.cfg.JWT_SECRET, { sub: user.id, pre: true }, '10m');
+      const preToken = await signAccessToken(app.keys.signing('access'), { sub: user.id, pre: true }, '10m');
       return { ...base, preToken, twoFactorSetupRequired };
     },
   );
@@ -431,7 +423,7 @@ export async function authRoutes(app: FastifyInstance) {
     await app.db.transaction().execute(async (trx) => {
       await trx
         .updateTable('user_account')
-        .set({ totp_secret_enc: encryptSecret(secret, app.cfg.TOTP_ENC_KEY) })
+        .set({ totp_secret_enc: app.keys.seal('totp', secret) })
         .where('id', '=', u.id)
         .execute();
       await audit(trx, actorOf(req), {
@@ -458,7 +450,7 @@ export async function authRoutes(app: FastifyInstance) {
     async (req) => {
       const { u } = await twoFactorUser(req);
       if (!u.totp_secret_enc) throw new AppError('CONFLICT', 'Call /auth/2fa/setup first');
-      const secret = decryptSecret(u.totp_secret_enc as Buffer, app.cfg.TOTP_ENC_KEY);
+      const secret = app.keys.openText('totp', u.totp_secret_enc as Buffer);
       if (!authenticator.check(req.body.code, secret))
         throw new AppError('UNAUTHENTICATED', 'Invalid authentication code');
       await app.db.transaction().execute(async (trx) => {
