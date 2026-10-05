@@ -4,9 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { api, ApiError, setToken } from '../lib/api';
 import { homePathFor, useAuth, type AvailableRole, type RoleName } from '../lib/auth';
 import type { LoginResponseDto, SessionDto, TwoFactorSetupDto } from '@dienst/shared';
+import { startAuthentication } from '@simplewebauthn/browser';
 import { LangSwitch } from '../components/LangSwitch';
 
-type Step = 'credentials' | 'totp' | 'role' | 'setup2fa';
+type Step = 'credentials' | 'totp' | 'key' | 'role' | 'setup2fa';
 
 export const roleLabel = (r: RoleName) =>
   r === 'superAdmin'
@@ -83,6 +84,10 @@ export function Login() {
   const [error, setError] = useState<string | null>(null);
   const [forgot, setForgot] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [key, setKey] = useState<{
+    options: Parameters<typeof startAuthentication>[0]['optionsJSON'];
+    challengeToken: string;
+  } | null>(null);
   const [setup, setSetup] = useState<{ secret: string; qrDataUrl: string } | null>(null);
   const [code, setCode] = useState('');
   const [params] = useSearchParams();
@@ -95,8 +100,10 @@ export function Login() {
   const fail = (e: unknown) => {
     const err = e as ApiError;
     if (err.status === 429) setError(t('Zu viele Versuche. Bitte warte einen Moment.'));
-    else if (err.details?.totpRequired) {
-      setStep('totp');
+    else if (err.details?.totpRequired || err.details?.webauthn) {
+      // second factor wanted: an authenticator code, a security key, or both are offered
+      setStep(err.details.totpRequired ? 'totp' : 'key');
+      setKey((err.details.webauthn as typeof key) ?? null);
       setError(null);
     } else setError(t(step === 'totp' ? 'Ungültiger Code.' : 'Ungültige Anmeldedaten.'));
   };
@@ -104,6 +111,38 @@ export function Login() {
   const finish = (token: string) => {
     setSession(token);
     nav('/', { replace: true });
+  };
+
+  const afterLogin = async (r: LoginResponseDto) => {
+    if (r.accessToken) return finish(r.accessToken);
+    setPre(r.preToken ?? null);
+    setRoles(r.availableRoles);
+    if (r.twoFactorSetupRequired) {
+      const s = await api<TwoFactorSetupDto>('/auth/2fa/setup', { body: {}, token: r.preToken });
+      setSetup(s);
+      setStep('setup2fa');
+    } else setStep('role');
+  };
+
+  const signInWithKey = async () => {
+    if (!key) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await startAuthentication({ optionsJSON: key.options });
+      const r = await api<LoginResponseDto>('/auth/login', {
+        body: { login, password, webauthn: { challengeToken: key.challengeToken, response } },
+        token: null,
+      });
+      await afterLogin(r);
+    } catch (err) {
+      // closing the browser dialog is not an error message worth showing
+      if ((err as { name?: string }).name === 'NotAllowedError')
+        setError(t('Anmeldung mit Sicherheitsschlüssel abgebrochen.'));
+      else fail(err);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -115,14 +154,7 @@ export function Login() {
         body: { login, password, totp: totp || undefined },
         token: null,
       });
-      if (r.accessToken) return finish(r.accessToken);
-      setPre(r.preToken ?? null);
-      setRoles(r.availableRoles);
-      if (r.twoFactorSetupRequired) {
-        const s = await api<TwoFactorSetupDto>('/auth/2fa/setup', { body: {}, token: r.preToken });
-        setSetup(s);
-        setStep('setup2fa');
-      } else setStep('role');
+      await afterLogin(r);
     } catch (err) {
       fail(err);
     } finally {
@@ -260,6 +292,17 @@ export function Login() {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
+        {key && (
+          <button
+            type="button"
+            className="btn btn-secondary btn-block"
+            disabled={busy || !login || !password}
+            onClick={() => void signInWithKey()}
+            data-testid="use-key"
+          >
+            {t('Mit Sicherheitsschlüssel anmelden')}
+          </button>
+        )}
         {step === 'totp' && (
           <div className="field">
             <label htmlFor="totp">{t('Code aus deiner Authenticator-App')}</label>

@@ -22,6 +22,7 @@ import rateLimit from '@fastify/rate-limit';
 import { AppError } from './lib/errors';
 import { Mailer } from './lib/mail';
 import { authRoutes } from './routes/auth';
+import { webauthnRoutes } from './routes/webauthn';
 import { meRoutes } from './routes/me';
 import { organisationRoutes } from './routes/organisation';
 import { departmentRoutes } from './routes/organisationDevices';
@@ -230,6 +231,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   await app.register(
     async (api) => {
       await api.register(authRoutes);
+      await api.register(webauthnRoutes);
       await api.register(ssoRoutes);
       await api.register(meRoutes);
       await api.register(organisationRoutes);

@@ -61,6 +61,18 @@ export function AccountMenu() {
               {t('Rolle wechseln')}: {t(roleLabel(r.role))} {r.companyName ? `· ${r.companyName}` : ''}
             </button>
           ))}
+          {me.role !== 'employee' && (
+            <button
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                nav('/security');
+              }}
+              style={menuBtn}
+            >
+              {t('Sicherheit')}
+            </button>
+          )}
           <button
             role="menuitem"
             onClick={async () => {

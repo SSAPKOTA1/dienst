@@ -60,9 +60,11 @@ describe('migrations', () => {
   it('rolls the newest migrations back and forward again to the same schema', async () => {
     await migrate(url(names[1]), () => undefined);
     const before = await shape(names[1]);
-    const undone = await rollback(url(names[1]), 7, () => undefined);
+    // 001 to 004 cannot be rolled back; everything after them can
+    const reversible = migrationFiles().length - 4;
+    const undone = await rollback(url(names[1]), reversible, () => undefined);
     expect(undone[0]).toBe(migrationFiles().at(-1));
-    expect(undone).toHaveLength(7);
+    expect(undone).toHaveLength(reversible);
     const reduced = await shape(names[1]);
     expect(reduced.length).toBeLessThan(before.length);
     expect(reduced.some((l) => l.includes('api_key') || l.includes('feed_post'))).toBe(false);
