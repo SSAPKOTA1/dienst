@@ -35,6 +35,9 @@ test.describe('Anträge', () => {
     await page.getByLabel('Aktion').fill('approved');
     await expect(page.getByTestId('audit-row').first()).toContainText('approved');
     await expect(page.getByRole('button', { name: 'Als CSV exportieren' })).toBeVisible();
+    // the hash chain of the company recomputes without a mismatch
+    await page.getByTestId('audit-verify').click();
+    await expect(page.getByTestId('audit-verify-result')).toContainText('Protokoll unverändert.');
   });
 
   test('Tablets and Regeln tabs render for the administration', async ({ page }) => {

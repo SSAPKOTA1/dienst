@@ -286,6 +286,7 @@ export function AdminAudit() {
     to: f.to || undefined,
   };
   const log = useGet('/audit-log', { ...q, page, pageSize: 25 });
+  const verify = useGet('/audit-log/verify', undefined, { enabled: false });
   const set = (k: keyof typeof f, v: string) => {
     setF({ ...f, [k]: v });
     setPage(1);
@@ -295,6 +296,14 @@ export function AdminAudit() {
     <div style={wrap}>
       <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
         <h2 style={{ margin: 0, fontSize: 20, marginRight: 'auto' }}>{t('Protokoll')}</h2>
+        <button
+          className="btn btn-secondary"
+          data-testid="audit-verify"
+          disabled={verify.isFetching}
+          onClick={() => void verify.refetch()}
+        >
+          {t('Integrität prüfen')}
+        </button>
         <Field label={t('Aktion')} htmlFor="al-action">
           <input
             id="al-action"
@@ -342,6 +351,35 @@ export function AdminAudit() {
           {t('Als CSV exportieren')}
         </button>
       </div>
+      {verify.data && (
+        <div
+          role="status"
+          data-testid="audit-verify-result"
+          style={{
+            border: '2px solid var(--color-text)',
+            padding: 'var(--space-2) var(--space-3)',
+            fontSize: 14,
+          }}
+        >
+          <b>{verify.data.ok ? t('Protokoll unverändert.') : t('Protokoll weicht ab!')}</b>{' '}
+          {t('{{n}} Einträge in {{c}} Ketten geprüft.', {
+            n: verify.data.chains.reduce((a: number, c: any) => a + c.rows, 0),
+            c: verify.data.chains.length,
+          })}
+          {verify.data.chains
+            .filter((c: any) => !c.ok)
+            .map((c: any) => (
+              <div key={c.chainKey} style={{ color: 'var(--warn)', fontWeight: 700 }}>
+                {t('Kette {{k}}: erste Abweichung bei Eintrag {{id}}', { k: c.chainKey, id: c.brokenAt })}
+              </div>
+            ))}
+          {verify.data.unverifiableLegacyRows ? (
+            <div style={{ fontSize: 12 }}>
+              {t('{{n}} ältere Einträge sind nicht prüfbar.', { n: verify.data.unverifiableLegacyRows })}
+            </div>
+          ) : null}
+        </div>
+      )}
       <div style={{ overflowX: 'auto', border: '2px solid var(--color-text)' }}>
         <table className="table" style={{ minWidth: 760 }}>
           <thead>

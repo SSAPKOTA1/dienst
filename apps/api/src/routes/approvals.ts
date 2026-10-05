@@ -3,7 +3,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { AppError, notFound } from '../lib/errors';
 import { actorOf, getPrincipal, requireRole } from '../lib/auth';
-import { audit } from '../lib/audit';
+import { audit, verifyAuditChains } from '../lib/audit';
 import { csvIds, idParam, isoDate } from '../lib/http';
 import { toCsv } from '../lib/csv';
 import { localDate } from '../lib/time';
@@ -581,6 +581,19 @@ export async function approvalRoutes(app: FastifyInstance) {
   );
 
   // ------------------------------------------------------------------ audit log
+  /** Recomputes the hash chains. A company admin checks the own company; the super admin also the global chains. */
+  r.get('/audit-log/verify', { preValidation: adminsOnly }, async (req) => {
+    const p = getPrincipal(req);
+    const result = await verifyAuditChains(db, p.role === 'superAdmin' ? undefined : p.scope.companyIds);
+    return {
+      ok: result.chains.every((c) => c.ok),
+      checkedAt: app.clock().toISOString(),
+      chains: result.chains,
+      // entries from before per-company chains cannot be verified (see docs/DECISIONS.md)
+      unverifiableLegacyRows: p.role === 'superAdmin' ? result.legacyRows : null,
+    };
+  });
+
   r.get(
     '/audit-log',
     {
