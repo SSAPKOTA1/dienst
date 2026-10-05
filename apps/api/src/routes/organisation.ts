@@ -6,6 +6,7 @@ import { AppError, notFound } from '../lib/errors';
 import { actorOf, getPrincipal, requireRole } from '../lib/auth';
 import { audit } from '../lib/audit';
 import { randomToken, sha256 } from '../lib/security';
+import { cidrList } from '../lib/net';
 import { csvIds, idParam, isoDate } from '../lib/http';
 import { issueInvitation, sendInvitationMail } from '../services/accounts';
 import { resolveHolidayRows } from '../services/holidays';
@@ -233,13 +234,14 @@ export async function organisationRoutes(app: FastifyInstance) {
     },
   );
 
-  // hotel settings: only the hours-visibility switch is editable in v1; the rest is shown read-only
+  // hotel settings: hours visibility (v1) and the platform options (break mode, badge, web punch)
   const settingsOut = (h: any) => ({
     hotelId: h.id,
     employeeHoursVisibility: h.employee_hours_visibility,
     breakMode: h.break_mode,
     kioskIdentification: h.kiosk_identification,
     allowWebPunch: h.allow_web_punch,
+    webPunchAllowedCidrs: h.web_punch_allowed_cidrs ?? [],
   });
   r.get(
     '/hotels/:id/settings',
@@ -251,26 +253,46 @@ export async function organisationRoutes(app: FastifyInstance) {
       return settingsOut(h);
     },
   );
+  const settingsBody = z
+    .object({
+      employeeHoursVisibility: z.enum(['immediately', 'after_approval']),
+      breakMode: z.enum(['confirm_at_clock_out', 'start_stop']),
+      kioskIdentification: z.enum(['name_pin', 'badge_pin']),
+      allowWebPunch: z.boolean(),
+      webPunchAllowedCidrs: cidrList,
+    })
+    .partial()
+    .refine((b) => Object.keys(b).length > 0, 'Nothing to change');
   r.put(
     '/hotels/:id/settings',
     {
       preValidation: requireRole(SA, AD),
-      schema: {
-        params: idParam,
-        body: z.object({ employeeHoursVisibility: z.enum(['immediately', 'after_approval']) }),
-      },
+      schema: { params: idParam, body: settingsBody },
     },
     async (req) => {
       getPrincipal(req).scope.assertHotel(req.params.id);
+      const b = req.body;
       return tx(async (trx) => {
         const old = await trx
           .selectFrom('hotel')
           .selectAll()
           .where('id', '=', req.params.id)
           .executeTakeFirstOrThrow();
+        const allow = b.allowWebPunch ?? old.allow_web_punch;
+        const cidrs = b.webPunchAllowedCidrs ?? old.web_punch_allowed_cidrs ?? [];
+        if (allow && !cidrs.length)
+          throw new AppError('VALIDATION', 'Web punch needs at least one allowed network (CIDR)', {
+            field: 'webPunchAllowedCidrs',
+          });
         const h = await trx
           .updateTable('hotel')
-          .set({ employee_hours_visibility: req.body.employeeHoursVisibility })
+          .set({
+            ...(b.employeeHoursVisibility ? { employee_hours_visibility: b.employeeHoursVisibility } : {}),
+            ...(b.breakMode ? { break_mode: b.breakMode } : {}),
+            ...(b.kioskIdentification ? { kiosk_identification: b.kioskIdentification } : {}),
+            ...(b.allowWebPunch !== undefined ? { allow_web_punch: b.allowWebPunch } : {}),
+            ...(b.webPunchAllowedCidrs ? { web_punch_allowed_cidrs: b.webPunchAllowedCidrs } : {}),
+          })
           .where('id', '=', old.id)
           .returningAll()
           .executeTakeFirstOrThrow();
@@ -280,8 +302,8 @@ export async function organisationRoutes(app: FastifyInstance) {
           entityId: old.id,
           companyId: old.company_id,
           hotelId: old.id,
-          old: { employeeHoursVisibility: old.employee_hours_visibility },
-          new: { employeeHoursVisibility: h.employee_hours_visibility },
+          old: settingsOut(old),
+          new: settingsOut(h),
         });
         return settingsOut(h);
       });

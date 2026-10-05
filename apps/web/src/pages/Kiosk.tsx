@@ -3,17 +3,29 @@ import { useTranslation } from 'react-i18next';
 import { buildUrl } from '../lib/api';
 import { fnum } from '../lib/format';
 import { LangSwitch } from '../components/LangSwitch';
+import {
+  clearLocalStates,
+  enqueue,
+  flushQueue,
+  loadOfflineRoster,
+  localStates,
+  queueLength,
+  saveOfflineRoster,
+  type OfflineAction,
+  type OfflineRosterItem,
+} from '../lib/offlineKiosk';
 
 const KEY = 'kioskToken';
 const IDLE_MS = 30_000;
 
 interface Item {
   employeeRef: string;
+  offlineRef?: string;
   displayName: string;
   departmentName: string | null;
   plannedStart: string | null;
   plannedEnd: string | null;
-  state: 'not_in' | 'working' | 'done';
+  state: 'not_in' | 'working' | 'on_break' | 'done';
 }
 interface Roster {
   serverTime: string;
@@ -21,6 +33,8 @@ interface Roster {
   hotelName: string;
   deviceName: string;
   pinLength: number;
+  breakMode?: 'confirm_at_clock_out' | 'start_stop';
+  identification?: 'name_pin' | 'badge_pin';
   items: Item[];
 }
 
@@ -47,14 +61,19 @@ async function kapi<T = any>(
   path: string,
   opts: { method?: string; body?: unknown; query?: Record<string, string> } = {},
 ): Promise<T> {
-  const r = await fetch(buildUrl(path, opts.query), {
-    method: opts.method ?? (opts.body !== undefined ? 'POST' : 'GET'),
-    headers: {
-      'x-kiosk-token': getToken() ?? '',
-      ...(opts.body !== undefined ? { 'content-type': 'application/json' } : {}),
-    },
-    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-  });
+  let r: Response;
+  try {
+    r = await fetch(buildUrl(path, opts.query), {
+      method: opts.method ?? (opts.body !== undefined ? 'POST' : 'GET'),
+      headers: {
+        'x-kiosk-token': getToken() ?? '',
+        ...(opts.body !== undefined ? { 'content-type': 'application/json' } : {}),
+      },
+      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+    });
+  } catch {
+    throw new KioskError(0, 'NETWORK', {}, 'No connection');
+  }
   const b = await r.json().catch(() => null);
   if (!r.ok)
     throw new KioskError(
@@ -66,9 +85,14 @@ async function kapi<T = any>(
   return b as T;
 }
 
+type PunchAction = OfflineAction;
+
 type Step =
   | { kind: 'list' }
-  | { kind: 'pin'; item: Item }
+  | { kind: 'action'; item: Item }
+  | { kind: 'pin'; item: Item; action: PunchAction }
+  | { kind: 'offbreak'; item: Item; pin: string }
+  | { kind: 'saved'; item: Item; action: PunchAction; at: string; offline: boolean }
   | {
       kind: 'break';
       item: Item;
@@ -77,6 +101,7 @@ type Step =
         grossMinutes: number;
         requiredBreakMinutes: number;
         suggestedBreakMinutes: number;
+        recordedBreakMinutes?: number | null;
         options: number[];
       };
     }
@@ -117,9 +142,34 @@ export function Kiosk() {
   const [now, setNow] = useState(Date.now());
   const [step, setStep] = useState<Step>({ kind: 'list' });
   const [q, setQ] = useState('');
-  const [found, setFound] = useState<Array<{ employeeRef: string; displayName: string }>>([]);
+  const [found, setFound] = useState<
+    Array<{ employeeRef: string; offlineRef?: string; displayName: string }>
+  >([]);
+  const [online, setOnline] = useState(true);
+  const [queueN, setQueueN] = useState(queueLength());
+  const [notice, setNotice] = useState<string | null>(null);
+  const [cache, setCache] = useState<OfflineRosterItem[]>(loadOfflineRoster());
   const idle = useRef<number | undefined>(undefined);
+  const pickRefRef = useRef<(ref: string, name: string) => unknown>(() => undefined);
   const tz = roster?.timezone ?? 'Europe/Berlin';
+  const breakMode = roster?.breakMode ?? 'confirm_at_clock_out';
+
+  const sync = useCallback(async () => {
+    if (!queueLength()) return;
+    try {
+      const r = await flushQueue((items) => kapi('/kiosk/offline-sync', { body: { items } }));
+      setQueueN(queueLength());
+      if (r.rejected > 0)
+        setNotice(
+          t('{{n}} offline erfasste Stempelungen wurden abgelehnt. Die Leitung ist informiert.', {
+            n: r.rejected,
+          }),
+        );
+      else if (r.applied > 0) setNotice(t('Offline erfasste Stempelungen wurden übertragen.'));
+    } catch {
+      /* still offline: the queue stays */
+    }
+  }, [t]);
 
   const load = useCallback(async () => {
     try {
@@ -127,10 +177,40 @@ export function Kiosk() {
       setRoster(r);
       setOffset(new Date(r.serverTime).getTime() - Date.now());
       setInvalid(false);
+      setOnline(true);
+      if (queueLength()) void sync();
+      else clearLocalStates();
     } catch (e) {
-      if ((e as KioskError).code === 'DEVICE_INVALID') setInvalid(true);
+      const code = (e as KioskError).code;
+      if (code === 'DEVICE_INVALID') setInvalid(true);
+      if (code === 'NETWORK') setOnline(false);
+    }
+  }, [sync]);
+
+  // the list of today's people is kept on the tablet so that punching still works without a connection
+  const refreshCache = useCallback(async () => {
+    try {
+      const r = await kapi<{ items: OfflineRosterItem[] }>('/kiosk/offline-roster');
+      saveOfflineRoster(r.items);
+      setCache(r.items);
+    } catch {
+      /* keep the old copy */
     }
   }, []);
+  useEffect(() => {
+    if (!token) return;
+    void refreshCache();
+    const a = setInterval(() => void refreshCache(), 5 * 60_000);
+    const goOffline = () => setOnline(false);
+    const goOnline = () => void load();
+    window.addEventListener('offline', goOffline);
+    window.addEventListener('online', goOnline);
+    return () => {
+      clearInterval(a);
+      window.removeEventListener('offline', goOffline);
+      window.removeEventListener('online', goOnline);
+    };
+  }, [token, refreshCache, load]);
 
   useEffect(() => {
     if (!token) return;
@@ -163,6 +243,15 @@ export function Kiosk() {
 
   useEffect(() => {
     if (q.trim().length < 2) return setFound([]);
+    if (!online) {
+      const needle = q.trim().toLowerCase();
+      return setFound(
+        cache
+          .filter((c) => c.displayName.toLowerCase().includes(needle))
+          .slice(0, 5)
+          .map((c) => ({ employeeRef: '', offlineRef: c.offlineRef, displayName: c.displayName })),
+      );
+    }
     const h = window.setTimeout(
       () =>
         void kapi<{ items: any[] }>('/kiosk/search', { query: { q: q.trim() } })
@@ -171,7 +260,39 @@ export function Kiosk() {
       250,
     );
     return () => window.clearTimeout(h);
-  }, [q]);
+  }, [q, online, cache]);
+
+  // a badge reader types the badge id and presses Enter, like a keyboard
+  useEffect(() => {
+    if (step.kind !== 'list' || roster?.identification !== 'badge_pin' || !online) return;
+    let buf = '';
+    let last = 0;
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName ?? '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      const at = Date.now();
+      if (at - last > 150) buf = '';
+      last = at;
+      if (e.key === 'Enter') {
+        const badge = buf;
+        buf = '';
+        if (badge.length < 4) return;
+        void kapi<{ employeeRef: string; displayName: string }>('/kiosk/badge', { body: { badge } })
+          .then((r) => pickRefRef.current(r.employeeRef, r.displayName))
+          .catch((err) =>
+            setNotice(
+              (err as KioskError).code === 'NOT_FOUND'
+                ? t('Badge unbekannt. Bitte Namen antippen.')
+                : (err as KioskError).message,
+            ),
+          );
+        return;
+      }
+      if (e.key.length === 1) buf += e.key;
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [step.kind, roster?.identification, online, t]);
 
   const clock = useMemo(
     () =>
@@ -208,7 +329,48 @@ export function Kiosk() {
   };
   const shiftLabel = (i: Item) =>
     i.plannedStart ? `${hm(i.plannedStart, tz)}–${hm(i.plannedEnd, tz)}` : t('Ungeplant');
-  const pick = (i: Item) => setStep({ kind: 'pin', item: i });
+  const offlineItems: Item[] = cache.map((c) => ({
+    employeeRef: '',
+    offlineRef: c.offlineRef,
+    displayName: c.displayName,
+    departmentName: null,
+    plannedStart: null,
+    plannedEnd: null,
+    state: localStates()[c.offlineRef] ?? 'not_in',
+  }));
+  const listItems = online ? (roster?.items ?? []) : offlineItems;
+  const pick = (i: Item) => {
+    setNotice(null);
+    if (!online) return setStep({ kind: 'action', item: i }); // the state is unknown offline: the person says what they do
+    if (i.state === 'working' || i.state === 'on_break') {
+      if (breakMode === 'start_stop') return setStep({ kind: 'action', item: i });
+      return setStep({ kind: 'pin', item: i, action: 'out' });
+    }
+    setStep({ kind: 'pin', item: i, action: 'in' });
+  };
+  // search results and badge scans do not know whether the person is already clocked in
+  const pickRef = async (employeeRef: string, displayName: string) => {
+    let state: Item['state'] = 'not_in';
+    try {
+      state = (await kapi<{ state: Item['state'] }>('/kiosk/punch-status', { query: { employeeRef } })).state;
+    } catch {
+      /* fall back to clock-in; the server answers ALREADY_CLOCKED_IN if needed */
+    }
+    pick({ employeeRef, displayName, departmentName: null, plannedStart: null, plannedEnd: null, state });
+  };
+  pickRefRef.current = pickRef;
+  const pickFound = (f: { employeeRef: string; offlineRef?: string; displayName: string }) =>
+    f.offlineRef
+      ? pick({
+          employeeRef: '',
+          offlineRef: f.offlineRef,
+          displayName: f.displayName,
+          departmentName: null,
+          plannedStart: null,
+          plannedEnd: null,
+          state: 'not_in',
+        })
+      : void pickRef(f.employeeRef, f.displayName);
 
   return (
     <main
@@ -248,6 +410,24 @@ export function Kiosk() {
             {clock}
           </div>
         </div>
+        {(!online || queueN > 0) && (
+          <div
+            role="status"
+            data-testid="kiosk-offline-banner"
+            style={{
+              padding: 'var(--space-3) var(--space-6)',
+              background: 'var(--color-text)',
+              color: 'var(--color-bg)',
+              fontWeight: 700,
+              fontSize: 16,
+            }}
+          >
+            {!online
+              ? t('Keine Verbindung. Stempelungen werden auf dem Tablet gespeichert und später übertragen.')
+              : t('Gespeicherte Stempelungen werden übertragen.')}{' '}
+            {queueN > 0 ? t('Wartend: {{n}}', { n: queueN }) : ''}
+          </div>
+        )}
         {step.kind === 'list' && (
           <div
             style={{
@@ -258,6 +438,16 @@ export function Kiosk() {
             }}
           >
             <h1 style={{ margin: 0, fontSize: 40 }}>{t('Tippe auf deinen Namen')}</h1>
+            {roster?.identification === 'badge_pin' && online && (
+              <div style={{ fontSize: 16 }} data-testid="kiosk-badge-hint">
+                {t('Oder halte deinen Badge an den Leser.')}
+              </div>
+            )}
+            {notice && (
+              <div role="status" style={{ fontSize: 16, fontWeight: 700 }} data-testid="kiosk-notice">
+                {notice}
+              </div>
+            )}
             <input
               className="input"
               style={{ fontSize: 18, minHeight: 52 }}
@@ -284,26 +474,7 @@ export function Kiosk() {
                       background: 'var(--color-bg)',
                       cursor: 'pointer',
                     }}
-                    onClick={async () => {
-                      // the search result does not know whether the person is already clocked in
-                      let state: 'not_in' | 'working' = 'not_in';
-                      try {
-                        const st = await kapi<{ state: 'not_in' | 'working' }>('/kiosk/punch-status', {
-                          query: { employeeRef: f.employeeRef },
-                        });
-                        state = st.state;
-                      } catch {
-                        /* fall back to clock-in; the server answers ALREADY_CLOCKED_IN if needed */
-                      }
-                      pick({
-                        employeeRef: f.employeeRef,
-                        displayName: f.displayName,
-                        departmentName: null,
-                        plannedStart: null,
-                        plannedEnd: null,
-                        state,
-                      });
-                    }}
+                    onClick={() => pickFound(f)}
                   >
                     {f.displayName}
                   </button>
@@ -319,9 +490,9 @@ export function Kiosk() {
                 border: '2px solid var(--color-divider)',
               }}
             >
-              {(roster?.items ?? []).map((i) => (
+              {listItems.map((i) => (
                 <button
-                  key={i.employeeRef}
+                  key={i.employeeRef || i.offlineRef}
                   data-testid={`kiosk-card-${i.displayName}`}
                   onClick={() => pick(i)}
                   style={{
@@ -342,35 +513,90 @@ export function Kiosk() {
                     {shiftLabel(i)}
                   </span>
                   <span
-                    className={`tag ${i.state === 'working' ? 'tag-accent' : 'tag-neutral'}`}
+                    className={`tag ${i.state === 'working' || i.state === 'on_break' ? 'tag-accent' : 'tag-neutral'}`}
                     style={{ alignSelf: 'flex-start', marginTop: 'auto' }}
                   >
                     {t(
                       i.state === 'working'
                         ? 'Eingestempelt'
-                        : i.state === 'done'
-                          ? 'Fertig'
-                          : 'Noch nicht da',
+                        : i.state === 'on_break'
+                          ? 'In der Pause'
+                          : i.state === 'done'
+                            ? 'Fertig'
+                            : 'Noch nicht da',
                     )}
                   </span>
                 </button>
               ))}
             </div>
-            {roster && roster.items.length === 0 && (
+            {listItems.length === 0 && (
               <div style={{ fontSize: 16 }}>{t('Gerade sind keine Schichten geplant. Nutze die Suche.')}</div>
             )}
           </div>
         )}
+        {step.kind === 'action' && (
+          <ActionStep
+            item={step.item}
+            online={online}
+            breakMode={breakMode}
+            onBack={reset}
+            onPick={(action) => setStep({ kind: 'pin', item: step.item, action })}
+          />
+        )}
         {step.kind === 'pin' && (
           <PinStep
             item={step.item}
+            action={step.action}
+            online={online}
+            cache={cache}
             pinLength={roster?.pinLength ?? 6}
             sub={shiftLabel(step.item)}
             onBack={reset}
-            onDone={setStep}
+            onDone={(s) => {
+              setQueueN(queueLength());
+              setStep(s);
+            }}
+            nowIso={() => new Date(Date.now() + offset).toISOString()}
             tz={tz}
           />
         )}
+        {step.kind === 'offbreak' && (
+          <BreakStep
+            step={{
+              kind: 'break',
+              item: step.item,
+              out: {
+                confirmToken: '',
+                grossMinutes: 0,
+                requiredBreakMinutes: 0,
+                suggestedBreakMinutes: 30,
+                options: [0, 15, 30, 45, 60],
+              },
+            }}
+            onBack={reset}
+            onDone={() => undefined}
+            offlineSubmit={async (brk, reason) => {
+              await enqueue({
+                action: 'out',
+                offlineRef: step.item.offlineRef!,
+                displayName: step.item.displayName,
+                pin: step.pin,
+                occurredAt: new Date(Date.now() + offset).toISOString(),
+                breakMinutes: brk,
+                reason,
+              });
+              setQueueN(queueLength());
+              setStep({
+                kind: 'saved',
+                item: step.item,
+                action: 'out',
+                at: new Date(Date.now() + offset).toISOString(),
+                offline: true,
+              });
+            }}
+          />
+        )}
+        {step.kind === 'saved' && <SavedDone step={step} tz={tz} onDone={reset} />}
         {step.kind === 'break' && (
           <BreakStep
             step={step}
@@ -470,19 +696,155 @@ function Register({ onSave, invalid }: { onSave: (t: string) => void; invalid: b
   );
 }
 
+const ACTION_LABEL: Record<PunchAction, string> = {
+  in: 'Einstempeln',
+  out: 'Ausstempeln',
+  break_start: 'Pause starten',
+  break_end: 'Pause beenden',
+};
+
+function ActionStep({
+  item,
+  online,
+  breakMode,
+  onBack,
+  onPick,
+}: {
+  item: Item;
+  online: boolean;
+  breakMode: 'confirm_at_clock_out' | 'start_stop';
+  onBack: () => void;
+  onPick: (a: PunchAction) => void;
+}) {
+  const { t } = useTranslation();
+  const actions: PunchAction[] = !online
+    ? breakMode === 'start_stop'
+      ? ['in', 'out', 'break_start', 'break_end']
+      : ['in', 'out']
+    : item.state === 'on_break'
+      ? ['break_end', 'out']
+      : ['break_start', 'out'];
+  return (
+    <div
+      style={{
+        padding: 'var(--space-6)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 'var(--space-4)',
+        flex: 1,
+      }}
+    >
+      <button className="btn btn-ghost" style={{ alignSelf: 'flex-start', fontSize: 16 }} onClick={onBack}>
+        ← {t('Nicht du?')}
+      </button>
+      <h1 style={{ margin: 0, fontSize: 48, lineHeight: 1.05 }}>{item.displayName}</h1>
+      <div
+        role="group"
+        aria-label={t('Was möchtest du tun?')}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))',
+          gap: 2,
+          background: 'var(--color-divider)',
+          border: '2px solid var(--color-divider)',
+        }}
+      >
+        {actions.map((a) => (
+          <button
+            key={a}
+            data-testid={`action-${a}`}
+            onClick={() => onPick(a)}
+            style={{
+              minHeight: 120,
+              fontSize: 28,
+              fontWeight: 800,
+              border: 0,
+              cursor: 'pointer',
+              background: 'var(--color-bg)',
+              textAlign: 'left',
+              padding: '0 var(--space-6)',
+            }}
+          >
+            {t(ACTION_LABEL[a])}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SavedDone({
+  step,
+  tz,
+  onDone,
+}: {
+  step: Extract<Step, { kind: 'saved' }>;
+  tz: string;
+  onDone: () => void;
+}) {
+  const { t } = useTranslation();
+  const label =
+    step.action === 'break_start'
+      ? 'Pause gestartet'
+      : step.action === 'break_end'
+        ? 'Pause beendet'
+        : step.action === 'in'
+          ? 'Eingestempelt'
+          : 'Ausgestempelt';
+  return (
+    <div
+      style={{
+        flex: 1,
+        background: 'var(--color-accent)',
+        color: 'var(--color-bg)',
+        padding: 'var(--space-8)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 'var(--space-4)',
+      }}
+      role="status"
+      data-testid="kiosk-done"
+    >
+      <h1 style={{ margin: 0, fontSize: 56, lineHeight: 1 }}>
+        {t(label)} {hm(step.at, tz)}
+      </h1>
+      <div style={{ fontSize: 22 }}>{step.item.displayName}</div>
+      {step.offline && (
+        <div
+          style={{ fontSize: 18, borderTop: '2px solid var(--color-bg)', paddingTop: 'var(--space-3)' }}
+          data-testid="kiosk-saved-offline"
+        >
+          {t('Offline gespeichert. Deine Leitung prüft die Zeit.')}
+        </div>
+      )}
+      <button onClick={onDone} style={doneBtn} data-testid="kiosk-finish">
+        {t('Fertig')}
+      </button>
+    </div>
+  );
+}
+
 function PinStep({
   item,
+  action,
+  online,
+  cache,
   pinLength,
   sub,
   onBack,
   onDone,
+  nowIso,
   tz,
 }: {
   item: Item;
+  action: PunchAction;
+  online: boolean;
+  cache: OfflineRosterItem[];
   pinLength: number;
   sub: string;
   onBack: () => void;
   onDone: (s: Step) => void;
+  nowIso: () => string;
   tz: string;
 }) {
   const { t } = useTranslation();
@@ -493,18 +855,38 @@ function PinStep({
   const submit = async (value: string) => {
     setBusy(true);
     setError(null);
+    // without a connection the punch waits on the tablet; the server checks the PIN when it is sent
+    const queue = async () => {
+      const offlineRef = item.offlineRef ?? cache.find((c) => c.displayName === item.displayName)?.offlineRef;
+      if (!offlineRef) throw new KioskError(0, 'NETWORK', {}, 'No connection');
+      const off = { ...item, offlineRef };
+      if (action === 'out') return onDone({ kind: 'offbreak', item: off, pin: value });
+      await enqueue({ action, offlineRef, displayName: item.displayName, pin: value, occurredAt: nowIso() });
+      onDone({ kind: 'saved', item: off, action, at: nowIso(), offline: true });
+    };
     try {
-      if (item.state === 'working') {
-        const out = await kapi('/kiosk/punch-out', { body: { employeeRef: item.employeeRef, pin: value } });
+      if (!online) return await queue();
+      const body = { employeeRef: item.employeeRef, pin: value };
+      if (action === 'out') {
+        const out = await kapi('/kiosk/punch-out', { body });
         onDone({ kind: 'break', item, out });
-      } else {
-        const res = await kapi('/kiosk/punch-in', { body: { employeeRef: item.employeeRef, pin: value } });
+      } else if (action === 'in') {
+        const res = await kapi('/kiosk/punch-in', { body });
         onDone({ kind: 'in', item, res });
+      } else {
+        await kapi(action === 'break_start' ? '/kiosk/break-start' : '/kiosk/break-end', { body });
+        onDone({ kind: 'saved', item, action, at: nowIso(), offline: false });
       }
     } catch (e) {
       const err = e as KioskError;
       setPin('');
-      if (err.code === 'PIN_INVALID')
+      if (err.code === 'NETWORK') {
+        try {
+          return await queue();
+        } catch {
+          setError(t('Keine Verbindung.'));
+        }
+      } else if (err.code === 'PIN_INVALID')
         setError(
           err.details.remainingAttempts === 1
             ? t('Falsche PIN. Noch 1 Versuch.')
@@ -513,6 +895,8 @@ function PinStep({
       else if (err.code === 'PIN_LOCKED') setError(t('PIN gesperrt. Bitte wende dich an deine Leitung.'));
       else if (err.code === 'ALREADY_CLOCKED_IN') setError(t('Du bist bereits eingestempelt.'));
       else if (err.code === 'NOT_FOUND') setError(t('Kein offener Eintrag gefunden.'));
+      else if (err.code === 'CONFLICT')
+        setError(t('Das passt gerade nicht: Pause läuft bereits oder ist nicht gestartet.'));
       else setError(err.message);
     } finally {
       setBusy(false);
@@ -551,7 +935,7 @@ function PinStep({
         </button>
         <h1 style={{ margin: 0, fontSize: 48, lineHeight: 1.05 }}>{item.displayName}</h1>
         <div style={{ fontSize: 18 }}>
-          {item.state === 'working' ? t('Ausstempeln') : t('Einstempeln')} · {sub}
+          {t(ACTION_LABEL[action])} · {sub}
         </div>
         <div style={{ marginTop: 'auto', fontSize: 20, fontWeight: 600 }}>
           {t('Gib deine {{n}}-stellige PIN ein', { n: pinLength })}
@@ -698,10 +1082,12 @@ function BreakStep({
   step,
   onDone,
   onBack,
+  offlineSubmit,
 }: {
   step: Extract<Step, { kind: 'break' }>;
   onDone: (r: any) => void;
   onBack: () => void;
+  offlineSubmit?: (brk: number, reason?: string) => Promise<void>;
 }) {
   const { t } = useTranslation();
   const { out } = step;
@@ -712,6 +1098,7 @@ function BreakStep({
   const submit = async () => {
     setError(null);
     try {
+      if (offlineSubmit) return await offlineSubmit(brk, reason.trim() || undefined);
       onDone(
         await kapi('/kiosk/punch-out/confirm-break', {
           body: {
@@ -746,11 +1133,19 @@ function BreakStep({
       <h1 style={{ margin: 0, fontSize: 40 }}>
         {step.item.displayName}: {t('Pause bestätigen')}
       </h1>
-      <div style={{ fontSize: 18 }}>
-        {t('Gearbeitet')}: {Math.floor(out.grossMinutes / 60)}:
-        {String(out.grossMinutes % 60).padStart(2, '0')} {t('Std.')} · {t('Vorgeschrieben')}:{' '}
-        {out.requiredBreakMinutes} {t('Min.')}
-      </div>
+      {out.grossMinutes > 0 && (
+        <div style={{ fontSize: 18 }}>
+          {t('Gearbeitet')}: {Math.floor(out.grossMinutes / 60)}:
+          {String(out.grossMinutes % 60).padStart(2, '0')} {t('Std.')} · {t('Vorgeschrieben')}:{' '}
+          {out.requiredBreakMinutes} {t('Min.')}
+          {out.recordedBreakMinutes != null && (
+            <>
+              {' '}
+              · {t('Aufgezeichnet')}: {out.recordedBreakMinutes} {t('Min.')}
+            </>
+          )}
+        </div>
+      )}
       <div
         role="radiogroup"
         aria-label={t('Pause')}

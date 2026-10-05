@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { AuthProvider, homePathFor, useAuth, type RoleName } from './lib/auth';
 import { ToastProvider } from './components/ui';
 import { PlannerShell } from './components/Shell';
-import { Login } from './pages/Login';
+import { Login, SsoCallback } from './pages/Login';
 import { AcceptInvitation, ForgotPassword } from './pages/AccountPages';
 import { Planning } from './pages/planning/Planning';
 import { Kiosk } from './pages/Kiosk';
@@ -25,6 +25,8 @@ import {
   PortalVacation,
 } from './pages/Portal';
 import { AdminAudit, AdminRules, AdminTablets } from './pages/AdminMore';
+import { AdminIntegrations } from './pages/AdminPlatform';
+import { Staffing } from './pages/Staffing';
 import { Staff } from './pages/Staff';
 import { StaffNew } from './pages/StaffNew';
 import { StaffImport } from './pages/StaffImport';
@@ -67,6 +69,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/login/sso" element={<SsoCallback />} />
           <Route path="/accept-invitation" element={<AcceptInvitation />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/kiosk" element={<Kiosk />} />
@@ -77,6 +80,7 @@ export function App() {
               <Route path="/vacation/*" element={<VacationRoutes />} />
               <Route path="/live" element={<Live />} />
               <Route path="/open-shifts" element={<OpenShifts />} />
+              <Route path="/staffing" element={<Staffing />} />
               <Route path="/announcements" element={<Announcements />} />
               <Route path="/compliance" element={<Compliance />} />
               <Route path="/analytics" element={<Analytics />} />
@@ -91,6 +95,7 @@ export function App() {
                 <Route path="hotels" element={<AdminHotels />} />
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="tablets" element={<AdminTablets />} />
+                <Route path="integrations" element={<AdminIntegrations />} />
                 <Route path="rules" element={<AdminRules />} />
                 <Route path="audit" element={<AdminAudit />} />
                 <Route path="companies" element={<AdminCompanies />} />

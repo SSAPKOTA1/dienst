@@ -1,5 +1,12 @@
 import argon2 from 'argon2';
-import { createCipheriv, createDecipheriv, createHash, randomBytes, randomInt } from 'node:crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  createHmac,
+  randomBytes,
+  randomInt,
+} from 'node:crypto';
 import { isWeakPin } from '@dienst/rules';
 import { AppError } from './errors';
 
@@ -15,6 +22,9 @@ export const verifySecret = async (hash: string, plain: string): Promise<boolean
 };
 
 export const sha256 = (s: string): string => createHash('sha256').update(s).digest('hex');
+/** Badge ids are stored as a keyed hash only (SPEC backlog: never the raw badge). */
+export const badgeHash = (key: string, badge: string): string =>
+  createHmac('sha256', key).update(`badge:${badge.trim()}`).digest('hex');
 export const randomToken = (): string => randomBytes(32).toString('base64url');
 
 /** One-time activation code: 10 chars, uppercase letters and digits without 0, O, 1, I (SPEC 4.14). */

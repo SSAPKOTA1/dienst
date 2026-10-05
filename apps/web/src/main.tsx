@@ -18,3 +18,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </React.StrictMode>,
 );
+
+// installable app + offline shell; skipped in development so hot reload is not served from a cache
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener(
+    'load',
+    () => void navigator.serviceWorker.register('/sw.js').catch(() => undefined),
+  );
+}

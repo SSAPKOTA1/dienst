@@ -49,7 +49,11 @@ Use `RATE_LIMIT_AUTH=1000 RATE_LIMIT_GLOBAL=100000` for the API when you run the
 
 Accounts and roles with role selector and TOTP for admins; automatic employee accounts (invitation link or activation code); companies, hotels, departments, shift templates and required headcount; employees with contracts, PINs and the computed time account; the Dienstplan (employee and shift view, drag and drop, keyboard path, draft/published with change panel and revert, substitute finder, absences, rule checks with emergency override); tablet kiosk (name + PIN, break confirmation, grace period, unplanned punches, auto-checkout, heartbeat); Live view; approvals, corrections, vacation requests; hours-visibility setting; month close and reopen; schedule Excel, timesheet PDF/Excel, attendance and audit CSV; employee portal; admin setup (hotels, users, tablets, read-only rules, audit log, onboarding checklist); employee Excel import with dry run, error CSV and a one-time credentials sheet.
 
-Not built on purpose (SPEC section 10): vacation planner, wishes, messages, blackout periods, month overview, time-account ledger, shift swaps, open shifts, availability, qualifications, documents, social feed, payroll export, SSO, offline kiosk; no wage fields, no employee sick reporting, no biometrics, no GPS.
+## What is built (backlog, M10-M13)
+
+Leave: blackout periods, half days, vacation planner, wishes, notices and carryover, month overview. Hours: time-account ledger, hour categories, payroll export (hours only), rest-period compensation, Sunday and night-worker checks, stricter-only rule profiles, feature toggles, analytics. Collaboration: shift swaps, open shifts, availability, qualifications, encrypted documents, offboarding, announcements, questions, feed, calendar subscription. Platform: break start/stop, badge identification, web punch (hotel network only), offline kiosk queue, occupancy staffing suggestions, read-only public API with keys (`docs/PUBLIC-API.md`), OpenID Connect SSO, installable PWA. Specification: `docs/BACKLOG-SPEC.md`.
+
+Still excluded on purpose: wage or hourly-rate fields, employee sick reporting (planners mark sickness), biometrics, GPS or location tracking, native apps (the PWA is provided instead).
 
 ## Layout
 

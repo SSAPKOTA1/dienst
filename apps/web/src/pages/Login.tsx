@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api, ApiError, setToken } from '../lib/api';
 import { homePathFor, useAuth, type AvailableRole, type RoleName } from '../lib/auth';
@@ -84,6 +84,10 @@ export function Login() {
   const [busy, setBusy] = useState(false);
   const [setup, setSetup] = useState<{ secret: string; qrDataUrl: string } | null>(null);
   const [code, setCode] = useState('');
+  const [params] = useSearchParams();
+  const [ssoOpen, setSsoOpen] = useState(false);
+  const [company, setCompany] = useState('');
+  const ssoError = params.get('sso_error');
 
   if (me) return <Navigate to={homePathFor(me.role)} replace />;
 
@@ -276,6 +280,45 @@ export function Login() {
           </div>
         )}
       </form>
+      {ssoError && (
+        <div
+          role="alert"
+          data-testid="sso-error"
+          style={{ color: 'var(--warn)', fontSize: 13, fontWeight: 600 }}
+        >
+          {t(
+            ssoError === 'no_account'
+              ? 'Für dieses Firmenkonto gibt es kein Konto in der App. Bitte die Administration fragen.'
+              : 'Die Anmeldung mit dem Firmenkonto hat nicht geklappt.',
+          )}
+        </div>
+      )}
+      <button type="button" className="btn btn-secondary" onClick={() => setSsoOpen(!ssoOpen)}>
+        {t('Mit Firmenkonto anmelden')}
+      </button>
+      {ssoOpen && (
+        <form
+          style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-end' }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            window.location.href = `/api/v1/auth/sso/start?company=${encodeURIComponent(company.trim())}`;
+          }}
+        >
+          <div className="field" style={{ flex: 1 }}>
+            <label htmlFor="sso-company">{t('Firmennummer')}</label>
+            <input
+              id="sso-company"
+              className="input"
+              inputMode="numeric"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+            />
+          </div>
+          <button className="btn btn-primary" disabled={!/^\d+$/.test(company.trim())}>
+            {t('Weiter')}
+          </button>
+        </form>
+      )}
       <button
         type="button"
         className="btn btn-ghost"
@@ -298,6 +341,79 @@ export function Login() {
         )}{' '}
         <Link to="/accept-invitation">{t('Ich habe einen Aktivierungscode')}</Link>
       </div>
+    </AuthFrame>
+  );
+}
+
+/** Landing page of the single sign-on redirect: trades the one-time ticket for a session. */
+export function SsoCallback() {
+  const { t } = useTranslation();
+  const nav = useNavigate();
+  const { setSession } = useAuth();
+  const [roles, setRoles] = useState<AvailableRole[] | null>(null);
+  const [pre, setPre] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    const ticket = new URLSearchParams(window.location.hash.slice(1)).get('ticket');
+    window.history.replaceState(null, '', window.location.pathname);
+    if (!ticket) return setError(t('Die Anmeldung ist abgelaufen. Bitte noch einmal versuchen.'));
+    api('/auth/sso/exchange', { body: { ticket }, token: null })
+      .then((r) => {
+        if (r.accessToken) {
+          setSession(r.accessToken);
+          nav('/', { replace: true });
+        } else {
+          setPre(r.preToken);
+          setRoles(r.availableRoles);
+        }
+      })
+      .catch((e: ApiError) =>
+        setError(
+          e.details?.adminNeedsMfa
+            ? t('Administratoren brauchen beim Firmenkonto eine Zwei-Faktor-Anmeldung.')
+            : t('Die Anmeldung mit dem Firmenkonto hat nicht geklappt.'),
+        ),
+      );
+  }, [nav, setSession, t]);
+  const pick = async (r: AvailableRole) => {
+    try {
+      const s = await api('/auth/select-role', {
+        body: { role: r.role, employeeId: r.employeeId },
+        token: pre,
+      });
+      setSession(s.accessToken);
+      nav('/', { replace: true });
+    } catch {
+      setError(t('Die Anmeldung mit dem Firmenkonto hat nicht geklappt.'));
+    }
+  };
+  return (
+    <AuthFrame title={roles ? 'Rolle wählen' : 'Anmelden'}>
+      {error && (
+        <>
+          <div role="alert" style={{ color: 'var(--warn)', fontWeight: 600 }}>
+            {error}
+          </div>
+          <Link to="/login">{t('Zurück zur Anmeldung')}</Link>
+        </>
+      )}
+      {!error && !roles && <div>{t('Einen Moment …')}</div>}
+      {roles && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+          {roles.map((r) => (
+            <button
+              key={`${r.role}-${r.employeeId ?? ''}`}
+              className="btn btn-secondary"
+              onClick={() => void pick(r)}
+            >
+              {t(roleLabel(r.role))} {r.companyName ?? ''}
+            </button>
+          ))}
+        </div>
+      )}
     </AuthFrame>
   );
 }

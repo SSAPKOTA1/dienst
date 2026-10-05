@@ -14,6 +14,8 @@ const FLAG_LABEL: Record<string, string> = {
   auto_checkout: 'Auto-Ausstempeln',
   under_break: 'Pause zu kurz',
   correction: 'Korrektur',
+  offline: 'Offline erfasst',
+  web: 'Web-Stempelung',
 };
 
 const CORRECTION_LABEL: Record<string, string> = {

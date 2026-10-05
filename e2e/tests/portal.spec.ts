@@ -37,7 +37,10 @@ test.describe('Handy-Portal', () => {
   test('unapproved hours stay hidden ("Wartet auf Freigabe") and the timesheet PDF downloads', async ({ page }) => {
     await login(page, 'maria.garcia');
     await page.goto('/me/attendance');
-    if ((await page.getByTestId('hours-hidden').count()) === 0) await page.getByRole('button', { name: 'Vorheriger Monat' }).click();
+    await page.waitForLoadState('networkidle');
+    // the seed's pending records sit in the current or the previous month, depending on the day
+    if ((await page.getByTestId('hours-hidden').count()) === 0)
+      await page.getByRole('button', { name: 'Vorheriger Monat' }).click();
     await expect(page.getByTestId('hours-hidden').first()).toHaveText('Wartet auf Freigabe');
     await page.goto('/me/account');
     const [dl] = await Promise.all([page.waitForEvent('download'), page.getByTestId('my-timesheet-pdf').click()]);

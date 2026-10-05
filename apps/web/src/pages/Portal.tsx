@@ -8,7 +8,7 @@ import { fdate, fnum, fsigned, ftime } from '../lib/format';
 import { Dialog, ErrorNote, Field, useToast } from '../components/ui';
 import { AccountMenu } from '../components/Shell';
 import { LedgerTable } from '../components/Ledger';
-import { PortalExtras } from './PortalExtras';
+import { WebPunchCard, PortalExtras } from './PortalExtras';
 import { LangSwitch } from '../components/LangSwitch';
 import { addDaysIso, mondayOfIso, todayIso, weekRangeLabel } from './planning/util';
 
@@ -193,6 +193,7 @@ export function PortalHome() {
           </div>
         )}
       </div>
+      <WebPunchCard />
       <section style={card} aria-labelledby="h-next">
         <h2 id="h-next" style={cardHead}>
           {t('Nächste Schichten')}

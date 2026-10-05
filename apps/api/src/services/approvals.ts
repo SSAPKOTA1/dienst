@@ -32,10 +32,17 @@ export function assertNotSelf(p: Principal, employeeUserId: number) {
     throw new AppError('SELF_APPROVAL', 'You cannot decide on your own records');
 }
 
-export type Flag = 'variation' | 'unplanned' | 'auto_checkout' | 'under_break' | 'correction';
+export type Flag =
+  'variation' | 'unplanned' | 'auto_checkout' | 'under_break' | 'correction' | 'offline' | 'web';
 
 export function flagsOf(
-  r: { is_unplanned: boolean; auto_checked_out: boolean; under_break_warning: boolean; source: string },
+  r: {
+    is_unplanned: boolean;
+    auto_checked_out: boolean;
+    under_break_warning: boolean;
+    source: string;
+    offline_punch?: boolean;
+  },
   variations: Array<{ variation_type: string; status: string }>,
 ): Flag[] {
   const f: Flag[] = [];
@@ -44,6 +51,8 @@ export function flagsOf(
   if (r.auto_checked_out) f.push('auto_checkout');
   if (r.under_break_warning) f.push('under_break');
   if (r.source === 'correction') f.push('correction');
+  if (r.offline_punch || r.source === 'kiosk_offline') f.push('offline');
+  if (r.source === 'web') f.push('web');
   return f;
 }
 
@@ -100,6 +109,7 @@ export async function listWorkedTime(
       'p.is_unplanned',
       'p.auto_checked_out',
       'p.under_break_warning',
+      'p.offline_punch',
       'p.source',
       'p.approval_status',
       'p.approval_notes',

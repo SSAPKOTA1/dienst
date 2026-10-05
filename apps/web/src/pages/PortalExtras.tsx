@@ -251,3 +251,130 @@ function AvailDialog({ onClose, onDone }: { onClose: () => void; onDone: () => v
     </Dialog>
   );
 }
+
+/** Clock in and out in the browser, only where the hotel allows it and only from the hotel network. */
+export function WebPunchCard() {
+  const { t } = useTranslation();
+  const toast = useToast();
+  const st = useGet('/me/punch', undefined, { refetchInterval: 30_000 });
+  const inn = useSend<{ hotelId: number }>('POST', '/me/punch/in');
+  const out = useSend<{ breakMinutes: number; reason?: string }>('POST', '/me/punch/out');
+  const brk = useSend<{ action: 'start' | 'end' }>('POST', '/me/punch/break');
+  const [b, setB] = useState<number | null>(null);
+  const [reason, setReason] = useState('');
+  if (!st.data?.enabled) return null;
+  const open = st.data.open;
+  const hotel = st.data.hotels[0];
+  const net = hotel && !hotel.networkOk;
+  const err = inn.error ?? out.error ?? brk.error;
+  const chosen = b ?? open?.suggestedBreakMinutes ?? 0;
+  const short = open && chosen < open.requiredBreakMinutes;
+  return (
+    <section
+      style={{ border: '2px solid var(--color-text)', margin: 'var(--space-3)' }}
+      aria-labelledby="wp-h"
+      data-testid="web-punch"
+    >
+      <h2
+        id="wp-h"
+        style={{
+          margin: 0,
+          padding: 'var(--space-2) var(--space-3)',
+          fontSize: 14,
+          background: 'var(--color-surface)',
+          borderBottom: '2px solid var(--color-text)',
+        }}
+      >
+        {t('Stempeln im Browser')}
+      </h2>
+      <div
+        style={{ padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}
+      >
+        {net && <div role="status">{t('Stempeln geht nur im Netzwerk des Hotels.')}</div>}
+        {!open && (
+          <button
+            className="btn btn-primary"
+            disabled={!!net}
+            onClick={() =>
+              inn.mutate(
+                { hotelId: hotel.hotelId },
+                { onSuccess: () => (toast(t('Eingestempelt.')), void st.refetch()) },
+              )
+            }
+          >
+            {t('Einstempeln')}
+          </button>
+        )}
+        {open && (
+          <>
+            <div role="status">
+              ● {t('Eingestempelt seit')}{' '}
+              {new Date(open.since).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+              {open.onBreak ? ` · ${t('In der Pause')}` : ''}
+            </div>
+            {st.data.hotels.find((h: any) => h.hotelId === open.hotelId)?.breakMode === 'start_stop' && (
+              <button
+                className="btn btn-secondary"
+                disabled={!!net}
+                onClick={() =>
+                  brk.mutate(
+                    { action: open.onBreak ? 'end' : 'start' },
+                    { onSuccess: () => void st.refetch() },
+                  )
+                }
+              >
+                {open.onBreak ? t('Pause beenden') : t('Pause starten')}
+              </button>
+            )}
+            <div
+              role="radiogroup"
+              aria-label={t('Pause')}
+              style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}
+            >
+              {open.options.map((o: number) => (
+                <button
+                  key={o}
+                  role="radio"
+                  aria-checked={chosen === o}
+                  className={chosen === o ? 'btn btn-primary' : 'btn btn-secondary'}
+                  onClick={() => setB(o)}
+                >
+                  {o} {t('Min.')}
+                </button>
+              ))}
+            </div>
+            {short && (
+              <input
+                className="input"
+                aria-label={t('Grund')}
+                placeholder={t('Grund (Pause kürzer als vorgeschrieben)')}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+              />
+            )}
+            <button
+              className="btn btn-primary"
+              disabled={!!net || (!!short && !reason.trim())}
+              onClick={() =>
+                out.mutate(
+                  { breakMinutes: chosen, reason: reason.trim() || undefined },
+                  {
+                    onSuccess: () => (
+                      toast(t('Ausgestempelt. Deine Leitung prüft die Zeit.')),
+                      setB(null),
+                      setReason(''),
+                      void st.refetch()
+                    ),
+                  },
+                )
+              }
+            >
+              {t('Ausstempeln')}
+            </button>
+          </>
+        )}
+        <ErrorNote error={err} />
+      </div>
+    </section>
+  );
+}

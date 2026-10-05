@@ -33,46 +33,55 @@ const getDummyHash = () => (dummyHash ??= hashSecret('timing-equaliser'));
 
 const roleSchema = z.enum(['superAdmin', 'admin', 'manager', 'employee']);
 
+export async function startSessionFor(
+  app: FastifyInstance,
+  req: FastifyRequest,
+  reply: FastifyReply,
+  userId: number,
+  role: Role,
+  employeeId: number | null,
+) {
+  const principal = await buildPrincipal(app.db, userId, role, employeeId);
+  if (!principal) throw new AppError('FORBIDDEN_SCOPE', 'Role is not available for this account');
+  const raw = randomToken();
+  await app.db
+    .insertInto('refresh_token')
+    .values({
+      user_id: userId,
+      token_hash: sha256(raw),
+      active_role: role,
+      active_employee_id: employeeId,
+      expires_at: new Date(app.clock().getTime() + REFRESH_TTL_MS),
+    })
+    .execute();
+  reply.setCookie(COOKIE, raw, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: app.cfg.COOKIE_SECURE,
+    path: '/api/v1/auth',
+    maxAge: REFRESH_TTL_MS / 1000,
+  });
+  const accessToken = await signAccessToken(app.cfg.JWT_SECRET, {
+    sub: userId,
+    role,
+    employeeId: principal.employeeId ?? undefined,
+    companyIds: role === 'admin' ? principal.scope.companyIds : undefined,
+    hotelIds: role === 'manager' || role === 'employee' ? principal.scope.hotelIds : undefined,
+  });
+  return { accessToken, role, employeeId: principal.employeeId };
+}
+
 export async function authRoutes(app: FastifyInstance) {
   const r = app.withTypeProvider<ZodTypeProvider>();
   const authLimit = { rateLimit: { max: app.cfg.RATE_LIMIT_AUTH, timeWindow: '1 minute' } };
 
-  async function startSession(
+  const startSession = (
     req: FastifyRequest,
     reply: FastifyReply,
     userId: number,
     role: Role,
     employeeId: number | null,
-  ) {
-    const principal = await buildPrincipal(app.db, userId, role, employeeId);
-    if (!principal) throw new AppError('FORBIDDEN_SCOPE', 'Role is not available for this account');
-    const raw = randomToken();
-    await app.db
-      .insertInto('refresh_token')
-      .values({
-        user_id: userId,
-        token_hash: sha256(raw),
-        active_role: role,
-        active_employee_id: employeeId,
-        expires_at: new Date(app.clock().getTime() + REFRESH_TTL_MS),
-      })
-      .execute();
-    reply.setCookie(COOKIE, raw, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: app.cfg.COOKIE_SECURE,
-      path: '/api/v1/auth',
-      maxAge: REFRESH_TTL_MS / 1000,
-    });
-    const accessToken = await signAccessToken(app.cfg.JWT_SECRET, {
-      sub: userId,
-      role,
-      employeeId: principal.employeeId ?? undefined,
-      companyIds: role === 'admin' ? principal.scope.companyIds : undefined,
-      hotelIds: role === 'manager' || role === 'employee' ? principal.scope.hotelIds : undefined,
-    });
-    return { accessToken, role, employeeId: principal.employeeId };
-  }
+  ) => startSessionFor(app, req, reply, userId, role, employeeId);
 
   const isStaffAdmin = (roles: { role: string }[]) =>
     roles.some((x) => x.role === 'superAdmin' || x.role === 'admin');
@@ -189,7 +198,7 @@ export async function authRoutes(app: FastifyInstance) {
       (x) => x.role === body.role && (body.role !== 'employee' || x.employeeId === body.employeeId),
     );
     if (!match) throw new AppError('FORBIDDEN_SCOPE', 'Role is not available for this account');
-    if (body.role === 'superAdmin' || body.role === 'admin') {
+    if ((body.role === 'superAdmin' || body.role === 'admin') && !(body.role === 'admin' && req.preSsoMfa)) {
       const u = await app.db
         .selectFrom('user_account')
         .select('totp_enabled')

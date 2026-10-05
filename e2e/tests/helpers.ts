@@ -18,10 +18,10 @@ export async function login(page: Page, loginName: string, opts: { totp?: boolea
   await page.goto('/login');
   await page.fill('#login', loginName);
   await page.fill('#password', PASSWORD);
-  await page.getByRole('button', { name: 'Anmelden' }).click();
+  await page.getByRole('button', { name: 'Anmelden', exact: true }).click();
   if (opts.totp) {
     await page.fill('#totp', await freshTotp());
-    await page.getByRole('button', { name: 'Anmelden' }).click();
+    await page.getByRole('button', { name: 'Anmelden', exact: true }).click();
   }
   if (opts.role) await page.getByRole('button', { name: opts.role }).click();
   await expect(page.getByRole('navigation').first()).toBeVisible();

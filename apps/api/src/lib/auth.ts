@@ -9,6 +9,7 @@ declare module 'fastify' {
   interface FastifyRequest {
     principal: Principal | null;
     preUserId: number | null;
+    preSsoMfa: boolean;
   }
 }
 
@@ -52,12 +53,15 @@ export const requirePreOrAccess: preValidationAsyncHookHandler = async (req) => 
   const app = req.server;
   const tok = bearer(req);
   if (!tok) throw new AppError('UNAUTHENTICATED', 'Missing token');
-  const claims = await verifyToken<{ role?: Role; pre?: boolean; employeeId?: number }>(
+  const claims = await verifyToken<{ role?: Role; pre?: boolean; employeeId?: number; ssoMfa?: boolean }>(
     app.cfg.JWT_SECRET,
     tok,
   );
-  if (!claims) throw new AppError('UNAUTHENTICATED', 'Invalid or expired token');
+  // only real session tokens: other signed payloads (kiosk refs, SSO tickets) carry neither a role nor `pre`
+  if (!claims || !claims.sub || (!claims.pre && !claims.role))
+    throw new AppError('UNAUTHENTICATED', 'Invalid or expired token');
   req.preUserId = Number(claims.sub);
+  req.preSsoMfa = claims.ssoMfa === true;
   if (claims.role && !claims.pre) {
     req.principal = await buildPrincipal(app.db, Number(claims.sub), claims.role, claims.employeeId);
   }

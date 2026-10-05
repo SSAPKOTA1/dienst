@@ -14,6 +14,7 @@ export const PLANNER_NAV: NavSection[] = [
       { path: '/month', label: 'Monatsübersicht' },
       { path: '/vacation', label: 'Urlaub' },
       { path: '/open-shifts', label: 'Offene Schichten' },
+      { path: '/staffing', label: 'Besetzung' },
     ],
   },
   {

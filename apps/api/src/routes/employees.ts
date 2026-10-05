@@ -6,7 +6,8 @@ import { addDays, isMinor } from '@dienst/rules';
 import { AppError, notFound } from '../lib/errors';
 import { actorOf, getPrincipal, requireRole } from '../lib/auth';
 import { audit } from '../lib/audit';
-import { generatePin, hashSecret } from '../lib/security';
+import QRCode from 'qrcode';
+import { badgeHash, generatePin, hashSecret, randomActivationCode } from '../lib/security';
 import { csvIds, idParam, isoDate, pageQuery, paged } from '../lib/http';
 import { issueInvitation, sendInvitationMail } from '../services/accounts';
 import {
@@ -148,6 +149,7 @@ export async function employeeDetail(db: Db, p: Principal, id: number, today: st
     departmentIds: ds.map((d) => d.department_id),
     contract: c ? contractOut(c) : null,
     pin: { setAt: e.pin_set_at, lockedUntil: e.pin_locked_until, failedCount: e.pin_failed_count },
+    hasBadge: !!e.badge_hash,
     account: {
       userId: e.user_id,
       username: u.username,
@@ -580,6 +582,69 @@ export async function employeeRoutes(app: FastifyInstance) {
         });
         return { unlocked: true };
       });
+    },
+  );
+
+  // ---------------------------------------------------------------- badge (NFC tag or QR) - only a keyed hash is stored
+  r.post(
+    '/employees/:id/badge',
+    {
+      preValidation: requireRole(AD, SA),
+      schema: { params: idParam, body: z.object({ badge: z.string().min(8).max(100).optional() }) },
+    },
+    async (req) => {
+      const p = getPrincipal(req);
+      const out = await tx(async (trx) => {
+        const { e } = await employeeView(trx, p, req.params.id);
+        const badge = req.body.badge?.trim() || `B-${randomActivationCode()}${randomActivationCode()}`;
+        const hash = badgeHash(app.cfg.TOTP_ENC_KEY, badge);
+        const dup = await trx
+          .selectFrom('employee')
+          .select('employee_id')
+          .where('company_id', '=', e.company_id)
+          .where('badge_hash', '=', hash)
+          .where('employee_id', '<>', e.employee_id)
+          .executeTakeFirst();
+        if (dup) throw new AppError('CONFLICT', 'This badge is already assigned');
+        await trx
+          .updateTable('employee')
+          .set({ badge_hash: hash })
+          .where('employee_id', '=', e.employee_id)
+          .execute();
+        await audit(trx, actorOf(req), {
+          action: 'badge_assigned',
+          entityType: 'employee',
+          entityId: e.employee_id,
+          companyId: e.company_id,
+          hotelId: e.primary_hotel_id,
+        });
+        return badge;
+      });
+      return { badge: out, qrDataUrl: await QRCode.toDataURL(out, { margin: 1, width: 240 }) };
+    },
+  );
+
+  r.delete(
+    '/employees/:id/badge',
+    { preValidation: requireRole(AD, SA), schema: { params: idParam } },
+    async (req, reply) => {
+      const p = getPrincipal(req);
+      await tx(async (trx) => {
+        const { e } = await employeeView(trx, p, req.params.id);
+        await trx
+          .updateTable('employee')
+          .set({ badge_hash: null })
+          .where('employee_id', '=', e.employee_id)
+          .execute();
+        await audit(trx, actorOf(req), {
+          action: 'badge_removed',
+          entityType: 'employee',
+          entityId: e.employee_id,
+          companyId: e.company_id,
+          hotelId: e.primary_hotel_id,
+        });
+      });
+      return reply.status(204).send();
     },
   );
 

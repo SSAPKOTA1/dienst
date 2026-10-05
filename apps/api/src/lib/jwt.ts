@@ -5,6 +5,8 @@ export interface TokenClaims {
   sub: number;
   role?: Role;
   pre?: boolean;
+  /** pre-token of an SSO login whose identity provider vouched for a second factor */
+  ssoMfa?: boolean;
   employeeId?: number;
   companyIds?: number[];
   hotelIds?: number[];

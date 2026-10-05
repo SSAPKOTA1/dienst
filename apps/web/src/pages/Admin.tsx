@@ -15,12 +15,14 @@ import {
   useToast,
 } from '../components/ui';
 import { ClosePeriods } from './AdminMore';
+import { HotelPlatformSettings } from './AdminPlatform';
 
 const TABS = [
   ['overview', 'Übersicht'],
   ['hotels', 'Hotels'],
   ['users', 'Benutzer & Rollen'],
   ['tablets', 'Tablets'],
+  ['integrations', 'Schnittstellen'],
   ['rules', 'Regeln'],
   ['audit', 'Protokoll'],
 ] as const;
@@ -30,8 +32,9 @@ export function AdminLayout() {
   const { me } = useAuth();
   const company = useGet('/companies');
   const name = (company.data?.items ?? []).map((c: any) => c.name).join(', ') || 'Trip Inn Hotels';
+  const base = TABS.filter(([k]) => k !== 'integrations' || me?.role !== 'manager');
   const tabs: Array<readonly [string, string]> =
-    me?.role === 'superAdmin' ? [...TABS, ['companies', 'Unternehmen']] : [...TABS];
+    me?.role === 'superAdmin' ? [...base, ['companies', 'Unternehmen']] : [...base];
   return (
     <main style={{ flex: 1, minWidth: 0 }}>
       <PageHead kicker={`${t('Administration')} · ${name}`} title="Admin" />
@@ -415,6 +418,7 @@ export function AdminHotels() {
               </label>
             )}
           </div>
+          {me?.role !== 'manager' && <HotelPlatformSettings hotelId={h.id} />}
           <table className="table">
             <thead>
               <tr>

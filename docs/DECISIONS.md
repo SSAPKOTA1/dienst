@@ -90,3 +90,11 @@ One line per decision: what and why.
 - **Offboarding does not anonymise** employee data: retention (`company.retention_months`) and anonymisation jobs remain a policy decision; the exit statement and the deactivation are built.
 - **Calendar feed**: the ICS shows shifts and "Abwesend" days only (never types or reasons) and refuses inactive employees or a disabled feature.
 - **Notification reminders** (qualification, document, contract end) use a payload key per subject and threshold so a repeat run never duplicates them.
+- **M13 offline PINs**: the PIN cannot be verified offline without caching verifiers, so a queued punch stores the PIN encrypted (AES-GCM, non-extractable key in IndexedDB) and the server verifies it on sync. A wrong PIN is rejected and the planners are told; every offline punch needs manual review, which bounds guessing. No PIN verifier is ever cached.
+- **M13 offline roster** lists only people with a shift within 24 h or an open record; others cannot punch offline (the tablet falls back to "no connection").
+- **M13 break segments**: a segment shorter than 15 minutes is stored but does not count (ArbZG § 4: breaks of at least 15 minutes). The clock-out confirmation remains so the employee can correct the total.
+- **M13 web punch** needs a non-empty network list; an empty list never matches (safe default). Requests behind a proxy need `TRUST_PROXY` for the right client IP.
+- **M13 public API** never names health-related absence types; `time_off.type` is mapped to `vacation` or `absence`. Keys are read-only by construction (GET routes only).
+- **M13 SSO**: an admin-supplied issuer URL is fetched by the server (https required in production); there is no private-address filter, so only trusted admins should configure it. SSO administrators need IdP MFA; because the local TOTP check is skipped for them, `switch-role` back to admin after an SSO login needs a new SSO login or a local TOTP. Super admins are excluded from SSO.
+- **M13 SSO ticket**: the web app gets a 2-minute single-use ticket in the URL fragment (never sent to a server log) instead of a session cookie set during the cross-site redirect. `requirePreOrAccess` now rejects any signed payload that is neither a session nor a pre-token.
+- **M13 staffing suggestions** are applied as date overrides of `shift_staffing_requirement`, never as schedule entries.

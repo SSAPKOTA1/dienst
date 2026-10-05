@@ -86,6 +86,19 @@ export interface AnnouncementAck {
   employee_id: number;
 }
 
+export interface ApiKey {
+  company_id: number;
+  created_at: Generated<Timestamp>;
+  created_by_user_id: number | null;
+  hotel_id: number | null;
+  id: Generated<number>;
+  key_hash: string;
+  key_prefix: string;
+  last_used_at: Timestamp | null;
+  name: string;
+  revoked_at: Timestamp | null;
+}
+
 export interface ArbeitszeitkontoEntry {
   created_at: Generated<Timestamp | null>;
   created_by_user_id: number;
@@ -429,6 +442,24 @@ export interface Notification {
   user_id: number;
 }
 
+export interface OccupancyForecast {
+  created_at: Generated<Timestamp>;
+  hotel_id: number;
+  id: Generated<number>;
+  occupancy_pct: number;
+  on_date: string;
+}
+
+export interface OfflinePunchLog {
+  client_id: string;
+  created_at: Generated<Timestamp>;
+  detail: string | null;
+  id: Generated<number>;
+  kiosk_device_id: number;
+  outcome: string;
+  punch_record_id: number | null;
+}
+
 export interface OpenShift {
   created_at: Generated<Timestamp | null>;
   created_by_role: string;
@@ -631,6 +662,38 @@ export interface ShiftSwapRequest {
   status: Generated<string>;
 }
 
+export interface SsoIdentity {
+  created_at: Generated<Timestamp>;
+  id: Generated<number>;
+  provider_id: number;
+  subject: string;
+  user_id: number;
+}
+
+export interface SsoProvider {
+  client_id: string;
+  client_secret_enc: Buffer;
+  company_id: number;
+  created_at: Generated<Timestamp>;
+  enabled: Generated<boolean>;
+  id: Generated<number>;
+  issuer: string;
+}
+
+export interface SsoTicketUse {
+  jti: string;
+  used_at: Generated<Timestamp>;
+}
+
+export interface StaffingRule {
+  created_at: Generated<Timestamp>;
+  headcount: number;
+  hotel_id: number;
+  id: Generated<number>;
+  min_occupancy_pct: number;
+  shift_id: number;
+}
+
 export interface SuperAdmin {
   created_at: Generated<Timestamp | null>;
   first_name: string;
@@ -734,6 +797,7 @@ export interface DB {
   admin_company: AdminCompany;
   announcement: Announcement;
   announcement_ack: AnnouncementAck;
+  api_key: ApiKey;
   arbeitszeitkonto_entry: ArbeitszeitkontoEntry;
   audit_log: AuditLog;
   calendar_feed: CalendarFeed;
@@ -761,6 +825,8 @@ export interface DB {
   manager: Manager;
   manager_hotel: ManagerHotel;
   notification: Notification;
+  occupancy_forecast: OccupancyForecast;
+  offline_punch_log: OfflinePunchLog;
   open_shift: OpenShift;
   open_shift_claim: OpenShiftClaim;
   payroll_period: PayrollPeriod;
@@ -777,6 +843,10 @@ export interface DB {
   shift: Shift;
   shift_staffing_requirement: ShiftStaffingRequirement;
   shift_swap_request: ShiftSwapRequest;
+  sso_identity: SsoIdentity;
+  sso_provider: SsoProvider;
+  sso_ticket_use: SsoTicketUse;
+  staffing_rule: StaffingRule;
   super_admin: SuperAdmin;
   time_correction_request: TimeCorrectionRequest;
   time_off: TimeOff;

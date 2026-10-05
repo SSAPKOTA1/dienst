@@ -1,22 +1,14 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { variationMinutes, withinGrace } from '@dienst/rules';
+import { withinGrace } from '@dienst/rules';
 import { AppError, notFound } from '../lib/errors';
 import { audit, type Actor } from '../lib/audit';
-import { sha256 } from '../lib/security';
+import { badgeHash, sha256 } from '../lib/security';
 import { signPayload, verifyToken } from '../lib/jwt';
-import { localDate } from '../lib/time';
-import {
-  breakOptions,
-  computeClose,
-  graceOf,
-  hotelTz,
-  matchSchedule,
-  paidFor,
-  verifyPin,
-  type Device,
-} from '../services/kiosk';
+import { breakOptions, computeClose, graceOf, hotelTz, verifyPin, type Device } from '../services/kiosk';
+import { breakToggle, closePunch, punchIn, segmentMinutes, type BreakSegment } from '../services/punch';
+import { notifyPlanners } from '../services/collab';
 import type { Trx } from '../db';
 
 declare module 'fastify' {
@@ -26,6 +18,12 @@ declare module 'fastify' {
 }
 
 const TTL = '5m';
+const OFFLINE_REF_TTL = '48h';
+const OFFLINE_MAX_AGE_MS = 24 * 3600e3;
+const onBreak = (segs: unknown): boolean => {
+  const a = segs as BreakSegment[] | null;
+  return !!a?.length && a[a.length - 1].end == null;
+};
 
 export async function kioskRoutes(app: FastifyInstance) {
   const r = app.withTypeProvider<ZodTypeProvider>();
@@ -77,7 +75,7 @@ export async function kioskRoutes(app: FastifyInstance) {
     const hotel = await db
       .selectFrom('hotel as h')
       .innerJoin('company as c', 'c.id', 'h.company_id')
-      .select(['h.name', 'c.pin_length'])
+      .select(['h.name', 'c.pin_length', 'h.break_mode', 'h.kiosk_identification'])
       .where('h.id', '=', dev.hotelId)
       .executeTakeFirstOrThrow();
     const lo = new Date(now.getTime() - 2 * 3600e3);
@@ -113,6 +111,7 @@ export async function kioskRoutes(app: FastifyInstance) {
         'p.schedule_id',
         'p.planned_start',
         'p.planned_end',
+        'p.break_segments',
         'e.display_name',
         'pd.name as pdept',
       ])
@@ -141,7 +140,7 @@ export async function kioskRoutes(app: FastifyInstance) {
         departmentName: o.pdept,
         plannedStart: o.planned_start?.toISOString() ?? null,
         plannedEnd: o.planned_end?.toISOString() ?? null,
-        state: 'working',
+        state: onBreak(o.break_segments) ? 'on_break' : 'working',
       });
     }
     entries.sort(
@@ -180,6 +179,8 @@ export async function kioskRoutes(app: FastifyInstance) {
       hotelName: hotel.name,
       deviceName: dev.name,
       pinLength: hotel.pin_length,
+      breakMode: hotel.break_mode,
+      identification: hotel.kiosk_identification,
       items,
     };
   });
@@ -217,13 +218,14 @@ export async function kioskRoutes(app: FastifyInstance) {
       const empId = await readRef(req.device!, req.query.employeeRef);
       const last = await db
         .selectFrom('punch_record')
-        .select(['actual_punch_in', 'actual_punch_out'])
+        .select(['actual_punch_in', 'actual_punch_out', 'break_segments'])
         .where('employee_id', '=', empId)
         .orderBy('actual_punch_in', 'desc')
         .limit(1)
         .executeTakeFirst();
       return {
-        state: last && !last.actual_punch_out ? 'working' : 'not_in',
+        state:
+          last && !last.actual_punch_out ? (onBreak(last.break_segments) ? 'on_break' : 'working') : 'not_in',
         lastPunchAt: (last?.actual_punch_out ?? last?.actual_punch_in)?.toISOString() ?? null,
       };
     },
@@ -261,88 +263,17 @@ export async function kioskRoutes(app: FastifyInstance) {
     const tz = await hotelTz(db, dev.hotelId);
     try {
       return await db.transaction().execute(async (trx) => {
-        const open = await trx
-          .selectFrom('punch_record')
-          .selectAll()
-          .where('employee_id', '=', empId)
-          .where('actual_punch_out', 'is', null)
-          .executeTakeFirst();
-        if (open) {
-          if (now.getTime() - open.actual_punch_in.getTime() < 60e3) return inResponse(open, grace, dev); // idempotent double tap
-          throw new AppError('ALREADY_CLOCKED_IN', 'Already clocked in', {
-            since: open.actual_punch_in.toISOString(),
-          });
-        }
-        const match = await matchSchedule(trx, dev.hotelId, empId, now);
-        const shiftDate = localDate(match ? match.planned_start : now, tz);
-        const closed = await trx
-          .selectFrom('payroll_period')
-          .select('id')
-          .where('company_id', '=', emp.company_id)
-          .where('status', '=', 'closed')
-          .where('period_start', '<=', shiftDate)
-          .where('period_end', '>=', shiftDate)
-          .where((eb) => eb.or([eb('hotel_id', 'is', null), eb('hotel_id', '=', dev.hotelId)]))
-          .executeTakeFirst();
-        if (closed) throw new AppError('PERIOD_CLOSED', 'The payroll period is closed');
-        let variation: number | null = null;
-        let paidStart = now;
-        let outside = false;
-        if (match) {
-          variation = variationMinutes(now.toISOString(), match.planned_start.toISOString());
-          outside = !withinGrace(variation, grace);
-          if (!outside) paidStart = match.planned_start;
-        }
-        const rec = await trx
-          .insertInto('punch_record')
-          .values({
-            employee_id: empId,
-            hotel_id: dev.hotelId,
-            schedule_id: match?.id ?? null,
-            is_unplanned: !match,
-            shift_date: shiftDate,
-            source: 'kiosk',
-            kiosk_device_id: dev.id,
-            planned_start: match?.planned_start ?? null,
-            planned_end: match?.planned_end ?? null,
-            actual_punch_in: now,
-            paid_start: paidStart,
-            start_variation_minutes: variation,
-            approval_status: 'pending',
-          })
-          .returningAll()
-          .executeTakeFirstOrThrow();
-        if (!match || outside) {
-          await trx
-            .insertInto('time_variation')
-            .values({
-              punch_record_id: rec.id,
-              employee_id: empId,
-              hotel_id: dev.hotelId,
-              variation_type: !match ? 'unplanned' : variation! < 0 ? 'clock_in_early' : 'clock_in_late',
-              planned_time: match?.planned_start ?? null,
-              actual_time: now,
-              variation_minutes: variation,
-            })
-            .execute();
-        }
-        await trx
-          .insertInto('punch_record_history')
-          .values({
-            punch_record_id: rec.id,
-            changed_by_user_id: emp.user_id,
-            changed_by_role: 'employee',
-            change_type: 'clock_in',
-            new_values: JSON.stringify({ actual_punch_in: now.toISOString(), unplanned: !match }),
-          })
-          .execute();
-        await audit(trx, actorFor(emp.user_id), {
-          action: 'punch_in',
-          entityType: 'punch_record',
-          entityId: rec.id,
-          hotelId: dev.hotelId,
+        const { rec } = await punchIn(trx, {
+          empId,
+          userId: emp.user_id,
           companyId: emp.company_id,
-          new: { deviceId: dev.id, unplanned: !match, variationMinutes: variation },
+          hotelId: dev.hotelId,
+          at: now,
+          now,
+          source: 'kiosk',
+          deviceId: dev.id,
+          grace,
+          tz,
         });
         return inResponse(rec, grace, dev);
       });
@@ -419,6 +350,15 @@ export async function kioskRoutes(app: FastifyInstance) {
     if (!rec || rec.hotel_id !== dev.hotelId) throw notFound('Open time record');
     const grace = await graceOf(db, emp.company_id);
     const c = computeClose(rec, now, grace);
+    const mode = (
+      await db
+        .selectFrom('hotel')
+        .select('break_mode')
+        .where('id', '=', dev.hotelId)
+        .executeTakeFirstOrThrow()
+    ).break_mode;
+    const recorded =
+      mode === 'start_stop' ? segmentMinutes(rec.break_segments as BreakSegment[] | null, now) : null;
     const sched = rec.schedule_id
       ? await db
           .selectFrom('schedule')
@@ -436,8 +376,12 @@ export async function kioskRoutes(app: FastifyInstance) {
       grossMinutes: c.grossMinutes,
       requiredBreakMinutes: c.requiredBreak,
       plannedBreakMinutes: sched?.planned_break_minutes ?? null,
-      suggestedBreakMinutes: Math.max(c.requiredBreak, sched?.planned_break_minutes ?? 0),
-      options: breakOptions(c.requiredBreak),
+      recordedBreakMinutes: recorded,
+      suggestedBreakMinutes:
+        recorded != null ? recorded : Math.max(c.requiredBreak, sched?.planned_break_minutes ?? 0),
+      options: [...new Set([...breakOptions(c.requiredBreak), ...(recorded != null ? [recorded] : [])])].sort(
+        (a, b) => a - b,
+      ),
     };
   });
 
@@ -466,9 +410,8 @@ export async function kioskRoutes(app: FastifyInstance) {
       return db.transaction().execute(async (trx: Trx) => {
         const rec = await trx
           .selectFrom('punch_record')
-          .selectAll()
+          .select(['id', 'hotel_id', 'employee_id'])
           .where('id', '=', c.rec!)
-          .forUpdate()
           .executeTakeFirst();
         if (!rec || rec.hotel_id !== dev.hotelId) throw notFound('Time record');
         const emp = await trx
@@ -476,110 +419,283 @@ export async function kioskRoutes(app: FastifyInstance) {
           .select(['employee_id', 'user_id', 'company_id'])
           .where('employee_id', '=', rec.employee_id)
           .executeTakeFirstOrThrow();
-        if (rec.actual_punch_out) {
-          if (rec.actual_punch_out.getTime() === outAt.getTime())
-            return {
-              status: rec.under_break_warning ? 'clocked_out_with_warning' : 'clocked_out',
-              paidHours: rec.paid_hours ?? 0,
-              approvalStatus: rec.approval_status,
-            }; // idempotent confirm
-          throw new AppError('CONFLICT', 'The record is already closed');
-        }
-        const grace = await graceOf(trx, emp.company_id);
-        const cl = computeClose(rec, outAt, grace);
-        const brk = req.body.actualBreakMinutes;
-        const under = brk < cl.requiredBreak;
-        if (under && !(req.body.reason && req.body.reason.trim().length > 0))
-          throw new AppError(
-            'REASON_REQUIRED',
-            'A reason is required when the break is shorter than required',
-            { requiredBreakMinutes: cl.requiredBreak },
-          );
-        const closedPeriod = await trx
-          .selectFrom('payroll_period')
-          .select('id')
-          .where('company_id', '=', emp.company_id)
-          .where('status', '=', 'closed')
-          .where('period_start', '<=', rec.shift_date)
-          .where('period_end', '>=', rec.shift_date)
+        return closePunch(trx, {
+          empId: emp.employee_id,
+          userId: emp.user_id,
+          companyId: emp.company_id,
+          recordId: rec.id,
+          hotelId: dev.hotelId,
+          outAt,
+          now,
+          grace: await graceOf(trx, emp.company_id),
+          breakMinutes: req.body.actualBreakMinutes,
+          reason: req.body.reason,
+        });
+      });
+    },
+  );
+
+  // ---------------------------------------------------------------- break start / stop
+  async function breakRoute(
+    action: 'start' | 'end',
+    dev: Device,
+    body: { employeeRef: string; pin: string },
+  ) {
+    const now = app.clock();
+    const empId = await readRef(dev, body.employeeRef);
+    const emp = await verifyPin(db, empId, body.pin, now);
+    const mode = await db
+      .selectFrom('hotel')
+      .select('break_mode')
+      .where('id', '=', dev.hotelId)
+      .executeTakeFirstOrThrow();
+    if (mode.break_mode !== 'start_stop')
+      throw new AppError('CONFLICT', 'Break start/stop is not enabled for this hotel');
+    return db.transaction().execute((trx) =>
+      breakToggle(trx, {
+        empId,
+        userId: emp.user_id,
+        companyId: emp.company_id,
+        hotelId: dev.hotelId,
+        at: now,
+        action,
+      }),
+    );
+  }
+  r.post('/kiosk/break-start', { ...route, schema: { body: pinBody } }, (req) =>
+    breakRoute('start', req.device!, req.body),
+  );
+  r.post('/kiosk/break-end', { ...route, schema: { body: pinBody } }, (req) =>
+    breakRoute('end', req.device!, req.body),
+  );
+
+  // ---------------------------------------------------------------- badge identification
+  r.post(
+    '/kiosk/badge',
+    { ...route, schema: { body: z.object({ badge: z.string().min(4).max(200) }) } },
+    async (req) => {
+      const dev = req.device!;
+      const h = await db
+        .selectFrom('hotel')
+        .select('kiosk_identification')
+        .where('id', '=', dev.hotelId)
+        .executeTakeFirstOrThrow();
+      if (h.kiosk_identification !== 'badge_pin') throw notFound('Badge');
+      const e = await db
+        .selectFrom('employee as e')
+        .innerJoin('employee_hotel as eh', 'eh.employee_id', 'e.employee_id')
+        .select(['e.employee_id', 'e.display_name'])
+        .where('e.badge_hash', '=', badgeHash(app.cfg.TOTP_ENC_KEY, req.body.badge))
+        .where('eh.hotel_id', '=', dev.hotelId)
+        .where('e.status', '=', 'active')
+        .executeTakeFirst();
+      if (!e) throw notFound('Badge');
+      return { employeeRef: await ref(dev, e.employee_id), displayName: e.display_name };
+    },
+  );
+
+  // ---------------------------------------------------------------- offline queue
+  r.get('/kiosk/offline-roster', route, async (req) => {
+    const dev = req.device!;
+    const now = app.clock();
+    const lo = new Date(now.getTime() - 24 * 3600e3);
+    const hi = new Date(now.getTime() + 24 * 3600e3);
+    const rows = await db
+      .selectFrom('employee as e')
+      .innerJoin('employee_hotel as eh', 'eh.employee_id', 'e.employee_id')
+      .select(['e.employee_id', 'e.display_name'])
+      .where('eh.hotel_id', '=', dev.hotelId)
+      .where('e.status', '=', 'active')
+      .where((eb) =>
+        eb.or([
+          eb.exists(
+            eb
+              .selectFrom('schedule as s')
+              .select('s.id')
+              .whereRef('s.employee_id', '=', 'e.employee_id')
+              .where('s.hotel_id', '=', dev.hotelId)
+              .where('s.status', '=', 'published')
+              .where('s.planned_start', '<=', hi)
+              .where('s.planned_end', '>=', lo),
+          ),
+          eb.exists(
+            eb
+              .selectFrom('punch_record as p')
+              .select('p.id')
+              .whereRef('p.employee_id', '=', 'e.employee_id')
+              .where('p.actual_punch_out', 'is', null),
+          ),
+        ]),
+      )
+      .orderBy('e.last_name')
+      .execute();
+    return {
+      serverTime: now.toISOString(),
+      maxAgeHours: OFFLINE_MAX_AGE_MS / 3600e3,
+      items: await Promise.all(
+        rows.map(async (e) => ({
+          displayName: e.display_name,
+          offlineRef: await signPayload(
+            app.cfg.JWT_SECRET,
+            { kind: 'offref', emp: e.employee_id, dev: dev.id },
+            OFFLINE_REF_TTL,
+          ),
+        })),
+      ),
+    };
+  });
+
+  const offlineItem = z.object({
+    clientId: z.string().min(8).max(64),
+    action: z.enum(['in', 'out', 'break_start', 'break_end']),
+    occurredAt: z.string().datetime({ offset: true }),
+    offlineRef: z.string(),
+    pin: z.string().min(4).max(8),
+    breakMinutes: z.number().int().min(0).max(240).optional(),
+    reason: z.string().max(300).optional(),
+  });
+  r.post(
+    '/kiosk/offline-sync',
+    { ...route, schema: { body: z.object({ items: z.array(offlineItem).min(1).max(200) }) } },
+    async (req) => {
+      const dev = req.device!;
+      const now = app.clock();
+      const items = [...req.body.items].sort((a, b) => a.occurredAt.localeCompare(b.occurredAt));
+      const results: Array<{
+        clientId: string;
+        status: 'applied' | 'rejected' | 'duplicate';
+        code?: string;
+      }> = [];
+      for (const it of items) {
+        const prior = await db
+          .selectFrom('offline_punch_log')
+          .select(['outcome', 'detail'])
+          .where('kiosk_device_id', '=', dev.id)
+          .where('client_id', '=', it.clientId)
           .executeTakeFirst();
-        if (closedPeriod) throw new AppError('PERIOD_CLOSED', 'The payroll period is closed');
-        const startOutside =
-          rec.is_unplanned ||
-          (rec.start_variation_minutes != null && !withinGrace(rec.start_variation_minutes, grace));
-        const flagged = startOutside || cl.outsideGrace || under;
-        const hours = paidFor(cl.paidStart, cl.paidEnd, brk);
-        await trx
-          .updateTable('punch_record')
-          .set({
-            actual_punch_out: outAt,
-            paid_start: cl.paidStart,
-            paid_end: cl.paidEnd,
-            end_variation_minutes: cl.endVariation,
-            required_break_minutes: cl.requiredBreak,
-            actual_break_minutes: brk,
-            paid_hours: hours,
-            under_break_warning: under,
-            approval_status: flagged ? 'pending' : 'approved',
-            approval_source: flagged ? null : 'auto',
-            approved_at: flagged ? null : now,
-            updated_at: now,
-          })
-          .where('id', '=', rec.id)
-          .execute();
-        if (cl.outsideGrace) {
-          await trx
-            .insertInto('time_variation')
+        if (prior) {
+          results.push({ clientId: it.clientId, status: 'duplicate', code: prior.detail ?? undefined });
+          continue;
+        }
+        const at = new Date(it.occurredAt);
+        let empId: number | null = null;
+        let companyId: number | null = null;
+        try {
+          if (
+            at.getTime() > now.getTime() + 120e3 ||
+            now.getTime() - at.getTime() > OFFLINE_MAX_AGE_MS + 3600e3
+          )
+            throw new AppError('VALIDATION', 'The punch is too old or lies in the future', {
+              code: 'OFFLINE_EXPIRED',
+            });
+          const c = await verifyToken<{ kind?: string; emp?: number; dev?: number }>(
+            app.cfg.JWT_SECRET,
+            it.offlineRef,
+          );
+          if (!c || c.kind !== 'offref' || c.dev !== dev.id || !c.emp)
+            throw new AppError('UNAUTHENTICATED', 'The offline selection is no longer valid');
+          empId = c.emp;
+          const emp = await verifyPin(db, empId, it.pin, now);
+          companyId = emp.company_id;
+          const member = await db
+            .selectFrom('employee_hotel')
+            .select('hotel_id')
+            .where('employee_id', '=', empId)
+            .where('hotel_id', '=', dev.hotelId)
+            .executeTakeFirst();
+          if (!member) throw new AppError('FORBIDDEN_SCOPE', 'This employee does not work at this hotel');
+          const tz = await hotelTz(db, dev.hotelId);
+          const grace = await graceOf(db, emp.company_id);
+          const who = { empId, userId: emp.user_id, companyId: emp.company_id };
+          const recordId = await db.transaction().execute(async (trx) => {
+            if (it.action === 'in') {
+              const { rec } = await punchIn(trx, {
+                ...who,
+                hotelId: dev.hotelId,
+                at,
+                now,
+                source: 'kiosk_offline',
+                deviceId: dev.id,
+                grace,
+                tz,
+              });
+              return rec.id;
+            }
+            if (it.action === 'out') {
+              const open = await trx
+                .selectFrom('punch_record')
+                .select(['id', 'actual_punch_in'])
+                .where('employee_id', '=', empId!)
+                .where('actual_punch_out', 'is', null)
+                .executeTakeFirst();
+              if (!open) throw new AppError('NOT_FOUND', 'No open time record');
+              if (at <= open.actual_punch_in)
+                throw new AppError('VALIDATION', 'Clock-out is before clock-in');
+              const res = await closePunch(trx, {
+                ...who,
+                recordId: open.id,
+                hotelId: dev.hotelId,
+                outAt: at,
+                now,
+                grace,
+                breakMinutes: it.breakMinutes ?? 0,
+                reason: it.reason?.trim() || 'Offline erfasst',
+                forceReview: true,
+                offline: true,
+                source: 'kiosk_offline',
+              });
+              void res;
+              return open.id;
+            }
+            const b = await breakToggle(trx, {
+              ...who,
+              hotelId: dev.hotelId,
+              at,
+              action: it.action === 'break_start' ? 'start' : 'end',
+            });
+            return b.recordId;
+          });
+          await db
+            .insertInto('offline_punch_log')
             .values({
-              punch_record_id: rec.id,
-              employee_id: rec.employee_id,
-              hotel_id: rec.hotel_id,
-              variation_type: cl.endVariation! < 0 ? 'clock_out_early' : 'clock_out_late',
-              planned_time: rec.planned_end,
-              actual_time: outAt,
-              variation_minutes: cl.endVariation,
-              reason: req.body.reason?.trim() ?? null,
+              kiosk_device_id: dev.id,
+              client_id: it.clientId,
+              punch_record_id: recordId,
+              outcome: 'applied',
             })
             .execute();
+          results.push({ clientId: it.clientId, status: 'applied' });
+        } catch (e) {
+          const code = e instanceof AppError ? e.code : 'INTERNAL';
+          if (code === 'INTERNAL') throw e;
+          await db.transaction().execute(async (trx) => {
+            await trx
+              .insertInto('offline_punch_log')
+              .values({ kiosk_device_id: dev.id, client_id: it.clientId, outcome: 'rejected', detail: code })
+              .execute();
+            await audit(
+              trx,
+              { userId: null, type: 'system' },
+              {
+                action: 'offline_punch_rejected',
+                entityType: 'kiosk_device',
+                entityId: dev.id,
+                hotelId: dev.hotelId,
+                companyId: companyId ?? undefined,
+                new: { clientId: it.clientId, action: it.action, occurredAt: it.occurredAt, code },
+              },
+            );
+            await notifyPlanners(trx, dev.hotelId, 'offline_punch_rejected', {
+              action: it.action,
+              occurredAt: it.occurredAt,
+              code,
+              deviceName: dev.name,
+            });
+          });
+          results.push({ clientId: it.clientId, status: 'rejected', code });
         }
-        if (under)
-          await trx
-            .updateTable('time_variation')
-            .set({ reason: req.body.reason!.trim() })
-            .where('punch_record_id', '=', rec.id)
-            .where('reason', 'is', null)
-            .execute();
-        await trx
-          .insertInto('punch_record_history')
-          .values({
-            punch_record_id: rec.id,
-            changed_by_user_id: emp.user_id,
-            changed_by_role: 'employee',
-            change_type: 'clock_out',
-            new_values: JSON.stringify({
-              actual_punch_out: outAt.toISOString(),
-              actual_break_minutes: brk,
-              paid_hours: hours,
-            }),
-            reason: req.body.reason?.trim() ?? null,
-          })
-          .execute();
-        await audit(trx, actorFor(emp.user_id), {
-          action: 'punch_out',
-          entityType: 'punch_record',
-          entityId: rec.id,
-          hotelId: rec.hotel_id,
-          companyId: emp.company_id,
-          new: { paidHours: hours, breakMinutes: brk, flagged, underBreak: under },
-          reason: req.body.reason?.trim() ?? null,
-        });
-        void now;
-        return {
-          status: under ? 'clocked_out_with_warning' : 'clocked_out',
-          paidHours: hours,
-          approvalStatus: flagged ? 'pending' : 'approved',
-        };
-      });
+      }
+      return { results };
     },
   );
 }

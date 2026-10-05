@@ -65,3 +65,7 @@
 ## M12 Collaboration (backlog) - done
 - Swaps and giveaways with rule checks and auto-approval option, open shifts, availability and qualification rules, encrypted documents, offboarding with exit statement, announcements with read confirmation, questions to management, hotel feed, ICS subscription, team absences; portal tab Team and planner pages.
 - Tests: swaps (8), people (7), comms (6), rules +; matrix rows; e2e collab (4).
+
+## M13 Platform (backlog) - done
+- Break start/stop, badge identification, web punch with network limits, offline kiosk queue with review, occupancy staffing suggestions, read-only public API with keys, OIDC SSO (mock IdP tested), PWA shell; UI for all of it.
+- Tests: punch (6), occupancy (3), apiKeys (7), sso (7), rules occupancy (3), +19 matrix rows, e2e platform (3).

@@ -159,6 +159,50 @@ export function Staff() {
   );
 }
 
+function BadgePanel({ id, has }: { id: number; has: boolean }) {
+  const { t } = useTranslation();
+  const toast = useToast();
+  const [shown, setShown] = useState<{ badge: string; qrDataUrl: string } | null>(null);
+  const make = useSend<void, { badge: string; qrDataUrl: string }>('POST', `/employees/${id}/badge`);
+  const drop = useSend('DELETE', `/employees/${id}/badge`);
+  return (
+    <div
+      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}
+      data-testid="badge-panel"
+    >
+      <Label>{t('Badge (QR/NFC)')}</Label>
+      <div style={{ fontSize: 13 }}>{has ? t('Badge zugewiesen.') : t('Kein Badge zugewiesen.')}</div>
+      {shown && (
+        <div style={{ border: '2px solid var(--color-accent)', padding: 'var(--space-3)' }} role="status">
+          <img src={shown.qrDataUrl} alt={t('QR-Code des Badges')} width={160} height={160} />
+          <div style={{ fontFamily: 'monospace' }} data-testid="badge-value">
+            {shown.badge}
+          </div>
+          <div style={{ fontSize: 12 }}>
+            {t('Wird nur einmal angezeigt. Ausdrucken und persönlich übergeben.')}
+          </div>
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+        <button className="btn btn-secondary" onClick={() => make.mutate(undefined, { onSuccess: setShown })}>
+          {has ? t('Neuen Badge erzeugen') : t('Badge erzeugen')}
+        </button>
+        {has && (
+          <button
+            className="btn btn-ghost"
+            onClick={() =>
+              drop.mutate(undefined, { onSuccess: () => (setShown(null), toast(t('Badge entfernt.'))) })
+            }
+          >
+            {t('Badge entfernen')}
+          </button>
+        )}
+      </div>
+      <ErrorNote error={make.error ?? drop.error} />
+    </div>
+  );
+}
+
 function StaffDetail({ id }: { id: number }) {
   const { t } = useTranslation();
   const toast = useToast();
@@ -323,6 +367,8 @@ function StaffDetail({ id }: { id: number }) {
             </div>
             <ErrorNote error={reset.error ?? unlock.error} />
           </div>
+          <hr className="hr" style={{ margin: 0 }} />
+          <BadgePanel id={id} has={!!e.hasBadge} />
           <hr className="hr" style={{ margin: 0 }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <Label>{t('Konto')}</Label>

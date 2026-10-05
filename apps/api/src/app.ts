@@ -21,7 +21,11 @@ import { scheduleRoutes } from './routes/schedule';
 import { kioskRoutes } from './routes/kiosk';
 import { liveRoutes } from './routes/live';
 import { approvalRoutes } from './routes/approvals';
+import { occupancyRoutes } from './routes/occupancy';
+import { apiKeyRoutes, publicApiRoutes } from './routes/apiKeys';
+import { ssoRoutes } from './routes/sso';
 import { selfRoutes } from './routes/self';
+import { webPunchRoutes } from './routes/webPunch';
 import { exportRoutes } from './routes/exports';
 import { importRoutes } from './routes/imports';
 import { leaveRoutes } from './routes/leave';
@@ -86,6 +90,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
 
   app.decorateRequest('principal', null);
   app.decorateRequest('preUserId', null);
+  app.decorateRequest('preSsoMfa', false);
   app.decorate(
     'mailer',
     new Mailer(
@@ -175,6 +180,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   await app.register(
     async (api) => {
       await api.register(authRoutes);
+      await api.register(ssoRoutes);
       await api.register(meRoutes);
       await api.register(organisationRoutes);
       await api.register(employeeRoutes);
@@ -185,6 +191,9 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       await api.register(liveRoutes);
       await api.register(approvalRoutes);
       await api.register(selfRoutes);
+      await api.register(apiKeyRoutes);
+      await api.register(occupancyRoutes);
+      await api.register(webPunchRoutes);
       await api.register(exportRoutes);
       await api.register(importRoutes);
       await api.register(leaveRoutes);
@@ -199,6 +208,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
     },
     { prefix: '/api/v1' },
   );
+  await app.register(publicApiRoutes, { prefix: '/api/public/v1' });
   void r;
   return app;
 }
