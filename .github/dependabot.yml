@@ -8,12 +8,13 @@ updates:
       # one pull request for the routine updates, security updates stay separate
       minor-and-patch:
         update-types: [minor, patch]
-    labels: [dependencies]
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: weekly, day: monday }
-    labels: [dependencies]
   - package-ecosystem: docker
     directory: /
     schedule: { interval: weekly, day: monday }
-    labels: [dependencies]
+    ignore:
+      # the ops image carries pg_dump/pg_restore and must match the database server (16); a major upgrade is a planned migration
+      - dependency-name: postgres
+        update-types: ['version-update:semver-major']
