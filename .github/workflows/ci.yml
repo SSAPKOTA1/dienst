@@ -52,6 +52,8 @@ jobs:
     name: end-to-end (Playwright, accessibility)
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      DATABASE_URL: postgres://dienst:dienst@localhost:5432/dienst_test
     services:
       postgres:
         image: postgres:16
@@ -80,6 +82,8 @@ jobs:
     name: end-to-end (${{ matrix.browser }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      DATABASE_URL: postgres://dienst:dienst@localhost:5432/dienst_test
     strategy:
       fail-fast: false
       matrix:
@@ -109,6 +113,8 @@ jobs:
     name: images, smoke tests, backups, SBOM, scan
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      DATABASE_URL: postgres://dienst:dienst@localhost:5432/dienst_test
     services:
       postgres:
         image: postgres:16
