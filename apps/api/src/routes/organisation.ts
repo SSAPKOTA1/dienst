@@ -10,6 +10,7 @@ import { audit } from '../lib/audit';
 import { cidrList } from '../lib/net';
 import { idParam } from '../lib/http';
 import { issueInvitation, sendInvitationMail } from '../services/accounts';
+import { setAdminAccess } from '../services/roles';
 import type { Trx } from '../db';
 
 const SA = 'superAdmin' as const;
@@ -123,6 +124,7 @@ export async function organisationRoutes(app: FastifyInstance) {
     federalState: h.federal_state,
     timezone: h.timezone,
     employeeHoursVisibility: h.employee_hours_visibility,
+    isActive: h.is_active,
   });
   const hotelBody = z.object({
     companyId: z.number().int().positive(),
@@ -173,11 +175,9 @@ export async function organisationRoutes(app: FastifyInstance) {
     },
     async (req) => {
       const p = getPrincipal(req);
-      let q = db
-        .selectFrom('hotel')
-        .selectAll()
-        .where('id', 'in', p.scope.hotelIds.length ? p.scope.hotelIds : [0])
-        .orderBy('id');
+      // everyone else sees active hotels in scope only; the super admin also needs the switched-off ones to reactivate them
+      let q = db.selectFrom('hotel').selectAll().orderBy('id');
+      if (p.role !== 'superAdmin') q = q.where('id', 'in', p.scope.hotelIds.length ? p.scope.hotelIds : [0]);
       if (req.query.companyId) q = q.where('company_id', '=', req.query.companyId);
       return { items: (await q.execute()).map(hotelOut) };
     },
@@ -187,7 +187,8 @@ export async function organisationRoutes(app: FastifyInstance) {
     '/hotels/:id',
     { preValidation: requireRole(SA, AD, MG), schema: { params: idParam } },
     async (req) => {
-      getPrincipal(req).scope.assertHotel(req.params.id);
+      const p = getPrincipal(req);
+      if (p.role !== 'superAdmin') p.scope.assertHotel(req.params.id);
       const h = await db.selectFrom('hotel').selectAll().where('id', '=', req.params.id).executeTakeFirst();
       if (!h) throw notFound('Hotel');
       return hotelOut(h);
@@ -243,6 +244,55 @@ export async function organisationRoutes(app: FastifyInstance) {
     allowWebPunch: h.allow_web_punch,
     webPunchAllowedCidrs: h.web_punch_allowed_cidrs ?? [],
   });
+  r.put(
+    '/hotels/:id/active',
+    {
+      preValidation: requireRole(SA),
+      schema: { params: idParam, body: z.object({ active: z.boolean() }) },
+    },
+    async (req) => {
+      const { active } = req.body;
+      return tx(async (trx) => {
+        const old = await trx
+          .selectFrom('hotel')
+          .selectAll()
+          .where('id', '=', req.params.id)
+          .executeTakeFirst();
+        if (!old) throw notFound('Hotel');
+        if (old.is_active === active) return hotelOut(old);
+        if (!active) {
+          // someone still clocked in would be stuck without a tablet to clock out on
+          const open = await trx
+            .selectFrom('punch_record')
+            .select('id')
+            .where('hotel_id', '=', old.id)
+            .where('actual_punch_out', 'is', null)
+            .executeTakeFirst();
+          if (open)
+            throw new AppError('CONFLICT', 'The hotel still has open time records. Close them first.', {
+              code: 'HOTEL_HAS_OPEN_PUNCHES',
+            });
+        }
+        const h = await trx
+          .updateTable('hotel')
+          .set({ is_active: active, deactivated_at: active ? null : app.clock() })
+          .where('id', '=', old.id)
+          .returningAll()
+          .executeTakeFirstOrThrow();
+        await audit(trx, actorOf(req), {
+          action: active ? 'hotel_activated' : 'hotel_deactivated',
+          entityType: 'hotel',
+          entityId: old.id,
+          companyId: old.company_id,
+          hotelId: old.id,
+          old: { isActive: old.is_active },
+          new: { isActive: active },
+        });
+        return hotelOut(h);
+      });
+    },
+  );
+
   r.get(
     '/hotels/:id/settings',
     { preValidation: requireRole(SA, AD, MG), schema: { params: idParam } },
@@ -327,45 +377,62 @@ export async function organisationRoutes(app: FastifyInstance) {
     return { userId: u.id, invite: inv.secret, reused: false };
   }
 
-  const adminBody = z.object({
-    email: z.email().max(255),
-    firstName: z.string().min(1).max(100),
-    lastName: z.string().min(1).max(100),
-    companyIds: z.array(z.number().int().positive()).min(1),
-  });
+  const adminBody = z
+    .object({
+      email: z.email().max(255),
+      firstName: z.string().min(1).max(100),
+      lastName: z.string().min(1).max(100),
+      /** whole companies: the admin sees and manages all their hotels */
+      companyIds: z.array(z.number().int().positive()).default([]),
+      /** single hotels: the admin is limited to these */
+      hotelIds: z.array(z.number().int().positive()).default([]),
+    })
+    .refine((b) => b.companyIds.length + b.hotelIds.length > 0, {
+      message: 'Assign at least one company or hotel',
+    });
+
   r.post('/admins', { preValidation: requireRole(SA), schema: { body: adminBody } }, async (req, reply) => {
     const p = getPrincipal(req);
     const b = req.body;
     const out = await tx(async (trx) => {
-      for (const id of b.companyIds)
-        if (!(await trx.selectFrom('company').select('id').where('id', '=', id).executeTakeFirst()))
-          throw notFound('Company');
       const u = await ensureStaffUser(trx, b.email, app.clock());
-      if (await trx.selectFrom('admin').select('admin_id').where('user_id', '=', u.userId).executeTakeFirst())
-        throw new AppError('CONFLICT', 'This person is already an admin');
-      const a = await trx
-        .insertInto('admin')
-        .values({
-          user_id: u.userId,
-          first_name: b.firstName,
-          last_name: b.lastName,
-          created_by_id: p.superAdminId!,
-        })
-        .returning('admin_id')
-        .executeTakeFirstOrThrow();
-      await trx
-        .insertInto('admin_company')
-        .values(
-          b.companyIds.map((c) => ({ admin_id: a.admin_id, company_id: c, assigned_by_id: p.superAdminId! })),
-        )
-        .execute();
+      const existing = await trx
+        .selectFrom('admin')
+        .select(['admin_id', 'revoked_at'])
+        .where('user_id', '=', u.userId)
+        .executeTakeFirst();
+      if (existing && !existing.revoked_at) throw new AppError('CONFLICT', 'This person is already an admin');
+      let adminId: number;
+      if (existing) {
+        // a revoked admin comes back with the data they had
+        adminId = existing.admin_id;
+        await trx
+          .updateTable('admin')
+          .set({ revoked_at: null, first_name: b.firstName, last_name: b.lastName, updated_at: app.clock() })
+          .where('admin_id', '=', adminId)
+          .execute();
+      } else {
+        adminId = (
+          await trx
+            .insertInto('admin')
+            .values({
+              user_id: u.userId,
+              first_name: b.firstName,
+              last_name: b.lastName,
+              created_by_id: p.superAdminId!,
+            })
+            .returning('admin_id')
+            .executeTakeFirstOrThrow()
+        ).admin_id;
+      }
+      await setAdminAccess(trx, adminId, b.companyIds, b.hotelIds, p.superAdminId!);
       await audit(trx, actorOf(req), {
         action: 'admin_created',
         entityType: 'admin',
-        entityId: a.admin_id,
-        new: { companyIds: b.companyIds },
+        entityId: adminId,
+        new: { companyIds: b.companyIds, hotelIds: b.hotelIds },
       });
-      return { adminId: a.admin_id, userId: u.userId, invite: u.invite };
+      return { adminId, userId: u.userId, invite: u.invite };
     });
     if (out.invite) await sendInvitationMail(app, b.email, b.firstName, out.invite);
     return reply.status(201).send({ adminId: out.adminId, userId: out.userId });
@@ -376,9 +443,11 @@ export async function organisationRoutes(app: FastifyInstance) {
       .selectFrom('admin as a')
       .innerJoin('user_account as u', 'u.id', 'a.user_id')
       .select(['a.admin_id', 'a.first_name', 'a.last_name', 'u.email', 'u.status', 'u.last_login_at'])
+      .where('a.revoked_at', 'is', null)
       .orderBy('a.last_name')
       .execute();
     const links = await db.selectFrom('admin_company').select(['admin_id', 'company_id']).execute();
+    const hotelLinks = await db.selectFrom('admin_hotel').select(['admin_id', 'hotel_id']).execute();
     return {
       items: rows.map((a) => ({
         adminId: a.admin_id,
@@ -388,55 +457,156 @@ export async function organisationRoutes(app: FastifyInstance) {
         status: a.status,
         lastLoginAt: a.last_login_at,
         companyIds: links.filter((l) => l.admin_id === a.admin_id).map((l) => l.company_id),
+        hotelIds: hotelLinks.filter((l) => l.admin_id === a.admin_id).map((l) => l.hotel_id),
       })),
     };
   });
+
+  const superAdminBody = z.object({
+    email: z.email().max(255),
+    firstName: z.string().min(1).max(100),
+    lastName: z.string().min(1).max(100),
+  });
+  r.post(
+    '/super-admins',
+    { preValidation: requireRole(SA), schema: { body: superAdminBody } },
+    async (req, reply) => {
+      const b = req.body;
+      const out = await tx(async (trx) => {
+        const u = await ensureStaffUser(trx, b.email, app.clock());
+        const existing = await trx
+          .selectFrom('super_admin')
+          .select(['super_admin_id', 'revoked_at'])
+          .where('user_id', '=', u.userId)
+          .executeTakeFirst();
+        if (existing && !existing.revoked_at)
+          throw new AppError('CONFLICT', 'This person is already a super admin');
+        let superAdminId: number;
+        if (existing) {
+          superAdminId = existing.super_admin_id;
+          await trx
+            .updateTable('super_admin')
+            .set({
+              revoked_at: null,
+              first_name: b.firstName,
+              last_name: b.lastName,
+              updated_at: app.clock(),
+            })
+            .where('super_admin_id', '=', superAdminId)
+            .execute();
+        } else {
+          superAdminId = (
+            await trx
+              .insertInto('super_admin')
+              .values({ user_id: u.userId, first_name: b.firstName, last_name: b.lastName })
+              .returning('super_admin_id')
+              .executeTakeFirstOrThrow()
+          ).super_admin_id;
+        }
+        await audit(trx, actorOf(req), {
+          action: 'super_admin_created',
+          entityType: 'super_admin',
+          entityId: superAdminId,
+        });
+        return { superAdminId, userId: u.userId, invite: u.invite };
+      });
+      if (out.invite) await sendInvitationMail(app, b.email, b.firstName, out.invite);
+      return reply.status(201).send({ superAdminId: out.superAdminId, userId: out.userId });
+    },
+  );
 
   r.put(
     '/admins/:id/companies',
     {
       preValidation: requireRole(SA),
-      schema: {
-        params: idParam,
-        body: z.object({ companyIds: z.array(z.number().int().positive()).min(1) }),
-      },
+      schema: { params: idParam, body: z.object({ companyIds: z.array(z.number().int().positive()) }) },
     },
     async (req) => {
       const p = getPrincipal(req);
+      const { companyIds } = req.body;
       await tx(async (trx) => {
         if (
           !(await trx
             .selectFrom('admin')
             .select('admin_id')
             .where('admin_id', '=', req.params.id)
+            .where('revoked_at', 'is', null)
             .executeTakeFirst())
         )
           throw notFound('Admin');
-        const old = await trx
+        const oldCompanies = await trx
           .selectFrom('admin_company')
           .select('company_id')
           .where('admin_id', '=', req.params.id)
           .execute();
-        await trx.deleteFrom('admin_company').where('admin_id', '=', req.params.id).execute();
-        await trx
-          .insertInto('admin_company')
-          .values(
-            req.body.companyIds.map((c) => ({
-              admin_id: req.params.id,
-              company_id: c,
-              assigned_by_id: p.superAdminId!,
-            })),
-          )
-          .execute();
+        const hotels = (
+          await trx
+            .selectFrom('admin_hotel')
+            .select('hotel_id')
+            .where('admin_id', '=', req.params.id)
+            .execute()
+        ).map((h) => h.hotel_id);
+        if (!companyIds.length && !hotels.length)
+          throw new AppError('VALIDATION', 'Assign at least one company or hotel');
+        await setAdminAccess(trx, req.params.id, companyIds, hotels, p.superAdminId!);
         await audit(trx, actorOf(req), {
           action: 'admin_companies_updated',
           entityType: 'admin',
           entityId: req.params.id,
-          old: old.map((o) => o.company_id),
-          new: req.body.companyIds,
+          old: oldCompanies.map((o) => o.company_id),
+          new: companyIds,
         });
       });
-      return { companyIds: req.body.companyIds };
+      return { companyIds };
+    },
+  );
+
+  const adminAccessBody = z.object({
+    companyIds: z.array(z.number().int().positive()),
+    hotelIds: z.array(z.number().int().positive()),
+  });
+  /** Replaces everything an admin may reach (whole companies and single hotels) in one step. */
+  r.put(
+    '/admins/:id/access',
+    { preValidation: requireRole(SA), schema: { params: idParam, body: adminAccessBody } },
+    async (req) => {
+      const p = getPrincipal(req);
+      const { companyIds, hotelIds } = req.body;
+      if (!companyIds.length && !hotelIds.length)
+        throw new AppError('VALIDATION', 'Assign at least one company or hotel');
+      await tx(async (trx) => {
+        if (
+          !(await trx
+            .selectFrom('admin')
+            .select('admin_id')
+            .where('admin_id', '=', req.params.id)
+            .where('revoked_at', 'is', null)
+            .executeTakeFirst())
+        )
+          throw notFound('Admin');
+        const oldCompanies = await trx
+          .selectFrom('admin_company')
+          .select('company_id')
+          .where('admin_id', '=', req.params.id)
+          .execute();
+        const oldHotels = await trx
+          .selectFrom('admin_hotel')
+          .select('hotel_id')
+          .where('admin_id', '=', req.params.id)
+          .execute();
+        await setAdminAccess(trx, req.params.id, companyIds, hotelIds, p.superAdminId!);
+        await audit(trx, actorOf(req), {
+          action: 'admin_access_updated',
+          entityType: 'admin',
+          entityId: req.params.id,
+          old: {
+            companyIds: oldCompanies.map((o) => o.company_id),
+            hotelIds: oldHotels.map((o) => o.hotel_id),
+          },
+          new: { companyIds, hotelIds },
+        });
+      });
+      return { companyIds, hotelIds };
     },
   );
 

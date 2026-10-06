@@ -25,6 +25,7 @@ export function AdminHotels() {
     (b) => `/hotels/${b.id}/settings`,
   );
   const delDept = useSend<number>('DELETE', (id) => `/departments/${id}`);
+  const setActive = useSend<{ id: number; active: boolean }>('PUT', (b) => `/hotels/${b.id}/active`);
   const sa = me?.role === 'superAdmin';
   return (
     <div
@@ -39,7 +40,11 @@ export function AdminHotels() {
         )}
       </div>
       {(hotels.data?.items ?? []).map((h) => (
-        <section key={h.id} style={{ border: '2px solid var(--color-text)' }}>
+        <section
+          key={h.id}
+          style={{ border: '2px solid var(--color-text)', opacity: h.isActive ? 1 : 0.65 }}
+          aria-label={h.isActive ? h.name : `${h.name} (${t('inaktiv')})`}
+        >
           <div
             style={{
               display: 'flex',
@@ -51,11 +56,45 @@ export function AdminHotels() {
               borderBottom: '2px solid var(--color-text)',
             }}
           >
-            <h3 style={{ margin: 0, fontSize: 18, marginRight: 'auto' }}>{h.name}</h3>
+            <h3 style={{ margin: 0, fontSize: 18, marginRight: 'auto' }}>
+              {h.name}{' '}
+              {!h.isActive && (
+                <span className="tag tag-neutral" style={{ marginLeft: 6 }}>
+                  {t('inaktiv')}
+                </span>
+              )}
+            </h3>
             <span style={{ fontSize: 13 }}>
               {h.city} · {h.federalState} · {h.timezone}
             </span>
-            {me?.role !== 'manager' && (
+            {sa && (
+              <button
+                className="btn btn-ghost"
+                onClick={() => {
+                  if (
+                    h.isActive &&
+                    !window.confirm(
+                      t(
+                        'Hotel wirklich deaktivieren? Es verschwindet aus Planung und Tablet, die Daten bleiben erhalten.',
+                      ),
+                    )
+                  )
+                    return;
+                  setActive.mutate(
+                    { id: h.id, active: !h.isActive },
+                    {
+                      onSuccess: () => {
+                        toast(h.isActive ? t('Hotel deaktiviert.') : t('Hotel aktiviert.'));
+                        void hotels.refetch();
+                      },
+                    },
+                  );
+                }}
+              >
+                {h.isActive ? t('Hotel deaktivieren') : t('Hotel aktivieren')}
+              </button>
+            )}
+            {me?.role !== 'manager' && h.isActive && (
               <label style={{ fontSize: 13, display: 'flex', gap: 6, alignItems: 'center' }}>
                 {t('Stunden für Mitarbeitende sichtbar')}
                 <select
@@ -145,7 +184,7 @@ export function AdminHotels() {
           )}
         </section>
       ))}
-      <ErrorNote error={delDept.error} />
+      <ErrorNote error={delDept.error ?? setActive.error} />
       {dlg?.kind === 'hotel' && (
         <HotelDialog
           companies={companies.data?.items ?? []}

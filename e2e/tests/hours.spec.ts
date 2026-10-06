@@ -14,7 +14,10 @@ test.describe('Stunden und Regeln', () => {
     await page.getByTestId('lim-dailyWarnMinutes').fill('480');
     await page.getByTestId('lim-save').click();
     await expect(page.getByText('Angepasst')).toBeVisible();
-    await page.getByRole('button', { name: 'Auf Standard zurücksetzen' }).click();
+    await page
+      .getByRole('region', { name: 'Arbeitszeitgrenzen' })
+      .getByRole('button', { name: 'Auf Standard zurücksetzen' })
+      .click();
     await expect(page.getByText('Gesetzliche Standardwerte')).toBeVisible();
     await expect(max).toHaveValue('600');
 

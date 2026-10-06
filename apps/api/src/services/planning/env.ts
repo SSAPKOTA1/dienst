@@ -12,6 +12,7 @@ import {
   isNightWork,
   isoWeekday,
   type RuleOther,
+  type SeverityConfig,
   type ShiftWishRule,
   type Violation,
 } from '@dienst/rules';
@@ -101,6 +102,8 @@ export class PlanEnv {
   leaveWishes = new Map<number, LeaveWishRule[]>();
   /** limits of the rule profile per hotel (hotel profile, else company profile, else statutory defaults) */
   limits = new Map<number, Partial<RuleLimits>>();
+  /** soft or hard per configurable restriction of the same profile */
+  severities = new Map<number, SeverityConfig>();
   availability = new Map<number, AvailabilityRule[]>();
   qualifications = new Map<number, Array<{ id: number; validUntil: string | null }>>();
   /** qualification required per shift id (only shifts that require one) */
@@ -290,11 +293,21 @@ export class PlanEnv {
       .innerJoin('company as c', 'c.id', 'h.company_id')
       .leftJoin('rule_profile as hp', 'hp.id', 'h.rule_profile_id')
       .leftJoin('rule_profile as cp', 'cp.id', 'c.rule_profile_id')
-      .select(['h.id', 'hp.rules as hotel_rules', 'cp.rules as company_rules'])
+      .select([
+        'h.id',
+        'hp.rules as hotel_rules',
+        'cp.rules as company_rules',
+        'hp.severities as hotel_severities',
+        'cp.severities as company_severities',
+      ])
       .execute();
     for (const p of profiles) {
+      // a hotel profile replaces the company profile as a whole
+      const hotelProfile = p.hotel_rules != null;
       const r = (p.hotel_rules ?? p.company_rules) as Partial<RuleLimits> | null;
       if (r) env.limits.set(p.id, r);
+      const sev = (hotelProfile ? p.hotel_severities : p.company_severities) as SeverityConfig | null;
+      if (sev && Object.keys(sev).length) env.severities.set(p.id, sev);
     }
     if (ids.length) {
       const yearFrom = addDays(opts.from, -366);
@@ -454,6 +467,7 @@ export class PlanEnv {
         held: this.qualifications.get(s.employeeId) ?? [],
       },
       limits: this.limits.get(s.hotelId),
+      severities: this.severities.get(s.hotelId),
       calendar: {
         sundayDates: (this.calendar.get(s.employeeId) ?? [])
           .filter((c) => c.sunday && !ignore.has(c.id) && c.date !== local.localDate)

@@ -45,7 +45,7 @@ test.describe('Anträge', () => {
     await page.goto('/admin/tablets');
     await expect(page.getByTestId('device-row').first()).toBeVisible();
     await page.goto('/admin/rules');
-    await expect(page.getByRole('heading', { name: 'Regeln' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Regeln', exact: true })).toBeVisible();
     await expect(page.getByText('REST_PERIOD')).toBeVisible();
   });
 });

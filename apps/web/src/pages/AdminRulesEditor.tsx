@@ -1,5 +1,7 @@
 import type {
   FeatureSettingList,
+  HotelDto,
+  SeveritySettingsDto,
   HourCategoryDto,
   Items,
   QualificationDto,
@@ -10,7 +12,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { download, useGet, useSend, type ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
-import { Dialog, ErrorNote, Field, Toggle, useToast } from '../components/ui';
+import { Dialog, ErrorNote, Field, Segmented, Toggle, useToast } from '../components/ui';
 
 const box: React.CSSProperties = { border: '2px solid var(--color-text)' };
 const head: React.CSSProperties = {
@@ -123,6 +125,192 @@ export function RuleLimitsEditor() {
             </button>
           </div>
         )}
+      </div>
+    </section>
+  );
+}
+
+const RESTRICTION_LABEL: Record<string, [string, string]> = {
+  DAILY_OVER_8H: ['Mehr als 8 Stunden pro Tag', 'Die Arbeitszeit eines Tages liegt über 8 Stunden.'],
+  REST_PERIOD_SHORT: [
+    'Ruhezeit zwischen 10 und 11 Stunden',
+    'Die Ruhezeit ist kürzer als 11, aber mindestens 10 Stunden. Darunter ist es immer gesperrt.',
+  ],
+  MONTHLY_CAP: ['Monatliche Stundengrenze', 'Die geplanten Stunden überschreiten die Grenze im Vertrag.'],
+  SUNDAY_LIMIT: ['Weniger als 15 freie Sonntage', 'Der Mitarbeiter hätte im Jahr zu wenige freie Sonntage.'],
+  NIGHT_WORKER: [
+    'Nachtarbeitnehmer',
+    'Die Zahl der Nachtschichten erreicht die Grenze für Nachtarbeitnehmer.',
+  ],
+  ABSENCE_CONFLICT: ['Abwesenheit', 'Der Mitarbeiter hat an dem Tag Urlaub oder ist abwesend.'],
+  WRONG_DEPARTMENT: ['Falsche Abteilung', 'Der Mitarbeiter gehört nicht zur Abteilung der Schicht.'],
+  UNAVAILABLE: [
+    'Nicht verfügbar',
+    'Die Schicht liegt in einem Zeitfenster, in dem der Mitarbeiter nicht kann.',
+  ],
+  WISH_CONFLICT: ['Wunsch', 'Die Schicht widerspricht einem Wunsch des Mitarbeiters.'],
+  QUALIFICATION_MISSING: [
+    'Qualifikation fehlt',
+    'Die Schicht verlangt eine Qualifikation, die fehlt oder abgelaufen ist.',
+  ],
+};
+const LOCKED_LABEL: Record<string, string> = {
+  DAILY_LIMIT: 'Mehr als 10 Stunden pro Tag (Gesetz)',
+  REST_PERIOD: 'Ruhezeit unter 10 Stunden (Gesetz)',
+  MINOR_DAILY: 'Jugendliche: mehr als 8 Stunden pro Tag (Gesetz)',
+  MINOR_NIGHT: 'Jugendliche: Schicht zwischen 20 und 6 Uhr (Gesetz)',
+  MINOR_REST: 'Jugendliche: Ruhezeit unter 12 Stunden (Gesetz)',
+  OVERLAP: 'Überschneidung mit einer anderen Schicht',
+  PAST_DAY: 'Tag liegt in der Vergangenheit',
+  PERIOD_CLOSED: 'Monat ist abgeschlossen',
+  NOT_AT_HOTEL: 'Mitarbeiter arbeitet nicht in diesem Hotel',
+  CONTRACT_INACTIVE: 'Kein gültiger Vertrag',
+};
+const LEVEL_LABEL = {
+  soft: 'Weich: nur Warnung',
+  reason: 'Weich: mit Begründung',
+  hard: 'Hart: nicht planbar',
+};
+
+/**
+ * Per restriction: soft (a warning, the shift can still be planned) or hard (planning is not possible).
+ * Valid for the whole company or for one hotel. Statutory and technical restrictions are listed but cannot be changed.
+ */
+export function SeverityEditor() {
+  const { t } = useTranslation();
+  const { me } = useAuth();
+  const toast = useToast();
+  const hotels = useGet<Items<HotelDto>>('/hotels');
+  const [hotelId, setHotelId] = useState(0);
+  const q = hotelId ? { hotelId } : undefined;
+  const sev = useGet<SeveritySettingsDto>('/settings/severities', q);
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const admin = me?.role !== 'manager';
+  const save = useSend<{ severities: Record<string, string> }>(
+    'PUT',
+    hotelId ? `/settings/severities?hotelId=${hotelId}` : '/settings/severities',
+  );
+  useEffect(() => {
+    if (sev.data) setDraft(Object.fromEntries(sev.data.restrictions.map((r) => [r.code, r.level])));
+  }, [sev.data]);
+  const submit = (reset: boolean) =>
+    save.mutate(
+      {
+        severities: reset
+          ? {}
+          : Object.fromEntries(
+              (sev.data?.restrictions ?? [])
+                .filter((r) => draft[r.code] && draft[r.code] !== r.default)
+                .map((r) => [r.code, draft[r.code]]),
+            ),
+      },
+      {
+        onSuccess: () => {
+          toast(t('Gespeichert.'));
+          void sev.refetch();
+        },
+      },
+    );
+  const err = save.error as ApiError | null;
+  return (
+    <section style={box} aria-labelledby="sv-h">
+      <h3 id="sv-h" style={head}>
+        {t('Planungsregeln: weich oder hart')}
+      </h3>
+      <div
+        style={{
+          padding: 'var(--space-3) var(--space-4)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--space-2)',
+        }}
+      >
+        <div style={{ fontSize: 13 }}>
+          {t(
+            'Weich: Die Schicht lässt sich planen, es erscheint nur eine Warnung. Hart: Die Schicht lässt sich gar nicht planen, auch nicht mit der Notfall-Ausnahme. Gesetzliche Grenzen bleiben immer hart.',
+          )}{' '}
+          {sev.data?.customised ? <b>{t('Angepasst')}</b> : <span>{t('Standardeinstellung')}</span>}
+        </div>
+        <Field label={t('Gilt für')} htmlFor="sv-scope">
+          <select
+            id="sv-scope"
+            className="input"
+            style={{ maxWidth: 320 }}
+            value={hotelId}
+            onChange={(e) => setHotelId(Number(e.target.value))}
+          >
+            <option value={0}>{t('Gesamtes Unternehmen')}</option>
+            {(hotels.data?.items ?? []).map((h) => (
+              <option key={h.id} value={h.id}>
+                {h.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="table" style={{ minWidth: 640 }}>
+            <thead>
+              <tr>
+                <th>{t('Regel')}</th>
+                <th>{t('Wirkung')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(sev.data?.restrictions ?? []).map((r) => {
+                const [name, hint] = RESTRICTION_LABEL[r.code] ?? [r.code, ''];
+                return (
+                  <tr key={r.code} data-testid={`sev-row-${r.code}`}>
+                    <td style={{ verticalAlign: 'top' }}>
+                      <div style={{ fontWeight: 700 }}>{t(name)}</div>
+                      <div style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{t(hint)}</div>
+                    </td>
+                    <td style={{ verticalAlign: 'top', whiteSpace: 'nowrap' }}>
+                      <Segmented
+                        label={t(name)}
+                        value={(draft[r.code] ?? r.level) as 'soft' | 'reason' | 'hard'}
+                        onChange={(v) => admin && setDraft({ ...draft, [r.code]: v })}
+                        options={r.levels.map((l) => ({ value: l, label: t(LEVEL_LABEL[l]) }))}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        {Array.isArray(err?.details?.errors) && (
+          <ul role="alert" style={{ margin: 0, paddingLeft: 18, fontSize: 13, fontWeight: 700 }}>
+            {(err.details.errors as string[]).map((e) => (
+              <li key={e}>{e}</li>
+            ))}
+          </ul>
+        )}
+        {!err?.details?.errors && <ErrorNote error={err} />}
+        {admin && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              className="btn btn-primary"
+              data-testid="sev-save"
+              disabled={save.isPending}
+              onClick={() => submit(false)}
+            >
+              {t('Speichern')}
+            </button>
+            <button className="btn btn-secondary" disabled={save.isPending} onClick={() => submit(true)}>
+              {t('Auf Standard zurücksetzen')}
+            </button>
+          </div>
+        )}
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 3 }}>
+            {t('Immer hart (nicht einstellbar)')}
+          </div>
+          <ul data-testid="sev-locked" style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
+            {(sev.data?.locked ?? []).map((c) => (
+              <li key={c}>{t(LOCKED_LABEL[c] ?? c)}</li>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );

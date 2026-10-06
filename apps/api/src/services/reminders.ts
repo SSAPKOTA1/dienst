@@ -12,6 +12,7 @@ const adminUsersOf = async (db: Db, companyId: number): Promise<number[]> =>
       .innerJoin('admin as a', 'a.admin_id', 'ac.admin_id')
       .select('a.user_id')
       .where('ac.company_id', '=', companyId)
+      .where('a.revoked_at', 'is', null)
       .execute()
   ).map((x) => x.user_id);
 

@@ -192,5 +192,8 @@ export function violationText(v: Violation, t: TFunction): { title: string; msg:
 
 export const isMinorCode = (c: string) => MINOR_CODES.has(c);
 export const OVERRIDABLE = new Set(['DAILY_LIMIT', 'MINOR_REST', 'REST_PERIOD']);
+/** a blocked entry the emergency override can lift: statutory limits only, never a restriction the admin set to hard */
+export const isOverridable = (v: Violation) =>
+  v.severity === 'block' && OVERRIDABLE.has(v.code) && !v.details?.configuredHard;
 
 export { fdate };

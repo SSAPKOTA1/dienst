@@ -98,8 +98,16 @@ export async function plannerUsers(db: DbOrTrx, hotelId: number): Promise<number
     .innerJoin('hotel as h', 'h.company_id', 'ac.company_id')
     .select('a.user_id')
     .where('h.id', '=', hotelId)
+    .where('a.revoked_at', 'is', null)
     .execute();
-  return [...new Set([...mg, ...ad.map((x) => x.user_id)])];
+  const hotelAdmins = await db
+    .selectFrom('admin_hotel as ah')
+    .innerJoin('admin as a', 'a.admin_id', 'ah.admin_id')
+    .select('a.user_id')
+    .where('ah.hotel_id', '=', hotelId)
+    .where('a.revoked_at', 'is', null)
+    .execute();
+  return [...new Set([...mg, ...ad.map((x) => x.user_id), ...hotelAdmins.map((x) => x.user_id)])];
 }
 
 export async function notifyPlanners(

@@ -56,6 +56,7 @@ export interface Admin {
   created_by_id: number;
   first_name: string;
   last_name: string;
+  revoked_at: Timestamp | null;
   updated_at: Generated<Timestamp | null>;
   user_id: number;
 }
@@ -65,6 +66,13 @@ export interface AdminCompany {
   assigned_at: Generated<Timestamp | null>;
   assigned_by_id: number;
   company_id: number;
+}
+
+export interface AdminHotel {
+  admin_id: number;
+  assigned_at: Generated<Timestamp | null>;
+  assigned_by_id: number;
+  hotel_id: number;
 }
 
 export interface Announcement {
@@ -359,9 +367,11 @@ export interface Hotel {
   city: string | null;
   company_id: number;
   created_at: Generated<Timestamp | null>;
+  deactivated_at: Timestamp | null;
   employee_hours_visibility: Generated<string>;
   federal_state: string | null;
   id: Generated<number>;
+  is_active: Generated<boolean>;
   kiosk_identification: Generated<string>;
   name: string;
   rule_profile_id: number | null;
@@ -431,6 +441,7 @@ export interface Manager {
   first_name: string;
   last_name: string;
   manager_id: Generated<number>;
+  revoked_at: Timestamp | null;
   updated_at: Generated<Timestamp | null>;
   user_id: number;
 }
@@ -596,6 +607,7 @@ export interface RuleProfile {
   kind: string;
   name: string;
   rules: Json;
+  severities: Generated<Json>;
   valid_from: Generated<string>;
 }
 
@@ -706,6 +718,7 @@ export interface SuperAdmin {
   created_at: Generated<Timestamp | null>;
   first_name: string;
   last_name: string;
+  revoked_at: Timestamp | null;
   super_admin_id: Generated<number>;
   updated_at: Generated<Timestamp | null>;
   user_id: number;
@@ -799,15 +812,15 @@ export interface VacationNotice {
 }
 
 export interface WebauthnCredential {
-  id: Generated<number>;
-  user_id: number;
-  credential_id: string;
-  public_key: Buffer;
   counter: Generated<Int8>;
-  transports: string[] | null;
-  name: string;
   created_at: Generated<Timestamp>;
+  credential_id: string;
+  id: Generated<number>;
   last_used_at: Timestamp | null;
+  name: string;
+  public_key: Buffer;
+  transports: string[] | null;
+  user_id: number;
 }
 
 export interface DB {
@@ -815,6 +828,7 @@ export interface DB {
   absence_type: AbsenceType;
   admin: Admin;
   admin_company: AdminCompany;
+  admin_hotel: AdminHotel;
   announcement: Announcement;
   announcement_ack: AnnouncementAck;
   api_key: ApiKey;

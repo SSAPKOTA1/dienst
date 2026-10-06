@@ -2,8 +2,18 @@ import type { HourCategoryDto } from '@dienst/shared';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { DEFAULT_LIMITS, validateCategoryRule, validateLimits, type RuleLimits } from '@dienst/rules';
-import { FEATURES } from '@dienst/shared';
+import {
+  DEFAULT_LIMITS,
+  LOCKED_CODES,
+  RESTRICTIONS,
+  effectiveSeverities,
+  validateCategoryRule,
+  validateLimits,
+  validateSeverities,
+  type RuleLimits,
+  type SeverityConfig,
+} from '@dienst/rules';
+import { FEATURES, type SeveritySettingsDto } from '@dienst/shared';
 import ExcelJS from 'exceljs';
 import { AppError, notFound } from '../lib/errors';
 import { actorOf, getPrincipal, requireRole } from '../lib/auth';
@@ -458,6 +468,8 @@ export async function hoursRoutes(app: FastifyInstance) {
             name: req.query.hotelId ? 'Hotel' : 'Unternehmen',
             kind: 'standard',
             rules: JSON.stringify(req.body.limits),
+            // a new profile replaces the old one as a whole: keep the soft/hard choices
+            severities: JSON.stringify(old.profile?.severities ?? {}),
           })
           .returning('id')
           .executeTakeFirstOrThrow();
@@ -520,6 +532,97 @@ export async function hoursRoutes(app: FastifyInstance) {
         });
       });
       return reply.status(204).send();
+    },
+  );
+
+  // ------------------------------------------------------------------ soft or hard planning restrictions
+  const severityOut = (
+    companyId: number,
+    hotelId: number | null,
+    cfg: SeverityConfig,
+  ): SeveritySettingsDto => {
+    const level = effectiveSeverities(cfg);
+    return {
+      companyId,
+      hotelId,
+      customised: Object.keys(cfg).length > 0,
+      restrictions: RESTRICTIONS.map((x) => ({
+        code: x.code,
+        levels: [...x.levels],
+        default: x.default,
+        level: level[x.code],
+      })),
+      locked: [...LOCKED_CODES],
+    };
+  };
+
+  r.get(
+    '/settings/severities',
+    { preValidation: planners, schema: { querystring: ruleScope } },
+    async (req) => {
+      const p = getPrincipal(req);
+      const companyId = companyOf(p, req.query.companyId);
+      if (req.query.hotelId) p.scope.assertHotel(req.query.hotelId);
+      const e = await effective(companyId, req.query.hotelId);
+      return severityOut(
+        companyId,
+        req.query.hotelId ?? null,
+        (e.profile?.severities ?? {}) as SeverityConfig,
+      );
+    },
+  );
+
+  r.put(
+    '/settings/severities',
+    {
+      preValidation: admins,
+      schema: { querystring: ruleScope, body: z.object({ severities: z.record(z.string(), z.string()) }) },
+    },
+    async (req) => {
+      const p = getPrincipal(req);
+      const companyId = companyOf(p, req.query.companyId);
+      const errs = validateSeverities(req.body.severities);
+      if (errs.length)
+        throw new AppError('VALIDATION', 'Some restrictions cannot be set to this level', { errors: errs });
+      if (req.query.hotelId) p.scope.assertHotel(req.query.hotelId);
+      const cfg = req.body.severities as SeverityConfig;
+      return tx(async (trx) => {
+        const old = await effective(companyId, req.query.hotelId);
+        const prof = await trx
+          .insertInto('rule_profile')
+          .values({
+            company_id: companyId,
+            name: req.query.hotelId ? 'Hotel' : 'Unternehmen',
+            kind: 'standard',
+            // the working-time limits stay as they are
+            rules: JSON.stringify(old.profile?.rules ?? {}),
+            severities: JSON.stringify(cfg),
+          })
+          .returning('id')
+          .executeTakeFirstOrThrow();
+        if (req.query.hotelId)
+          await trx
+            .updateTable('hotel')
+            .set({ rule_profile_id: prof.id })
+            .where('id', '=', req.query.hotelId)
+            .execute();
+        else
+          await trx
+            .updateTable('company')
+            .set({ rule_profile_id: prof.id })
+            .where('id', '=', companyId)
+            .execute();
+        await audit(trx, actorOf(req), {
+          action: 'rule_severities_changed',
+          entityType: req.query.hotelId ? 'hotel' : 'company',
+          entityId: req.query.hotelId ?? companyId,
+          companyId,
+          hotelId: req.query.hotelId ?? null,
+          old: effectiveSeverities((old.profile?.severities ?? {}) as SeverityConfig),
+          new: effectiveSeverities(cfg),
+        });
+        return severityOut(companyId, req.query.hotelId ?? null, cfg);
+      });
     },
   );
 

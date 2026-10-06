@@ -158,6 +158,7 @@ export async function hotelManagerUsers(db: DbOrTrx, hotelId: number): Promise<n
     .innerJoin('manager as m', 'm.manager_id', 'mh.manager_id')
     .select('m.user_id')
     .where('mh.hotel_id', '=', hotelId)
+    .where('m.revoked_at', 'is', null)
     .execute();
   return rows.map((r) => r.user_id);
 }

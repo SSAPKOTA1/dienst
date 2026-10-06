@@ -1,0 +1,6 @@
+ALTER TABLE manager DROP COLUMN IF EXISTS revoked_at;
+ALTER TABLE admin DROP COLUMN IF EXISTS revoked_at;
+ALTER TABLE super_admin DROP COLUMN IF EXISTS revoked_at;
+DROP TABLE IF EXISTS admin_hotel;
+ALTER TABLE hotel DROP COLUMN IF EXISTS deactivated_at;
+ALTER TABLE hotel DROP COLUMN IF EXISTS is_active;

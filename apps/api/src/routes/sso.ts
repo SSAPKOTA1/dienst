@@ -33,6 +33,7 @@ async function userInCompany(db: DbOrTrx, userId: number, companyId: number): Pr
     .innerJoin('admin_company as ac', 'ac.admin_id', 'a.admin_id')
     .select('a.admin_id')
     .where('a.user_id', '=', userId)
+    .where('a.revoked_at', 'is', null)
     .where('ac.company_id', '=', companyId)
     .executeTakeFirst();
   if (a) return true;
@@ -42,6 +43,7 @@ async function userInCompany(db: DbOrTrx, userId: number, companyId: number): Pr
     .innerJoin('hotel as h', 'h.id', 'mh.hotel_id')
     .select('m.manager_id')
     .where('m.user_id', '=', userId)
+    .where('m.revoked_at', 'is', null)
     .where('h.company_id', '=', companyId)
     .executeTakeFirst();
   return !!m;

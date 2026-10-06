@@ -5,3 +5,4 @@ export * from './leave';
 export * from './profile';
 export * from './hours';
 export * from './occupancy';
+export * from './severity';

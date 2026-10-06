@@ -879,4 +879,87 @@ export const extraEn: Record<string, string> = {
   '{{n}} Einträge in {{c}} Ketten geprüft.': '{{n}} entries in {{c}} chains checked.',
   'Kette {{k}}: erste Abweichung bei Eintrag {{id}}': 'Chain {{k}}: first mismatch at entry {{id}}',
   '{{n}} ältere Einträge sind nicht prüfbar.': '{{n}} older entries cannot be verified.',
+  'Vertrag ändern': 'Change contract',
+  Rollen: 'Roles',
+  'Mitarbeiter bearbeiten': 'Edit employee',
+  'Kontakt-E-Mail': 'Contact e-mail',
+  Telefon: 'Phone',
+  'Das Stammhaus gehört nicht zu deinen Hotels und kann nicht geändert werden.':
+    'The home hotel is not one of your hotels and cannot be changed.',
+  'Die Änderung gilt ab dem gewählten Datum. Frühere Zeiten bleiben unverändert.':
+    'The change applies from the chosen date. Earlier periods stay unchanged.',
+  'Aktueller Vertrag seit': 'Current contract since',
+  'Gültig ab': 'Valid from',
+  'Monatsgrenze (Std.)': 'Monthly limit (h)',
+  'Feiertage werden bezahlt': 'Public holidays are paid',
+  inaktiv: 'inactive',
+  'Hotel wirklich deaktivieren? Es verschwindet aus Planung und Tablet, die Daten bleiben erhalten.':
+    'Really deactivate this hotel? It disappears from planning and the tablet; its data is kept.',
+  'Hotel deaktiviert.': 'Hotel deactivated.',
+  'Hotel aktiviert.': 'Hotel activated.',
+  'Hotel deaktivieren': 'Deactivate hotel',
+  'Hotel aktivieren': 'Activate hotel',
+  'Rollen von': 'Roles of',
+  'Diese Person ist Mitarbeitende. Die Rolle Mitarbeiter bleibt immer bestehen.':
+    'This person is an employee. The employee role always stays.',
+  'Diese Person ist keine Mitarbeitende.': 'This person is not an employee.',
+  'Mit mehreren Rollen wählt die Person bei der Anmeldung, in welcher sie arbeitet.':
+    'With several roles the person chooses at sign-in which one to work in.',
+  'legt Unternehmen, Hotels und Administration an': 'creates companies, hotels and administrators',
+  'verwaltet Mitarbeitende, Regeln und Leitungen': 'manages employees, rules and managers',
+  'Ganze Unternehmen (alle ihre Hotels)': 'Whole companies (all their hotels)',
+  'Einzelne Hotels': 'Single hotels',
+  'Wähle mindestens ein Unternehmen oder Hotel.': 'Choose at least one company or hotel.',
+  'plant und gibt frei für die gewählten Hotels': 'plans and approves for the chosen hotels',
+  'Wähle mindestens ein Hotel.': 'Choose at least one hotel.',
+  'Rollen ändern': 'Change roles',
+  Vertragsverlauf: 'Contract history',
+  'Planungsregeln: weich oder hart': 'Planning rules: soft or hard',
+  'Weich: Die Schicht lässt sich planen, es erscheint nur eine Warnung. Hart: Die Schicht lässt sich gar nicht planen, auch nicht mit der Notfall-Ausnahme. Gesetzliche Grenzen bleiben immer hart.':
+    'Soft: the shift can be planned, only a warning appears. Hard: the shift cannot be planned at all, not even with the emergency exception. Statutory limits always stay hard.',
+  Standardeinstellung: 'Default setting',
+  'Gilt für': 'Applies to',
+  'Gesamtes Unternehmen': 'Whole company',
+  'Immer hart (nicht einstellbar)': 'Always hard (not adjustable)',
+  'Mehr als 8 Stunden pro Tag': 'More than 8 hours per day',
+  'Die Arbeitszeit eines Tages liegt über 8 Stunden.': 'The working time of a day is above 8 hours.',
+  'Ruhezeit zwischen 10 und 11 Stunden': 'Rest period between 10 and 11 hours',
+  'Die Ruhezeit ist kürzer als 11, aber mindestens 10 Stunden. Darunter ist es immer gesperrt.':
+    'The rest period is shorter than 11 but at least 10 hours. Below that it is always blocked.',
+  'Die geplanten Stunden überschreiten die Grenze im Vertrag.':
+    'The planned hours exceed the limit in the contract.',
+  'Weniger als 15 freie Sonntage': 'Fewer than 15 Sundays off',
+  'Der Mitarbeiter hätte im Jahr zu wenige freie Sonntage.':
+    'The employee would have too few Sundays off in the year.',
+  'Die Zahl der Nachtschichten erreicht die Grenze für Nachtarbeitnehmer.':
+    'The number of night shifts reaches the limit for night workers.',
+  Abwesenheit: 'Absence',
+  'Der Mitarbeiter hat an dem Tag Urlaub oder ist abwesend.':
+    'The employee is on leave or absent on that day.',
+  'Falsche Abteilung': 'Wrong department',
+  'Der Mitarbeiter gehört nicht zur Abteilung der Schicht.':
+    'The employee does not belong to the department of the shift.',
+  'Nicht verfügbar': 'Not available',
+  'Die Schicht liegt in einem Zeitfenster, in dem der Mitarbeiter nicht kann.':
+    'The shift lies in a time window in which the employee cannot work.',
+  Wunsch: 'Wish',
+  'Die Schicht widerspricht einem Wunsch des Mitarbeiters.':
+    'The shift conflicts with a wish of the employee.',
+  'Qualifikation fehlt': 'Qualification missing',
+  'Die Schicht verlangt eine Qualifikation, die fehlt oder abgelaufen ist.':
+    'The shift requires a qualification that is missing or expired.',
+  'Mehr als 10 Stunden pro Tag (Gesetz)': 'More than 10 hours per day (law)',
+  'Ruhezeit unter 10 Stunden (Gesetz)': 'Rest period below 10 hours (law)',
+  'Jugendliche: mehr als 8 Stunden pro Tag (Gesetz)': 'Minors: more than 8 hours per day (law)',
+  'Jugendliche: Schicht zwischen 20 und 6 Uhr (Gesetz)': 'Minors: shift between 20:00 and 06:00 (law)',
+  'Jugendliche: Ruhezeit unter 12 Stunden (Gesetz)': 'Minors: rest period below 12 hours (law)',
+  'Überschneidung mit einer anderen Schicht': 'Overlap with another shift',
+  'Tag liegt in der Vergangenheit': 'Day lies in the past',
+  'Monat ist abgeschlossen': 'Month is closed',
+  'Mitarbeiter arbeitet nicht in diesem Hotel': 'Employee does not work at this hotel',
+  'Kein gültiger Vertrag': 'No valid contract',
+  'Weich: nur Warnung': 'Soft: warning only',
+  'Weich: mit Begründung': 'Soft: with a reason',
+  'Hart: nicht planbar': 'Hard: cannot be planned',
+  'Warnung, einstellbar (weich oder hart)': 'Warning, adjustable (soft or hard)',
 };
