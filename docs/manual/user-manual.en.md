@@ -27,6 +27,9 @@ You do **not** report sickness yourself: call your manager, who records it on th
 
 ## 3. Punching at the tablet
 
+### Clocking in with your phone (NFC)
+If your hotel has an NFC tag at the staff entrance and you have the Android app: open the app once and sign in (enter the server address your manager gave you), then **hold the back of your phone to the tag**. The app shows your hotel and **Clock in** (or **Clock out** with the break choice if you are clocked in); confirm with one tap. The time goes to your manager for review like a punch in the browser. Without the app the tag opens the same page in your browser after sign-in. Tell your manager if a tag is lost or damaged.
+
 1. **Tap your name** (or _Search name_ if you are not scheduled today), then enter your **6-digit PIN**. Alternatively hold your **badge** to the reader, then enter the PIN.
 2. Choose **Clock in**, **Break** or **Clock out**. The tablet shows what was recorded; _Not you?_ cancels.
 3. **Breaks:** the legal break (e.g. 30 minutes after more than 6 hours) is proposed and confirmed with you. If the real break was shorter you must give a reason. Starting and ending a break is possible where your hotel uses it.

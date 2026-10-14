@@ -5,6 +5,7 @@
 | Mitarbeitende, Tablet und Planung (Leitung) | [Benutzerhandbuch](benutzerhandbuch.de.md) | [User manual](user-manual.en.md) |
 | Administration und Betrieb im Hotel | [Administrationshandbuch](administrationshandbuch.de.md) | [Administrator handbook](admin-handbook.en.md) |
 | Technik: Installation, Betrieb, Notfälle | [../DEPLOYMENT.md](../DEPLOYMENT.md), [../INFRASTRUCTURE.md](../INFRASTRUCTURE.md), [../RUNBOOK.md](../RUNBOOK.md) | same |
+| Android-App und NFC-Tags | [../ANDROID.md](../ANDROID.md) | same |
 | Datenschutz | [../privacy/README.md](../privacy/README.md) | same |
 | Entwicklung | [../DEVELOPER.md](../DEVELOPER.md) | same |
 | Schnittstelle | [../api/REFERENCE.md](../api/REFERENCE.md), [../PUBLIC-API.md](../PUBLIC-API.md) | same |

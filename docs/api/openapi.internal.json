@@ -1779,6 +1779,81 @@
         }
       }
     },
+    "/api/v1/nfc-tags": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "hotelId": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "exclusiveMinimum": true,
+                    "maximum": 9007199254740991
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  }
+                },
+                "required": [
+                  "hotelId",
+                  "label"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "hotelId",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/nfc-tags/{id}": {
+      "delete": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
     "/api/v1/employees": {
       "post": {
         "requestBody": {
@@ -6274,6 +6349,35 @@
         }
       }
     },
+    "/api/v1/me/punch/nfc": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "token"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
     "/api/v1/me/punch/in": {
       "post": {
         "requestBody": {
@@ -6288,6 +6392,11 @@
                     "minimum": 0,
                     "exclusiveMinimum": true,
                     "maximum": 9007199254740991
+                  },
+                  "nfcToken": {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 200
                   }
                 },
                 "required": [
@@ -6319,6 +6428,11 @@
                       "start",
                       "end"
                     ]
+                  },
+                  "nfcToken": {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 200
                   }
                 },
                 "required": [
@@ -6352,6 +6466,11 @@
                   "reason": {
                     "type": "string",
                     "maxLength": 300
+                  },
+                  "nfcToken": {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 200
                   }
                 },
                 "required": [

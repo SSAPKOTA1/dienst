@@ -18,3 +18,6 @@ updates:
       # the ops image carries pg_dump/pg_restore and must match the database server (16); a major upgrade is a planned migration
       - dependency-name: postgres
         update-types: ['version-update:semver-major']
+  - package-ecosystem: gradle
+    directory: /apps/android
+    schedule: { interval: weekly, day: monday }

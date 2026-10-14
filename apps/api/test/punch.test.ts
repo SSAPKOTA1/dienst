@@ -327,3 +327,104 @@ describe('web punch', () => {
     expect((await web('GET', '/me/punch', fx.mgrA1.token)).status).toBe(403);
   });
 });
+
+describe('NFC tag punch', () => {
+  let tag: { id: number; token: string; url: string };
+  const nfc = (url: string, tok: string, body: unknown, ip = '203.0.113.9') =>
+    web('POST', url, tok, body, ip);
+
+  it('only admins manage tags; the token is shown once and only its hash is stored', async () => {
+    const body = { hotelId: fx.hotelA1, label: 'Personaleingang' };
+    expect((await call(ctx, 'POST', '/nfc-tags', fx.mgrA1.token, body)).status).toBe(403);
+    expect((await call(ctx, 'POST', '/nfc-tags', fx.adminB.token, body)).status).toBe(403); // other company
+    const made = await call(ctx, 'POST', '/nfc-tags', fx.adminA.token, body);
+    expect(made.status).toBe(201);
+    tag = made.body;
+    expect(tag.url).toBe(`${ctx.app.cfg.WEB_ORIGIN.replace(/\/+$/, '')}/nfc?t=${tag.token}`);
+    const stored = await ctx.db.selectFrom('hotel_nfc_tag').selectAll().executeTakeFirstOrThrow();
+    expect(JSON.stringify(stored)).not.toContain(tag.token);
+    const list = await call(ctx, 'GET', '/nfc-tags', fx.adminA.token);
+    expect(list.body.items).toHaveLength(1);
+    expect(JSON.stringify(list.body)).not.toContain(tag.token);
+    expect((await call(ctx, 'GET', '/nfc-tags', fx.adminB.token)).body.items).toHaveLength(0);
+  });
+
+  it('clocks in and out with the tag from anywhere, without the web punch switch; the trail names the tag', async () => {
+    at('2026-10-15T06:00:00Z');
+    // web punch is off for the hotel and the address is outside every network, so the browser way is closed
+    expect((await nfc('/me/punch/in', emp.maria, { hotelId: fx.hotelA1 })).status).toBe(403);
+    const seen = await nfc('/me/punch/nfc', emp.maria, { token: tag.token });
+    expect(seen.status).toBe(200);
+    expect(seen.body).toMatchObject({ hotelId: fx.hotelA1, open: null });
+    const inn = await nfc('/me/punch/in', emp.maria, { hotelId: fx.hotelA1, nfcToken: tag.token });
+    expect(inn.status).toBe(200);
+    expect((await nfc('/me/punch/nfc', emp.maria, { token: tag.token })).body.open).toMatchObject({
+      hotelId: fx.hotelA1,
+      source: 'web',
+    });
+    at('2026-10-15T14:00:00Z');
+    const out = await nfc('/me/punch/out', emp.maria, {
+      breakMinutes: 30,
+      nfcToken: tag.token,
+    });
+    expect(out.status).toBe(200);
+    expect(out.body.approvalStatus).toBe('pending'); // reviewed like every web punch
+    const trail = await ctx.db
+      .selectFrom('audit_log')
+      .select(['entity_id', 'new_values'])
+      .where('action', '=', 'punch_via_nfc')
+      .orderBy('id')
+      .execute();
+    expect(trail.map((t: any) => t.new_values.direction)).toEqual(['in', 'out']);
+    expect((trail[0].new_values as { tagId: number }).tagId).toBe(tag.id);
+  });
+
+  it('refuses unknown, foreign-hotel and revoked tags', async () => {
+    at('2026-10-16T06:00:00Z');
+    expect((await nfc('/me/punch/nfc', emp.maria, { token: 'nt_does-not-exist-at-all' })).status).toBe(404);
+    expect(
+      (await nfc('/me/punch/in', emp.maria, { hotelId: fx.hotelA1, nfcToken: 'nt_does-not-exist-at-all' }))
+        .status,
+    ).toBe(404);
+    // a tag of a hotel the employee does not work at
+    const other = await call(ctx, 'POST', '/nfc-tags', fx.adminA.token, { hotelId: fx.hotelA2, label: 'A2' });
+    expect((await nfc('/me/punch/nfc', emp.maria, { token: other.body.token })).status).toBe(403);
+    const mixed = await nfc('/me/punch/in', emp.maria, { hotelId: fx.hotelA1, nfcToken: other.body.token });
+    expect(mixed.status).toBe(403);
+    expect(mixed.body.error.details.reason).toBe('NFC_OTHER_HOTEL');
+    // revoke
+    expect((await call(ctx, 'DELETE', `/nfc-tags/${tag.id}`, fx.adminB.token)).status).toBe(403);
+    expect((await call(ctx, 'DELETE', `/nfc-tags/${tag.id}`, fx.adminA.token)).status).toBe(204);
+    expect((await call(ctx, 'DELETE', `/nfc-tags/${tag.id}`, fx.adminA.token)).status).toBe(204); // repeat is fine
+    expect((await nfc('/me/punch/nfc', emp.maria, { token: tag.token })).status).toBe(404);
+    expect((await nfc('/me/punch/in', emp.maria, { hotelId: fx.hotelA1, nfcToken: tag.token })).status).toBe(
+      404,
+    );
+    expect((await call(ctx, 'DELETE', '/nfc-tags/999999', fx.adminA.token)).status).toBe(404);
+    const list = await call(ctx, 'GET', '/nfc-tags', fx.adminA.token);
+    expect(list.body.items.find((t: any) => t.id === tag.id).revokedAt).not.toBeNull();
+  });
+
+  it('stops working when the hotel is switched off, and refuses a tag while clocked in elsewhere', async () => {
+    const fresh = await call(ctx, 'POST', '/nfc-tags', fx.adminA.token, {
+      hotelId: fx.hotelA1,
+      label: 'Neu',
+    });
+    at('2026-10-17T06:00:00Z');
+    expect(
+      (await nfc('/me/punch/in', emp.jon, { hotelId: fx.hotelA1, nfcToken: fresh.body.token })).status,
+    ).toBe(200);
+    const off = await call(ctx, 'PUT', `/hotels/${fx.hotelA1}/active`, fx.saToken, { active: false });
+    // an open punch blocks switching the hotel off; close it first
+    expect(off.status).toBe(409);
+    at('2026-10-17T12:00:00Z');
+    expect(
+      (await nfc('/me/punch/out', emp.jon, { breakMinutes: 30, nfcToken: fresh.body.token })).status,
+    ).toBe(200);
+    expect(
+      (await call(ctx, 'PUT', `/hotels/${fx.hotelA1}/active`, fx.saToken, { active: false })).status,
+    ).toBe(200);
+    expect((await nfc('/me/punch/nfc', emp.maria, { token: fresh.body.token })).status).toBe(404);
+    await call(ctx, 'PUT', `/hotels/${fx.hotelA1}/active`, fx.saToken, { active: true });
+  });
+});

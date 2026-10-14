@@ -53,7 +53,8 @@ test.describe('Zusammenarbeit', () => {
     await login(p, 'manager@demo.test');
     await p.goto('/open-shifts');
     await p.getByTestId('open-new').click();
-    await p.getByLabel('Datum').fill(isoDate(addDays(mondayOf(), 24)));
+    const day = addDays(mondayOf(), 24);
+    await p.getByLabel('Datum').fill(isoDate(day));
     await p.getByTestId('open-save').click();
     await expect(p.getByTestId('open-row').first()).toBeVisible();
 
@@ -61,8 +62,11 @@ test.describe('Zusammenarbeit', () => {
     const e = await ectx.newPage();
     await login(e, 'aylin.demir');
     await e.goto('/me/team');
-    await e.getByTestId('open-claim').first().click();
-    await expect(e.getByTestId('open-shift').first()).toContainText('Bewerbung zurückziehen');
+    // Aylin works at two hotels, so the demo data may offer her other open shifts first: pick the one just published
+    const dd = `${String(day.getUTCDate()).padStart(2, '0')}.${String(day.getUTCMonth() + 1).padStart(2, '0')}.`;
+    const mine = e.getByTestId('open-shift').filter({ hasText: dd });
+    await mine.getByTestId('open-claim').click();
+    await expect(mine).toContainText('Bewerbung zurückziehen');
 
     await p.goto('/requests');
     const claim = p.getByTestId('claim-row').first();

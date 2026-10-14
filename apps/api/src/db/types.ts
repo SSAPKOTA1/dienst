@@ -379,6 +379,16 @@ export interface Hotel {
   web_punch_allowed_cidrs: string[] | null;
 }
 
+export interface HotelNfcTag {
+  created_at: Generated<Timestamp>;
+  created_by_user_id: number;
+  hotel_id: number;
+  id: Generated<number>;
+  label: string;
+  revoked_at: Timestamp | null;
+  token_hash: string;
+}
+
 export interface HourCategory {
   active: Generated<boolean>;
   code: string;
@@ -852,6 +862,7 @@ export interface DB {
   feed_like: FeedLike;
   feed_post: FeedPost;
   hotel: Hotel;
+  hotel_nfc_tag: HotelNfcTag;
   hour_category: HourCategory;
   import_job: ImportJob;
   kiosk_device: KioskDevice;

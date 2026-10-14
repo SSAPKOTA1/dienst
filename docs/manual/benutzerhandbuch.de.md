@@ -27,6 +27,9 @@ Krankmeldungen trägst **nicht du** ein: Rufe deine Leitung an; sie vermerkt es 
 
 ## 3. Am Tablet stempeln
 
+### Mit dem Handy stempeln (NFC)
+Hat dein Hotel einen NFC-Tag am Personaleingang und du die Android-App: Öffne die App einmal und melde dich an (Server-Adresse bekommst du von deiner Leitung), dann **halte die Rückseite des Handys an den Tag**. Die App zeigt dein Hotel und **Einstempeln** (bzw. **Ausstempeln** mit der Pausenauswahl, wenn du eingestempelt bist); bestätige mit einem Tipp. Die Zeit geht wie beim Stempeln im Browser zur Prüfung an deine Leitung. Ohne App öffnet der Tag dieselbe Seite nach der Anmeldung im Browser. Sag deiner Leitung Bescheid, wenn ein Tag verloren oder beschädigt ist.
+
 Das Tablet hängt an der Rezeption oder im Personalraum.
 
 1. **Auf deinen Namen tippen** (oder _Namen suchen_, falls du heute nicht geplant bist), dann deine **6-stellige PIN** eingeben. Alternativ den **Badge** an den Leser halten, dann ebenfalls die PIN.
