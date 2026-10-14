@@ -83,6 +83,13 @@ const rows: Row[] = [
     allow: ['SA', 'AD'],
   },
   { method: 'GET', url: () => '/kiosk-devices', allow: ['SA', 'AD'] },
+  {
+    method: 'POST',
+    url: () => '/nfc-tags',
+    body: () => ({ hotelId: org.hotelA1, label: 'Eingang' }),
+    allow: ['SA', 'AD'],
+  },
+  { method: 'GET', url: () => '/nfc-tags', allow: ['SA', 'AD'] },
   { method: 'GET', url: () => `/holidays?hotelId=${org.hotelA1}&year=2026`, allow: ['SA', 'AD', 'MG', 'EM'] },
   {
     method: 'POST',
@@ -372,6 +379,7 @@ const rows: Row[] = [
   { method: 'POST', url: () => '/me/punch/in', body: () => ({}), allow: ['EM'] },
   { method: 'POST', url: () => '/me/punch/out', body: () => ({}), allow: ['EM'] },
   { method: 'POST', url: () => '/me/punch/break', body: () => ({}), allow: ['EM'] },
+  { method: 'POST', url: () => '/me/punch/nfc', body: () => ({}), allow: ['EM'] },
   { method: 'PUT', url: () => '/occupancy', body: () => ({}), allow: ['SA', 'AD', 'MG'] },
   { method: 'GET', url: () => '/occupancy', allow: ['SA', 'AD', 'MG'] },
   { method: 'GET', url: () => '/staffing-rules', allow: ['SA', 'AD', 'MG'] },

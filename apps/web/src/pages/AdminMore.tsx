@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { api, download, useGet, useSend, type ApiError } from '../lib/api';
 import { fdate, fdatetime } from '../lib/format';
 import { Dialog, ErrorNote, Field, useToast } from '../components/ui';
+import { NfcTags } from './admin/NfcTags';
 import {
   FeatureToggles,
   HourCategories,
@@ -101,6 +102,7 @@ export function AdminTablets() {
       <div style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>
         {t('Ein Tablet gilt als online, wenn es in den letzten 3 Minuten ein Lebenszeichen gesendet hat.')}
       </div>
+      <NfcTags hotels={hotels.data?.items ?? []} />
       {pair && (
         <PairDialog
           hotels={hotels.data?.items ?? []}

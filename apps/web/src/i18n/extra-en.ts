@@ -962,4 +962,24 @@ export const extraEn: Record<string, string> = {
   'Weich: mit Begründung': 'Soft: with a reason',
   'Hart: nicht planbar': 'Hard: cannot be planned',
   'Warnung, einstellbar (weich oder hart)': 'Warning, adjustable (soft or hard)',
+  'NFC-Tags': 'NFC tags',
+  'NFC-Tag anlegen': 'Add NFC tag',
+  'Diesen NFC-Tag sperren? Er funktioniert danach nicht mehr.': 'Block this NFC tag? It will stop working.',
+  'Noch kein NFC-Tag angelegt.': 'No NFC tag yet.',
+  'Mitarbeitende halten ihr Handy mit der Android-App an den Tag und stempeln so ein oder aus. Nur wer im Hotel arbeitet, kann damit stempeln; die Zeit geht wie beim Stempeln im Browser zur Prüfung.':
+    'Employees hold their phone with the Android app to the tag to clock in or out. Only people who work at the hotel can do so; the time goes to review like a browser punch.',
+  'NFC-Tag angelegt': 'NFC tag added',
+  'Schreiben Sie diesen Text mit einer NFC-Schreib-App (z. B. „NFC Tools“) als URL/URI-Eintrag auf einen NFC-Aufkleber. Er wird nur jetzt angezeigt.':
+    'Write this text to an NFC sticker with an NFC writer app (for example "NFC Tools") as a URL/URI record. It is only shown now.',
+  'Kopiert.': 'Copied.',
+  Kopieren: 'Copy',
+  'Name des Tags': 'Name of the tag',
+  'z. B. Personaleingang': 'e.g. Staff entrance',
+  'Stempeln mit NFC': 'Clock in with NFC',
+  'Kein NFC-Tag erkannt. Bitte halte das Handy an den Tag.':
+    'No NFC tag detected. Please hold the phone to the tag.',
+  'Dieser NFC-Tag ist nicht (mehr) gültig.': 'This NFC tag is no longer valid.',
+  'Zur Startseite': 'To the home page',
+  'Achtung: Diese Adresse zeigt auf „localhost“ und funktioniert nur an diesem Computer. Stellen Sie WEB_ORIGIN auf die Adresse ein, unter der Ihr Team die App öffnet.':
+    'Warning: this address points to "localhost" and only works on this computer. Set WEB_ORIGIN to the address your team uses to open the app.',
 };

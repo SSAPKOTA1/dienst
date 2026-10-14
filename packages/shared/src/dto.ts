@@ -73,6 +73,36 @@ export interface KioskDeviceDto {
   lastSeenAt: string | null;
   online: boolean;
 }
+/** A tag at the hotel entrance; `token` and `url` are only present in the answer that creates it. */
+export interface NfcTagDto {
+  id: number;
+  hotelId: number;
+  label: string;
+  createdAt: string;
+  revokedAt: string | null;
+  token?: string;
+  /** the web address to write to the tag (as an NFC URL record); the Android app opens it, other phones use the browser */
+  url?: string;
+}
+/** What the app learns when it reads a tag: the hotel and the employee's own punch state there. */
+export interface NfcResolveDto {
+  hotelId: number;
+  hotelName: string;
+  breakMode: string;
+  /** the employee's open time record, null when not clocked in */
+  open: {
+    hotelId: number;
+    source: string;
+    since: string;
+    onBreak: boolean;
+    grossMinutes: number;
+    requiredBreakMinutes: number;
+    recordedBreakMinutes: number | null;
+    suggestedBreakMinutes: number;
+    options: number[];
+  } | null;
+  serverTime: string;
+}
 export interface ShiftDto {
   id: number;
   hotelId: number;

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AuthProvider, homePathFor, useAuth, type RoleName } from './lib/auth';
 import { ToastProvider } from './components/ui';
@@ -28,6 +28,7 @@ const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default:
 const VacationRoutes = lazy(() => import('./pages/Vacation').then((m) => ({ default: m.VacationRoutes })));
 const PortalAccount = lazy(() => import('./pages/Portal').then((m) => ({ default: m.PortalAccount })));
 const PortalAttendance = lazy(() => import('./pages/Portal').then((m) => ({ default: m.PortalAttendance })));
+const NfcPunch = lazy(() => import('./pages/portal/NfcPunch').then((m) => ({ default: m.NfcPunch })));
 const PortalHome = lazy(() => import('./pages/Portal').then((m) => ({ default: m.PortalHome })));
 const PortalSchedule = lazy(() => import('./pages/Portal').then((m) => ({ default: m.PortalSchedule })));
 const PortalShell = lazy(() => import('./pages/Portal').then((m) => ({ default: m.PortalShell })));
@@ -52,14 +53,37 @@ const AdminUsers = lazy(() => import('./pages/Admin').then((m) => ({ default: m.
 function Guard({ roles }: { roles: RoleName[] }) {
   const { ready, me } = useAuth();
   if (!ready) return null;
-  if (!me) return <Navigate to="/login" replace />;
+  if (!me) {
+    // a tag tap that arrives before the login continues after it
+    try {
+      if (location.pathname === '/me/nfc')
+        sessionStorage.setItem('afterLogin', location.pathname + location.search);
+    } catch {
+      /* private mode: the employee taps again */
+    }
+    return <Navigate to="/login" replace />;
+  }
   if (!roles.includes(me.role)) return <Navigate to={homePathFor(me.role)} replace />;
   return <Outlet />;
+}
+
+/** The address on an NFC tag; the punch screen itself sits in the employee area behind the login. */
+function NfcLink() {
+  const { search } = useLocation();
+  return <Navigate to={`/me/nfc${search}`} replace />;
 }
 
 function Home() {
   const { ready, me } = useAuth();
   if (!ready) return null;
+  let next: string | null = null;
+  try {
+    next = sessionStorage.getItem('afterLogin');
+  } catch {
+    /* private mode */
+  }
+  // a tag tap that arrived before the login continues here
+  if (me?.role === 'employee' && next?.startsWith('/me/nfc?')) return <Navigate to={next} replace />;
   return <Navigate to={me ? homePathFor(me.role) : '/login'} replace />;
 }
 
@@ -84,6 +108,7 @@ export function App() {
             <Route path="/accept-invitation" element={<AcceptInvitation />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/kiosk" element={<Kiosk />} />
+            <Route path="/nfc" element={<NfcLink />} />
             <Route element={<Guard roles={['superAdmin', 'admin', 'manager']} />}>
               <Route element={<PlannerShell />}>
                 <Route path="/planning" element={<Planning />} />
@@ -118,6 +143,7 @@ export function App() {
             <Route element={<Guard roles={['employee']} />}>
               <Route path="/me" element={<PortalShell />}>
                 <Route index element={<PortalHome />} />
+                <Route path="nfc" element={<NfcPunch />} />
                 <Route path="schedule" element={<PortalSchedule />} />
                 <Route path="attendance" element={<PortalAttendance />} />
                 <Route path="vacation" element={<PortalVacation />} />

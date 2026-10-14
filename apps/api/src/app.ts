@@ -27,6 +27,7 @@ import { meRoutes } from './routes/me';
 import { organisationRoutes } from './routes/organisation';
 import { roleRoutes } from './routes/roles';
 import { departmentRoutes } from './routes/organisationDevices';
+import { nfcTagRoutes } from './routes/nfcTags';
 import { employeeRoutes } from './routes/employees';
 import { setupRoutes } from './routes/setup';
 import { shiftRoutes } from './routes/shifts';
@@ -238,6 +239,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       await api.register(organisationRoutes);
       await api.register(roleRoutes);
       await api.register(departmentRoutes);
+      await api.register(nfcTagRoutes);
       await api.register(employeeRoutes);
       await api.register(setupRoutes);
       await api.register(shiftRoutes);
