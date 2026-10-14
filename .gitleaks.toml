@@ -12,6 +12,7 @@ paths = [
   '''\.env\.production\.example$''',
   '''apps/api/src/config\.ts$''',          # the development defaults that production refuses to start with
   '''apps/api/test/.*''',                 # test keys
+  '''apps/android/app/src/test/.*''',     # made-up NFC tag token of the link-parsing unit test
   '''scripts/ops/smoke-container\.sh$''', # throwaway tokens of the smoke test
   '''apps/api/src/seed/sample\.ts$''',    # demo token and demo API key printed by the seed (development only)
   '''docs/.*''',
