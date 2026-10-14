@@ -1,0 +1,29 @@
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm
+    volumes:
+      - ..:/workspaces/dienst:cached
+    command: sleep infinity
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dienst
+      POSTGRES_PASSWORD: dienst
+      POSTGRES_DB: dienst
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      # creates the second database that `pnpm test` uses
+      - ./init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U dienst']
+      interval: 5s
+      retries: 10
+  mailhog:
+    image: mailhog/mailhog
+    restart: unless-stopped
+volumes:
+  dbdata:

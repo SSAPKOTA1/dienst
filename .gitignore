@@ -10,3 +10,4 @@ apps/web/dist
 .DS_Store
 backups
 deploy/monitoring/metrics-token
+.devcontainer/demo-logins.txt

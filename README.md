@@ -19,6 +19,10 @@ pnpm dev                        # API on :3000, web on :5173
 
 Open <http://localhost:5173>. `pnpm db:seed` always wipes the database and reseeds it relative to today.
 
+## Try it in GitHub Codespaces (no local install)
+
+Open the repository on GitHub, choose **Code > Codespaces > Create codespace**. `.devcontainer/` starts Node 22, PostgreSQL 16 and Mailhog, installs the dependencies, applies the migrations, loads the demo data and starts the app. The browser opens the forwarded port 5173; log in with one of the demo logins below (password `Demo!2345`). The logins are also saved in `.devcontainer/demo-logins.txt`. Outgoing e-mails are visible on the forwarded port 8025. `pnpm test` works there too. If the app is not running, start it with `pnpm dev`.
+
 ## Demo logins
 
 Password for every demo account: **`Demo!2345`**.

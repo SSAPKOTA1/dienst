@@ -1,0 +1,18 @@
+{
+  "name": "Dienstplan",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "forwardPorts": [5173, 8025],
+  "portsAttributes": {
+    "5173": { "label": "Dienstplan (web)", "onAutoForward": "openBrowser" },
+    "8025": { "label": "Mailhog (outgoing e-mails)", "onAutoForward": "notify" }
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": "bash .devcontainer/start.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode", "bradlc.vscode-tailwindcss"]
+    }
+  }
+}

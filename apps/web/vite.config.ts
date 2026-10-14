@@ -18,7 +18,8 @@ const headersFile = (): Plugin => ({
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), headersFile()],
-  server: { port: 5173, proxy: { '/api': 'http://localhost:3000' } },
+  // `.app.github.dev` lets the dev server answer when it is opened through a GitHub Codespaces forwarded port
+  server: { port: 5173, allowedHosts: ['.app.github.dev'], proxy: { '/api': 'http://localhost:3000' } },
   // the preview server serves the production build, so it gets the production headers (not the dev server: hot reload needs inline scripts)
   preview: { port: 5173, proxy: { '/api': 'http://localhost:3000' }, headers: SECURITY_HEADERS },
 });
