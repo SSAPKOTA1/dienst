@@ -50,7 +50,7 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
       - name: Scan gate (critical and high findings with a fix block the release)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: scan:${{ matrix.name }}
           severity: CRITICAL,HIGH
