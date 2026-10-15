@@ -4,6 +4,7 @@ import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { holidaysFor } from '@dienst/rules';
 import { sql as trxSql } from 'kysely';
 import { AppError, notFound } from '../lib/errors';
 import { actorOf, getPrincipal, requireRole } from '../lib/auth';
@@ -384,6 +385,40 @@ export async function departmentRoutes(app: FastifyInstance) {
         return h;
       });
       return reply.status(201).send({ id: row.id });
+    },
+  );
+
+  // national and state holidays of one year for all 16 federal states; rows that exist are left alone
+  r.post(
+    '/holidays/generate',
+    {
+      preValidation: requireRole(SA),
+      schema: { body: z.object({ year: z.number().int().min(2000).max(2100) }) },
+    },
+    async (req) => {
+      const { year } = req.body;
+      return tx(async (trx) => {
+        const existing = await trx
+          .selectFrom('public_holiday')
+          .select(['scope', 'federal_state', 'date'])
+          .where('scope', 'in', ['national', 'state'])
+          .where('date', '>=', `${year}-01-01`)
+          .where('date', '<=', `${year}-12-31`)
+          .execute();
+        const have = new Set(existing.map((e) => `${e.scope}|${e.federal_state ?? ''}|${e.date}`));
+        const missing = holidaysFor(year).filter((h) => !have.has(`${h.scope}|${h.state ?? ''}|${h.date}`));
+        for (const h of missing)
+          await trx
+            .insertInto('public_holiday')
+            .values({ scope: h.scope, federal_state: h.state ?? null, date: h.date, name: h.name })
+            .execute();
+        await audit(trx, actorOf(req), {
+          action: 'holidays_generated',
+          entityType: 'public_holiday',
+          new: { year, added: missing.length },
+        });
+        return { year, added: missing.length };
+      });
     },
   );
 

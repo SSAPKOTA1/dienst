@@ -203,6 +203,25 @@ describe('kiosk devices', () => {
 });
 
 describe('holidays', () => {
+  it('generates the holidays of all federal states for a year, once, for super admins only', async () => {
+    const denied = await call(ctx, 'POST', '/holidays/generate', org.adminA.token, { year: 2031 });
+    expect(denied.status).toBe(403);
+    const first = await call(ctx, 'POST', '/holidays/generate', org.saToken, { year: 2031 });
+    expect(first.status).toBe(200);
+    expect(first.body.added).toBeGreaterThan(30);
+    const again = await call(ctx, 'POST', '/holidays/generate', org.saToken, { year: 2031 });
+    expect(again.body.added).toBe(0);
+    const sn = await ctx.db
+      .selectFrom('public_holiday')
+      .select('date')
+      .where('federal_state', '=', 'SN')
+      .where('name', '=', 'Buß- und Bettag')
+      .where('date', '>=', '2031-01-01')
+      .where('date', '<=', '2031-12-31')
+      .execute();
+    expect(sn.map((r) => r.date)).toEqual(['2031-11-19']);
+  });
+
   it('resolves hotel > company > state > national and allows cancelling', async () => {
     const ins = (v: object) =>
       ctx.db

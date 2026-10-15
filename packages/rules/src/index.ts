@@ -6,3 +6,4 @@ export * from './profile';
 export * from './hours';
 export * from './occupancy';
 export * from './severity';
+export * from './holidays';
