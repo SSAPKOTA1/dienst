@@ -153,6 +153,9 @@ export interface CalendarFeed {
 }
 
 export interface Company {
+  alert_late_checkin_minutes: Generated<number>;
+  alert_missed_checkin_minutes: Generated<number>;
+  alert_missed_checkout_minutes: Generated<number>;
   created_at: Generated<Timestamp | null>;
   created_by_id: number;
   grace_period_minutes: Generated<number>;
@@ -391,6 +394,19 @@ export interface Hotel {
   web_punch_allowed_cidrs: string[] | null;
 }
 
+export interface HotelEvent {
+  created_at: Generated<Timestamp>;
+  created_by_user_id: number;
+  end_date: string;
+  hotel_id: number;
+  id: Generated<number>;
+  kind: string;
+  note: string | null;
+  start_date: string;
+  title: string;
+  updated_at: Generated<Timestamp>;
+}
+
 export interface HotelNfcTag {
   created_at: Generated<Timestamp>;
   created_by_user_id: number;
@@ -476,6 +492,7 @@ export interface ManagerHotel {
 export interface Notification {
   created_at: Generated<Timestamp | null>;
   employee_id: number | null;
+  hotel_id: number | null;
   id: Generated<number>;
   kind: string;
   payload: Json | null;
@@ -875,6 +892,7 @@ export interface DB {
   feed_like: FeedLike;
   feed_post: FeedPost;
   hotel: Hotel;
+  hotel_event: HotelEvent;
   hotel_nfc_tag: HotelNfcTag;
   hour_category: HourCategory;
   import_job: ImportJob;
