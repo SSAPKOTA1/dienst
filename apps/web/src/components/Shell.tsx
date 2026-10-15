@@ -105,14 +105,11 @@ export function PlannerShell() {
   const { t } = useTranslation();
   const loc = useLocation();
   const nav = useNavigate();
-  const section =
-    PLANNER_NAV.find((s) =>
-      s.items.some((i) => loc.pathname.startsWith(i.path.split('/').slice(0, 2).join('/'))),
-    ) ?? PLANNER_NAV[0];
   const { me } = useAuth();
   const count = useGet<ApprovalCountDto>('/approvals/count', undefined, { refetchInterval: 30_000 });
   const open: number = count.data?.total ?? 0;
-  // Managers see neither the admin section nor the analytics page (admins and super admins only).
+  // Managers see neither the admin section nor the analytics page (admins and super admins only). Both the top bar
+  // and the tabs below it come from this one list, so a hidden page cannot show up in either.
   const sections =
     me?.role === 'manager'
       ? PLANNER_NAV.filter((s) => s.key !== 'admin').map((s) => ({
@@ -120,6 +117,10 @@ export function PlannerShell() {
           items: s.items.filter((i) => i.path !== '/analytics'),
         }))
       : PLANNER_NAV;
+  const section =
+    sections.find((s) =>
+      s.items.some((i) => loc.pathname.startsWith(i.path.split('/').slice(0, 2).join('/'))),
+    ) ?? sections[0]!;
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <header

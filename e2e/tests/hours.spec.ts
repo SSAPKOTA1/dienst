@@ -60,7 +60,8 @@ test.describe('Stunden und Regeln', () => {
 
     await page.goto('/staff');
     // analytics is for admins and super admins only: managers have no menu entry (and the server refuses the data)
-    await expect(page.getByRole('link', { name: 'Auswertung' })).toHaveCount(0);
+    // the tabs under the top bar are buttons; the same locator finds the tab for an admin (see the admin test)
+    await expect(page.getByRole('button', { name: 'Auswertung' })).toHaveCount(0);
     await page.getByText(/^Maria G/).first().click();
     await expect(page.getByTestId('ledger-balance')).toContainText('h');
     await expect(page.getByTestId('ledger-line').first()).toBeVisible();
@@ -68,7 +69,10 @@ test.describe('Stunden und Regeln', () => {
 
   test('admin sees the analytics summary and the patterns; late arrivals and long stays are off by default', async ({ page }) => {
     await login(page, 'admin@demo.test', { totp: true, role: /Administration/ });
-    await page.goto('/analytics');
+    await page.goto('/staff');
+    // the admin does have the tab, so the manager check above cannot pass by looking at the wrong element
+    await expect(page.getByRole('button', { name: 'Auswertung' })).toHaveCount(1);
+    await page.getByRole('button', { name: 'Auswertung' }).click();
     await expect(page.getByTestId('an-pending')).toContainText(/\d/);
     await expect(page.getByTestId('an-table').locator('tbody tr').first()).toBeVisible();
     await expect(page.getByText('Es gibt keine Rangliste')).toBeVisible();
