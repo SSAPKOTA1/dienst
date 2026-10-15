@@ -27,6 +27,20 @@ export interface Ledger {
   overtimeMode: OvertimeMode;
 }
 
+/** Target hours of one working day: the contract's daily target, else the weekly target spread over the work days. */
+export function dailyTargetHours(c: {
+  daily_target_hours: number | null;
+  target_hours_per_week: number | null;
+  target_hours_per_month: number | null;
+  work_days_per_week: number;
+}): number | null {
+  if (c.daily_target_hours != null) return c.daily_target_hours;
+  const weekly =
+    c.target_hours_per_week ??
+    (c.target_hours_per_month != null ? (c.target_hours_per_month * 12) / 52 : null);
+  return weekly != null ? weekly / c.work_days_per_week : null;
+}
+
 const r2 = (n: number) => Math.round(n * 100) / 100;
 const monthsBetween = (from: string, to: string): string[] => {
   const out: string[] = [];
@@ -70,7 +84,7 @@ export async function buildLedger(db: DbOrTrx, employeeId: number, today: string
     (c.target_hours_per_month != null ? (c.target_hours_per_month * 12) / 52 : null);
   if (weekly == null && c.target_hours_per_month == null) return null;
   const monthly = c.target_hours_per_month ?? ((weekly as number) * 52) / 12;
-  const daily = c.daily_target_hours ?? (weekly != null ? weekly / c.work_days_per_week : 0);
+  const daily = dailyTargetHours(c) ?? 0;
   const start = emp.contract_start_date;
   const last = addDays(today, -1); // today is exclusive
   const manual = await db

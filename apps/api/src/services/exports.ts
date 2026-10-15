@@ -1,12 +1,13 @@
 import type { GridEntryOut, GridResult, GridRowOut } from './planning/grid';
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
-import { eachDay, isoWeekday } from '@dienst/rules';
+import { countedDays, eachDay, isoWeekday } from '@dienst/rules';
 import type { Db } from '../db';
 import { AppError } from '../lib/errors';
 import { localDate } from '../lib/time';
 import { formatInTimeZone } from 'date-fns-tz';
-import { computeTimeAccount } from './timeAccount';
+import { computeTimeAccount, dailyTargetHours } from './timeAccount';
+import { resolveHolidays } from './holidays';
 
 export const ABSENCE_DE: Record<string, string> = {
   annual_leave: 'Urlaub',
@@ -149,9 +150,15 @@ export interface TimesheetData {
     weekday: string;
     lines: Array<{ start: string; end: string; breakMinutes: number; hours: number }>;
     absence: string | null;
+    /** hours worked (approved) */
     hours: number;
+    /** hours credited for an absence that counts as worked time (sick leave, vacation, ...), not worked */
+    credit: number;
   }>;
   totalHours: number;
+  /** credited hours of the month and worked + credited */
+  creditHours: number;
+  totalWithCredit: number;
   workedDays: number;
   pendingCount: number;
   absenceDays: Record<string, number>;
@@ -203,13 +210,41 @@ export async function buildTimesheet(
     .orderBy('p.paid_start')
     .execute();
   const abs = await db
-    .selectFrom('time_off')
-    .select(['start_date', 'end_date', 'type'])
-    .where('employee_id', '=', employeeId)
-    .where('status', '=', 'approved')
-    .where('start_date', '<=', to)
-    .where('end_date', '>=', from)
+    .selectFrom('time_off as t')
+    .innerJoin('absence_type as at', 'at.code', 't.type')
+    .select(['t.start_date', 't.end_date', 't.type', 'at.credits_hours'])
+    .where('t.employee_id', '=', employeeId)
+    .where('t.status', '=', 'approved')
+    .where('t.start_date', '<=', to)
+    .where('t.end_date', '>=', from)
     .execute();
+  const creditContract = await db
+    .selectFrom('employee_contract')
+    .select([
+      'working_weekdays',
+      'daily_target_hours',
+      'target_hours_per_week',
+      'target_hours_per_month',
+      'work_days_per_week',
+    ])
+    .where('employee_id', '=', employeeId)
+    .where('valid_from', '<=', to)
+    .orderBy('valid_from', 'desc')
+    .limit(1)
+    .executeTakeFirst();
+  const dailyCredit = creditContract ? (dailyTargetHours(creditContract) ?? 0) : 0;
+  const holidays = new Set((await resolveHolidays(db, e.primary_hotel_id, from, to)).keys());
+  // days that earn a credit: a credit-giving absence on a working weekday that is not a public holiday
+  const creditDates = new Set<string>();
+  if (creditContract && dailyCredit > 0)
+    for (const a of abs.filter((x) => x.credits_hours))
+      for (const d of countedDays(
+        a.start_date < from ? from : a.start_date,
+        a.end_date > to ? to : a.end_date,
+        creditContract.working_weekdays,
+        holidays,
+      ))
+        creditDates.add(d);
   const dates = eachDay(from, to);
   const absenceDays: Record<string, number> = {};
   const days: TimesheetData['days'] = dates.map((date) => {
@@ -229,6 +264,7 @@ export async function buildTimesheet(
       lines,
       absence: a ? (ABSENCE_DE[a.type] ?? a.type) : null,
       hours: Math.round(lines.reduce((s, l) => s + l.hours, 0) * 100) / 100,
+      credit: creditDates.has(date) ? Math.round(dailyCredit * 100) / 100 : 0,
     };
   });
   const contract = await db
@@ -262,6 +298,8 @@ export async function buildTimesheet(
     label,
     days,
     totalHours: Math.round(days.reduce((s, d) => s + d.hours, 0) * 100) / 100,
+    creditHours: Math.round(days.reduce((s, d) => s + d.credit, 0) * 100) / 100,
+    totalWithCredit: Math.round(days.reduce((s, d) => s + d.hours + d.credit, 0) * 100) / 100,
     workedDays: days.filter((d) => d.lines.length).length,
     pendingCount: recs.filter((r) => r.approval_status === 'pending').length,
     absenceDays,
@@ -277,6 +315,14 @@ export async function buildTimesheet(
   };
 }
 
+/** Remark of a day: a credited absence says plainly that nothing was worked and the hours are credited. */
+const dayRemark = (d: TimesheetData['days'][number]): string =>
+  !d.absence
+    ? ''
+    : d.credit && !d.lines.length
+      ? `${d.absence} (nicht gearbeitet, Stunden gutgeschrieben)`
+      : d.absence;
+
 export function timesheetWorkbook(t: TimesheetData): ExcelJS.Workbook {
   const wb = new ExcelJS.Workbook();
   wb.creator = 'Dienstplan';
@@ -289,10 +335,21 @@ export function timesheetWorkbook(t: TimesheetData): ExcelJS.Workbook {
     t.employee.company,
   ]);
   ws.addRow([]);
-  headStyle(ws.addRow(['Datum', 'Tag', 'Von', 'Bis', 'Pause (Min.)', 'Stunden', 'Bemerkung']));
+  headStyle(
+    ws.addRow([
+      'Datum',
+      'Tag',
+      'Von',
+      'Bis',
+      'Pause (Min.)',
+      'Stunden gearbeitet',
+      'Stunden gutgeschrieben',
+      'Bemerkung',
+    ]),
+  );
   for (const d of t.days) {
     if (!d.lines.length && !d.absence) continue;
-    if (!d.lines.length) ws.addRow([de(d.date), d.weekday, '', '', '', '', d.absence]);
+    if (!d.lines.length) ws.addRow([de(d.date), d.weekday, '', '', '', '', d.credit || '', dayRemark(d)]);
     d.lines.forEach((l, i) =>
       ws.addRow([
         de(d.date),
@@ -301,19 +358,32 @@ export function timesheetWorkbook(t: TimesheetData): ExcelJS.Workbook {
         l.end,
         l.breakMinutes,
         l.hours,
-        i === 0 ? (d.absence ?? '') : '',
+        i === 0 ? d.credit || '' : '',
+        i === 0 ? dayRemark(d) : '',
       ]),
     );
   }
   ws.addRow([]);
-  const sum = ws.addRow(['Summe', '', '', '', '', t.totalHours, `${t.workedDays} Arbeitstage`]);
+  const sum = ws.addRow([
+    'Summe',
+    '',
+    '',
+    '',
+    '',
+    t.totalHours,
+    t.creditHours,
+    `${t.workedDays} Arbeitstage`,
+  ]);
   sum.font = { bold: true };
+  const all = ws.addRow(['Gesamt', '', '', '', '', t.totalWithCredit, '', 'gearbeitet + gutgeschrieben']);
+  all.font = { bold: true };
   if (t.targetHours != null) ws.addRow(['Soll', '', '', '', '', t.targetHours]);
   for (const [k, v] of Object.entries(t.absenceDays))
-    ws.addRow([ABSENCE_DE[k] ?? k, '', '', '', '', '', `${v} Tage`]);
+    ws.addRow([ABSENCE_DE[k] ?? k, '', '', '', '', '', '', `${v} Tage`]);
   if (t.pendingCount) ws.addRow([`Nicht enthalten: ${t.pendingCount} noch nicht freigegebene Zeiten`]);
-  [12, 6, 8, 8, 12, 10, 28].forEach((w, i) => (ws.getColumn(i + 1).width = w));
+  [12, 6, 8, 8, 12, 12, 14, 46].forEach((w, i) => (ws.getColumn(i + 1).width = w));
   ws.getColumn(6).numFmt = '0.00';
+  ws.getColumn(7).numFmt = '0.00';
   return wb;
 }
 
@@ -335,7 +405,7 @@ export function timesheetPdf(t: TimesheetData): Promise<Buffer> {
     );
     doc.text(`${t.employee.company}  ·  ${t.employee.hotel}`);
     doc.moveDown(0.8);
-    const cols = [60, 30, 50, 50, 70, 60, 190];
+    const cols = [58, 28, 42, 42, 62, 52, 56, 170];
     const x0 = 40;
     const row = (cells: string[], bold = false, shade = false) => {
       const y = doc.y;
@@ -359,16 +429,21 @@ export function timesheetPdf(t: TimesheetData): Promise<Buffer> {
         doc.text(c, x + 2, yy, {
           width: cols[i]! - 4,
           lineBreak: false,
-          align: i >= 4 && i <= 5 ? 'right' : 'left',
+          align: i >= 4 && i <= 6 ? 'right' : 'left',
         });
         x += cols[i]!;
       });
       doc.y = yy + 14;
     };
-    row(['Datum', 'Tag', 'Von', 'Bis', 'Pause (Min.)', 'Stunden', 'Bemerkung'], true, true);
+    row(
+      ['Datum', 'Tag', 'Von', 'Bis', 'Pause (Min.)', 'Std. gearb.', 'Std. gutgeschr.', 'Bemerkung'],
+      true,
+      true,
+    );
     for (const d of t.days) {
       if (!d.lines.length && !d.absence) continue;
-      if (!d.lines.length) row([de(d.date), d.weekday, '', '', '', '', d.absence ?? '']);
+      if (!d.lines.length)
+        row([de(d.date), d.weekday, '', '', '', '', d.credit ? num(d.credit) : '', dayRemark(d)]);
       d.lines.forEach((l, i) =>
         row([
           de(d.date),
@@ -377,18 +452,25 @@ export function timesheetPdf(t: TimesheetData): Promise<Buffer> {
           l.end,
           String(l.breakMinutes),
           num(l.hours),
-          i === 0 ? (d.absence ?? '') : '',
+          i === 0 && d.credit ? num(d.credit) : '',
+          i === 0 ? dayRemark(d) : '',
         ]),
       );
     }
     doc.moveDown(0.6);
-    row(['Summe', '', '', '', '', num(t.totalHours), `${t.workedDays} Arbeitstage`], true, true);
-    if (t.targetHours != null) row(['Soll', '', '', '', '', num(t.targetHours), '']);
+    row(
+      ['Summe', '', '', '', '', num(t.totalHours), num(t.creditHours), `${t.workedDays} Arbeitstage`],
+      true,
+      true,
+    );
+    row(['Gesamt', '', '', '', '', num(t.totalWithCredit), '', 'gearbeitet + gutgeschrieben'], true);
+    if (t.targetHours != null) row(['Soll', '', '', '', '', num(t.targetHours), '', '']);
     for (const [k, v] of Object.entries(t.absenceDays))
-      row([ABSENCE_DE[k] ?? k, '', '', '', '', '', `${v} Tage`]);
+      row([ABSENCE_DE[k] ?? k, '', '', '', '', '', '', `${v} Tage`]);
     if (t.vacation)
       row([
         'Urlaub',
+        '',
         '',
         '',
         '',
@@ -399,6 +481,7 @@ export function timesheetPdf(t: TimesheetData): Promise<Buffer> {
     if (t.timeAccount != null)
       row([
         'Arbeitszeitkonto',
+        '',
         '',
         '',
         '',
