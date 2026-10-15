@@ -12,6 +12,7 @@ export const PLANNER_NAV: NavSection[] = [
     items: [
       { path: '/planning', label: 'Dienstplan' },
       { path: '/month', label: 'Monatsübersicht' },
+      { path: '/events', label: 'Ereigniskalender' },
       { path: '/vacation', label: 'Urlaub' },
       { path: '/open-shifts', label: 'Offene Schichten' },
       { path: '/staffing', label: 'Besetzung' },

@@ -1,3 +1,4 @@
+import type { HotelEventDto } from '@dienst/shared';
 import type { CountQuery } from '../../routes/setup';
 import {
   addDays,
@@ -13,6 +14,7 @@ import type { Db } from '../../db';
 import { isoWithOffset } from '../../lib/time';
 import type { Principal } from '../../lib/scope';
 import { resolveHolidayRows } from '../holidays';
+import { eventsInRange } from '../hotelEvents';
 import { loadStaffing, requiredOn } from '../staffing';
 import { changesInRange, latestSnapshot, type Change } from './changes';
 import { PlanEnv, type EntryRow, type PlanEmployee } from './env';
@@ -81,7 +83,13 @@ export async function buildGrid(db: Db, p: Principal, now: Date, prm: GridParams
     from,
     to,
     status: 'draft',
-    days: dates.map((date) => ({ date, holiday: null, past: false, closedHotelIds: [] as number[] })),
+    days: dates.map((date) => ({
+      date,
+      holiday: null,
+      past: false,
+      closedHotelIds: [] as number[],
+      events: [] as HotelEventDto[],
+    })),
     rows: [],
     absences: [],
     totals: { perDay: [] },
@@ -251,9 +259,11 @@ export async function buildGrid(db: Db, p: Principal, now: Date, prm: GridParams
   const tz0 = env.hotel(hotelIds[0]).tz;
   void tz0;
   const hol = await resolveHolidayRows(db, hotelIds[0], from, to);
+  const events = await eventsInRange(db, hotelIds, from, to);
   const days = dates.map((date) => ({
     date,
     holiday: hol.get(date)?.name ?? null,
+    events: events.filter((ev) => ev.startDate <= date && ev.endDate >= date),
     past: date < env.today(hotelIds[0]),
     closedHotelIds: hotelIds.filter((h) => env.isClosed(h, date)),
   }));

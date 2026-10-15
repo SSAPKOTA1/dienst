@@ -1,3 +1,4 @@
+import type { HotelEventDto } from '@dienst/shared';
 import type { Violation } from './util';
 
 export interface GridEntry {
@@ -107,7 +108,13 @@ export interface GridData {
   from: string;
   to: string;
   status: 'draft' | 'published';
-  days: Array<{ date: string; holiday: string | null; past: boolean; closedHotelIds: number[] }>;
+  days: Array<{
+    date: string;
+    holiday: string | null;
+    past: boolean;
+    closedHotelIds: number[];
+    events: HotelEventDto[];
+  }>;
   rows: GridRow[];
   absences: GridAbsence[];
   totals: { perDay: Array<{ date: string; hours: number; headcount: number }> };

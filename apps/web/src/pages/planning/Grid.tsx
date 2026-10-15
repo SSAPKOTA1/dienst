@@ -1,10 +1,12 @@
 import type { CandidateDto, Items } from '@dienst/shared';
 import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { api } from '../../lib/api';
 import { fnum } from '../../lib/format';
+import { EVENT_KIND_LABEL, eventTitle } from '../../lib/hotelEvents';
 import type {
   DropState,
   GridAbsence,
@@ -780,6 +782,38 @@ function DayHeader({ data, lead, trail }: { data: GridData; lead: string; trail?
               >
                 {d.holiday}
               </span>
+            )}
+            {d.events.length > 0 && (
+              <Link
+                to="/events"
+                data-testid="grid-event"
+                data-noprint
+                title={d.events.map((e) => eventTitle(e, t)).join('\n\n')}
+                style={{
+                  flexBasis: '100%',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: 'var(--color-text)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                ◆ {t(EVENT_KIND_LABEL[d.events[0].kind])}: {d.events[0].title}
+                {d.events.length > 1 ? ` +${d.events.length - 1}` : ''}
+              </Link>
+            )}
+            {d.events.length > 0 && (
+              <div
+                data-printonly
+                style={{ display: 'none', flexBasis: '100%', fontSize: 9, fontWeight: 700, lineHeight: 1.2 }}
+              >
+                {d.events.map((e) => (
+                  <div key={e.id}>
+                    ◆ {t(EVENT_KIND_LABEL[e.kind])}: {e.title}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         );
