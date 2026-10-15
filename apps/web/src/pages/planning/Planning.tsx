@@ -758,6 +758,25 @@ export function Planning() {
             </div>
           ))}
         </div>
+        <div
+          data-noprint
+          data-testid="wish-legend"
+          style={{ padding: '6px var(--space-4)', fontSize: 12, display: 'flex', gap: 16, flexWrap: 'wrap' }}
+        >
+          <span>
+            <span className="pl-wish pl-wish-work" aria-hidden="true">
+              +
+            </span>{' '}
+            {t('Wunsch: arbeiten')}
+          </span>
+          <span>
+            <span className="pl-wish pl-wish-off" aria-hidden="true">
+              −
+            </span>{' '}
+            {t('Wunsch: frei')}
+          </span>
+          <span style={{ color: 'var(--color-neutral-700)' }}>{t('Ein Wunsch ist kein Versprechen.')}</span>
+        </div>
         <DndContext
           sensors={sensors}
           collisionDetection={(args) => {

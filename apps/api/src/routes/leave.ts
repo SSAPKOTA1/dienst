@@ -493,6 +493,87 @@ export async function leaveRoutes(app: FastifyInstance) {
     return { items: rows.map(shiftWishOut) };
   });
 
+  // Recurring weekday preferences: "good" or "bad" per weekday, optionally with a preferred shift. Shown to planners
+  // on the calendar; never a promise. PUT replaces the whole list (an empty list clears it).
+  r.get('/me/weekday-prefs', { preValidation: EM, preHandler: wishFeature }, async (req) => {
+    const emp = await myEmployee(db, getPrincipal(req));
+    const rows = await db
+      .selectFrom('employee_weekday_pref')
+      .select(['weekday', 'preference', 'shift_id'])
+      .where('employee_id', '=', emp.employee_id)
+      .orderBy('weekday')
+      .execute();
+    return {
+      items: rows.map((w) => ({ weekday: w.weekday, preference: w.preference, shiftId: w.shift_id })),
+    };
+  });
+  r.put(
+    '/me/weekday-prefs',
+    {
+      preValidation: EM,
+      preHandler: wishFeature,
+      schema: {
+        body: z.object({
+          items: z
+            .array(
+              z.object({
+                weekday: z.number().int().min(1).max(7),
+                preference: z.enum(['good', 'bad']),
+                shiftId: z.number().int().positive().nullish(),
+              }),
+            )
+            .max(7),
+        }),
+      },
+    },
+    async (req) => {
+      const p = getPrincipal(req);
+      const items = req.body.items;
+      if (new Set(items.map((i) => i.weekday)).size !== items.length)
+        throw new AppError('VALIDATION', 'Each weekday may appear only once');
+      await tx(async (trx) => {
+        const emp = await myEmployee(trx, p);
+        const hs = await trx
+          .selectFrom('employee_hotel')
+          .select('hotel_id')
+          .where('employee_id', '=', emp.employee_id)
+          .execute();
+        for (const i of items.filter((x) => x.shiftId)) {
+          const shift = await trx
+            .selectFrom('shift')
+            .select('hotel_id')
+            .where('id', '=', i.shiftId!)
+            .executeTakeFirst();
+          if (!shift || !hs.some((h) => h.hotel_id === shift.hotel_id))
+            throw new AppError('VALIDATION', 'Unknown shift');
+          if (i.preference === 'bad')
+            throw new AppError('VALIDATION', 'A shift can only go with a good weekday');
+        }
+        await trx.deleteFrom('employee_weekday_pref').where('employee_id', '=', emp.employee_id).execute();
+        if (items.length)
+          await trx
+            .insertInto('employee_weekday_pref')
+            .values(
+              items.map((i) => ({
+                employee_id: emp.employee_id,
+                weekday: i.weekday,
+                preference: i.preference,
+                shift_id: i.shiftId ?? null,
+              })),
+            )
+            .execute();
+        await audit(trx, actorOf(req), {
+          action: 'weekday_prefs_set',
+          entityType: 'employee',
+          entityId: emp.employee_id,
+          hotelId: emp.primary_hotel_id,
+          new: { items },
+        });
+      });
+      return { items };
+    },
+  );
+
   r.post(
     '/me/leave-wishes',
     {

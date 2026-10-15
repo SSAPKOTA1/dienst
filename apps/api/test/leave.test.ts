@@ -318,6 +318,76 @@ describe('wishes', () => {
   });
 });
 
+describe('weekday preferences and wish marks on the calendar', () => {
+  const grid = (token: string, from: string) =>
+    call(ctx, 'GET', `/schedule/grid?hotelIds=${fx.hotelA1}&view=employee&range=week&from=${from}`, token);
+  const cellOf = (g: any, employeeId: number, date: string) =>
+    g.body.rows.find((r: any) => r.employeeId === employeeId).cells.find((c: any) => c.date === date);
+
+  it('are saved per employee, validated and replaced as a whole', async () => {
+    const put = (body: unknown, token = emp.tom!) => call(ctx, 'PUT', '/me/weekday-prefs', token, body);
+    expect(
+      (
+        await put({
+          items: [
+            { weekday: 1, preference: 'good', shiftId: fx.early },
+            { weekday: 7, preference: 'bad' },
+          ],
+        })
+      ).status,
+    ).toBe(200);
+    const list = await call(ctx, 'GET', '/me/weekday-prefs', emp.tom!);
+    expect(list.body.items).toEqual([
+      { weekday: 1, preference: 'good', shiftId: fx.early },
+      { weekday: 7, preference: 'bad', shiftId: null },
+    ]);
+    // a weekday twice, a shift of another hotel, a shift with "bad", a manager
+    expect(
+      (
+        await put({
+          items: [
+            { weekday: 2, preference: 'good' },
+            { weekday: 2, preference: 'bad' },
+          ],
+        })
+      ).status,
+    ).toBe(400);
+    expect(
+      (await put({ items: [{ weekday: 2, preference: 'good', shiftId: fx.early2 }] }, emp.jon!)).status,
+    ).toBe(400); // Jon works at hotel A1 only
+    expect((await put({ items: [{ weekday: 2, preference: 'bad', shiftId: fx.early }] })).status).toBe(400);
+    expect((await put({ items: [] }, fx.mgrA1.token)).status).toBe(403);
+    // the failed saves left the list as it was
+    expect((await call(ctx, 'GET', '/me/weekday-prefs', emp.tom!)).body.items).toHaveLength(2);
+  });
+
+  it('show on the grid for planners: weekday preference, a dated wish wins, no reason text', async () => {
+    // Tom: Monday good (early), Sunday bad; plus a leave wish on Wednesday 2027-06-09 with a private reason
+    const lw = await call(ctx, 'POST', '/me/leave-wishes', emp.tom!, {
+      from: '2027-06-09',
+      to: '2027-06-09',
+      priority: 1,
+      reason: 'private-reason-xyz',
+    });
+    expect(lw.status).toBe(201);
+    const g = await grid(fx.mgrA1.token, '2027-06-07'); // Monday of that week
+    expect(g.status).toBe(200);
+    const tom = fx.emp.tom!;
+    expect(cellOf(g, tom, '2027-06-07').wishes).toEqual([
+      { kind: 'work', source: 'weekday', shiftName: expect.any(String), priority: null, status: null },
+    ]);
+    expect(cellOf(g, tom, '2027-06-13').wishes).toMatchObject([{ kind: 'off', source: 'weekday' }]);
+    expect(cellOf(g, tom, '2027-06-09').wishes).toMatchObject([
+      { kind: 'off', source: 'leave', priority: 1 },
+    ]);
+    expect(cellOf(g, tom, '2027-06-08').wishes).toEqual([]);
+    // the reason never leaves the portal and the wish decision screen
+    expect(JSON.stringify(g.body)).not.toContain('private-reason-xyz');
+    // an employee cannot read the planner grid
+    expect((await grid(emp.tom!, '2027-06-07')).status).toBe(403);
+  });
+});
+
 describe('vacation planner overview', () => {
   it('lists entitlement, carryover, taken, planned and requested per employee', async () => {
     await call(ctx, 'POST', '/me/time-off-requests', emp.tom!, { from: '2027-06-07', to: '2027-06-08' });

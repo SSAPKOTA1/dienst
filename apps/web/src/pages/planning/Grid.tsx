@@ -9,6 +9,7 @@ import type {
   DropState,
   GridAbsence,
   GridCell,
+  GridWish,
   GridData,
   GridEntry,
   GridRow,
@@ -546,7 +547,17 @@ function Cell({
     .filter(Boolean)
     .join(' ');
   const dow = t(DOW[dowOf(cell.date)]);
-  const desc = `${row.label}, ${dow} ${dayNum(cell.date)}, ${empty ? t('Leer') : [...live.map((e) => `${e.shiftName ?? ''} ${rangeLabel(e.start, e.end)}`), ...absences.map((a) => t(ABSENCE_LABEL[a.type] ?? a.type))].join(', ')}${locked ? `, ${t('Vergangen · gesperrt')}` : ''}${shiftView ? `, ${cell.assigned}/${cell.required}` : ''}`;
+  const wishText = (w: GridWish) =>
+    [
+      w.kind === 'work' ? t('Wunsch: arbeiten') : t('Wunsch: frei'),
+      w.shiftName,
+      w.source === 'weekday' ? t('jeden Wochentag') : null,
+      w.priority ? `${t('Priorität')} ${w.priority}` : null,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  const wishes = cell.wishes ?? [];
+  const desc = `${row.label}, ${dow} ${dayNum(cell.date)}, ${empty ? t('Leer') : [...live.map((e) => `${e.shiftName ?? ''} ${rangeLabel(e.start, e.end)}`), ...absences.map((a) => t(ABSENCE_LABEL[a.type] ?? a.type))].join(', ')}${wishes.length ? `, ${wishes.map(wishText).join(', ')}` : ''}${locked ? `, ${t('Vergangen · gesperrt')}` : ''}${shiftView ? `, ${cell.assigned}/${cell.required}` : ''}`;
   const openMenu = () => {
     const el = addRef.current ?? mainRef.current;
     if (!el) return;
@@ -634,6 +645,15 @@ function Cell({
       {absences.map((a) => (
         <AbsenceChip key={a.id} a={a} cell={cell} rowKey={row.key} />
       ))}
+      {wishes.length > 0 && (
+        <span className="pl-wishes" data-testid="cell-wishes" data-noprint>
+          {wishes.map((w, i) => (
+            <span key={i} className={`pl-wish pl-wish-${w.kind}`} title={wishText(w)} aria-hidden="true">
+              {w.kind === 'work' ? '+' : '−'}
+            </span>
+          ))}
+        </span>
+      )}
       {shiftView && (
         <span
           className="pl-count"

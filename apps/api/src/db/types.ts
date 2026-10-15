@@ -336,6 +336,16 @@ export interface EmployeeVacationAllowance {
   year: number;
 }
 
+export interface EmployeeWeekdayPref {
+  created_at: Generated<Timestamp>;
+  employee_id: number;
+  id: Generated<number>;
+  preference: string;
+  shift_id: number | null;
+  updated_at: Generated<Timestamp>;
+  weekday: number;
+}
+
 export interface FeedComment {
   author_name: string;
   author_user_id: number;
@@ -858,6 +868,7 @@ export interface DB {
   employee_qualification: EmployeeQualification;
   employee_shift_wish: EmployeeShiftWish;
   employee_vacation_allowance: EmployeeVacationAllowance;
+  employee_weekday_pref: EmployeeWeekdayPref;
   feed_comment: FeedComment;
   feed_like: FeedLike;
   feed_post: FeedPost;
