@@ -453,6 +453,7 @@ const rows: Row[] = [
     url: () => `/schedule/shared?hotelIds=${org.hotelA1}&from=2027-06-07`,
     allow: ['SA', 'AD', 'MG'],
   },
+  { method: 'GET', url: () => '/analytics/patterns?from=2027-06-01&to=2027-06-30', allow: ['SA', 'AD'] },
   { method: 'GET', url: () => '/me/weekday-prefs', allow: ['EM'] },
   { method: 'PUT', url: () => '/me/weekday-prefs', body: () => ({ items: [] }), allow: ['EM'] },
   { method: 'GET', url: () => '/vacation/employees/999999?year=2027', allow: ['SA', 'AD', 'MG'] },

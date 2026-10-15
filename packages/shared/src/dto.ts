@@ -597,3 +597,35 @@ export interface SharedPlanDto {
     }>;
   }>;
 }
+
+/** Analytics patterns (totals per hotel, department or shift; a null value is hidden because the group is too small). */
+export type PatternLevel = 'hotel' | 'department' | 'shift';
+export type PatternGranularity = 'week' | 'month';
+
+export interface PatternMetric {
+  unit: 'percent' | 'hours';
+  values: Array<number | null>;
+  total: number | null;
+  /** Monday to Sunday over the whole range */
+  byWeekday: Array<number | null>;
+}
+export interface PatternGroup {
+  key: string;
+  name: string;
+  hotelName: string;
+  metrics: {
+    sick: PatternMetric;
+    overtime: PatternMetric;
+    late: PatternMetric | null;
+    longStay: PatternMetric | null;
+  };
+}
+export interface PatternsDto {
+  from: string;
+  to: string;
+  level: PatternLevel;
+  granularity: PatternGranularity;
+  periods: string[];
+  thresholds: { min: number; minSick: number };
+  groups: PatternGroup[];
+}

@@ -46,6 +46,18 @@ export const FEATURES = [
   'documents',
   'calendar_feed',
   'team_calendar',
+  // analytics panels that measure behaviour; off until the company has agreed them (works council, data protection)
+  'analytics_late',
+  'analytics_long_stay',
 ] as const;
 export type Feature = (typeof FEATURES)[number];
+/** Features without a stored row are off, not on (everything else defaults to on). */
+export const FEATURES_DEFAULT_OFF: readonly Feature[] = ['analytics_late', 'analytics_long_stay'];
+
+/** Analytics patterns: a figure built from fewer people is not shown (sickness needs a larger group). */
+export const PATTERN_MIN_GROUP = 5;
+export const PATTERN_MIN_GROUP_SICK = 10;
+/** Clock-in later than planned start + this grace counts as late; clock-out later than planned end + this as long stay. */
+export const LATE_GRACE_MINUTES = 15;
+export const LONG_STAY_MINUTES = 30;
 export type MenuAbsenceType = (typeof MENU_ABSENCE_TYPES)[number];

@@ -1,5 +1,5 @@
 import type { FastifyRequest } from 'fastify';
-import type { Feature } from '@dienst/shared';
+import { FEATURES_DEFAULT_OFF, type Feature } from '@dienst/shared';
 import type { DbOrTrx } from '../db';
 import { AppError } from '../lib/errors';
 import { getPrincipal } from '../lib/auth';
@@ -11,7 +11,7 @@ export async function featureEnabled(db: DbOrTrx, companyId: number, feature: Fe
     .where('company_id', '=', companyId)
     .where('feature', '=', feature)
     .executeTakeFirst();
-  return r ? r.enabled : true;
+  return r ? r.enabled : !FEATURES_DEFAULT_OFF.includes(feature);
 }
 
 /** preHandler for employee endpoints: 403 `FEATURE_DISABLED` when the company switched the feature off. */

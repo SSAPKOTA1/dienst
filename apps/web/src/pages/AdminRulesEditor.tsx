@@ -327,6 +327,8 @@ const FEATURE_LABEL: Record<string, string> = {
   documents: 'Dokumente',
   calendar_feed: 'Kalender-Abo',
   team_calendar: 'Team-Abwesenheiten',
+  analytics_late: 'Auswertung: Verspätungen',
+  analytics_long_stay: 'Auswertung: lange Anwesenheit',
 };
 
 export function FeatureToggles() {

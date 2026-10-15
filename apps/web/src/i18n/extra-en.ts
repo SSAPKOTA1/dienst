@@ -881,6 +881,37 @@ export const extraEn: Record<string, string> = {
   '{{n}} ältere Einträge sind nicht prüfbar.': '{{n}} older entries cannot be verified.',
   'Vertrag ändern': 'Change contract',
   'Neue Version': 'New version',
+  Muster: 'Patterns',
+  Ebene: 'Level',
+  'je Woche': 'per week',
+  'je Monat': 'per month',
+  Rückblick: 'Look back',
+  '3 Monate': '3 months',
+  '6 Monate': '6 months',
+  '12 Monate': '12 months',
+  'Nur Summen, nie einzelne Personen. Zahlen aus weniger als 5 Personen werden nicht gezeigt (Krankheit: 10).':
+    'Totals only, never individual people. Figures from fewer than 5 people are not shown (sickness: 10).',
+  Krankheit: 'Sickness',
+  Überstunden: 'Overtime',
+  Verspätungen: 'Late arrivals',
+  'Lange Anwesenheit': 'Long stays',
+  'Anteil der geplanten Schichten, die wegen Krankheit ausfielen (%)':
+    'Share of planned shifts cancelled because of sickness (%)',
+  'Stunden über der geplanten Arbeitszeit (genehmigte Stempelzeiten)':
+    'Hours above the planned working time (approved punches)',
+  'Anteil der Einstempelungen nach Schichtbeginn plus Karenzzeit (%)':
+    'Share of clock-ins after the planned start plus grace period (%)',
+  'Anteil der Ausstempelungen mehr als 30 Minuten nach Schichtende (%)':
+    'Share of clock-outs more than 30 minutes after the planned end (%)',
+  'Keine Daten im Zeitraum.': 'No data in this period.',
+  'Nicht freigeschaltet. Einschalten unter Einrichtung → Regeln → Funktionen.':
+    'Not switched on. Switch it on under Setup → Rules → Features.',
+  'Nicht freigeschaltet.': 'Not switched on.',
+  Gruppe: 'Group',
+  Gesamt: 'Total',
+  'Werte als Tabelle': 'Values as a table',
+  'Auswertung: Verspätungen': 'Analytics: late arrivals',
+  'Auswertung: lange Anwesenheit': 'Analytics: long stays',
   'Zurück zum Dienstplan': 'Back to the schedule',
   'Die Woche ist noch nicht vollständig veröffentlicht. Bitte zuerst veröffentlichen.':
     'The week is not fully published yet. Please publish it first.',

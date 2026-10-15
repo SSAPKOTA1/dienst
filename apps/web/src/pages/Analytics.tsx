@@ -5,6 +5,7 @@ import { useGet } from '../lib/api';
 import { fnum, fsigned } from '../lib/format';
 import { PageHead } from '../components/ui';
 import { todayIso } from './planning/util';
+import { AnalyticsPatterns } from './AnalyticsPatterns';
 
 const monthRange = (m: string) =>
   [
@@ -102,6 +103,7 @@ export function Analytics() {
           )}
         </div>
       </div>
+      <AnalyticsPatterns />
     </main>
   );
 }
