@@ -1066,6 +1066,5 @@ export const extraEn: Record<string, string> = {
   Gesamtplan: 'Whole team',
   'Alle meine Hotels': 'All my hotels',
   'Keine Dienste': 'No shifts',
-  abwesend: 'away',
   ich: 'me',
 };
