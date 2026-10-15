@@ -719,6 +719,25 @@ export type MyScheduleDto = {
   absences: Array<{ id: number; from: string; to: string; type: string; status: string }>;
 };
 
+/** GET /me/team-schedule: published plan of the employee's hotels, names and times only */
+export type TeamScheduleDto = {
+  hotels: Array<{ id: number; name: string }>;
+  absencesEnabled: boolean;
+  entries: Array<{
+    id: number;
+    date: string;
+    start: string;
+    end: string;
+    hotelId: number;
+    employeeId: number;
+    displayName: string;
+    shiftName: string | null;
+    mine: boolean;
+  }>;
+  /** neutral "away": no type, reason or status */
+  absences: Array<{ employeeId: number; displayName: string; from: string; to: string; mine: boolean }>;
+};
+
 /** GET /me/colleagues */
 export type ColleagueList = {
   items: Array<{ employeeId: number; displayName: string; departmentName: string }>;

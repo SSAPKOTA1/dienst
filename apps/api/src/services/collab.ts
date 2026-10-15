@@ -148,3 +148,13 @@ export const myEmployee = async (d: Db | Trx, p: Principal) => {
     .where('employee_id', '=', p.employeeId)
     .executeTakeFirstOrThrow();
 };
+
+/** Colleagues see each other as "away" only for these types; sickness and other health-related absences are never shown. */
+export const TEAM_VISIBLE_TYPES = [
+  'annual_leave',
+  'special_leave',
+  'training',
+  'comp_time',
+  'unpaid_leave',
+  'rest_day',
+];

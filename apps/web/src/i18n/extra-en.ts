@@ -1062,4 +1062,9 @@ export const extraEn: Record<string, string> = {
   'Zur Startseite': 'To the home page',
   'Achtung: Diese Adresse zeigt auf „localhost“ und funktioniert nur an diesem Computer. Stellen Sie WEB_ORIGIN auf die Adresse ein, unter der Ihr Team die App öffnet.':
     'Warning: this address points to "localhost" and only works on this computer. Set WEB_ORIGIN to the address your team uses to open the app.',
+  'Mein Plan': 'My plan',
+  Gesamtplan: 'Whole team',
+  'Alle meine Hotels': 'All my hotels',
+  'Keine Dienste': 'No shifts',
+  ich: 'me',
 };

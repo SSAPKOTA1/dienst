@@ -7,6 +7,7 @@ import { Dialog, ErrorNote, Field, useToast } from '../../components/ui';
 import { addDaysIso, mondayOfIso, todayIso, weekRangeLabel } from '../planning/util';
 import { TZ, card, dayLabel, line } from './common';
 import { ABS } from './Attendance';
+import { TeamSchedule } from './TeamSchedule';
 
 export function PortalSchedule() {
   const { t } = useTranslation();
@@ -14,10 +15,38 @@ export function PortalSchedule() {
   const to = addDaysIso(week, 6);
   const s = useGet<MyScheduleDto>('/me/schedule', { from: week, to });
   const [swap, setSwap] = useState<MyScheduleEntry | null>(null);
+  const [view, setView] = useState<'mine' | 'team'>('mine');
   const days = Array.from({ length: 7 }, (_, i) => addDaysIso(week, i));
   const today = todayIso();
+  const tabs = (
+    <div
+      role="group"
+      aria-label={t('Ansicht')}
+      style={{ display: 'flex', gap: 8, padding: 'var(--space-3)' }}
+    >
+      {(['mine', 'team'] as const).map((v) => (
+        <button
+          key={v}
+          className={view === v ? 'btn btn-primary' : 'btn btn-secondary'}
+          aria-pressed={view === v}
+          data-testid={`sched-view-${v}`}
+          onClick={() => setView(v)}
+        >
+          {v === 'mine' ? t('Mein Plan') : t('Gesamtplan')}
+        </button>
+      ))}
+    </div>
+  );
+  if (view === 'team')
+    return (
+      <main>
+        {tabs}
+        <TeamSchedule />
+      </main>
+    );
   return (
     <main>
+      {tabs}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 'var(--space-3)' }}>
         <button
           className="btn btn-secondary"
