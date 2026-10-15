@@ -446,6 +446,13 @@ const rows: Row[] = [
     body: () => ({ answer: 'x' }),
     allow: ['SA', 'AD', 'MG'],
   },
+  { method: 'GET', url: () => '/vacation/overview/export?year=2027', allow: ['SA', 'AD', 'MG'] },
+  { method: 'GET', url: () => '/schedule/month/export?month=2027-06', allow: ['SA', 'AD', 'MG'] },
+  {
+    method: 'GET',
+    url: () => `/schedule/shared?hotelIds=${org.hotelA1}&from=2027-06-07`,
+    allow: ['SA', 'AD', 'MG'],
+  },
   { method: 'GET', url: () => '/me/weekday-prefs', allow: ['EM'] },
   { method: 'PUT', url: () => '/me/weekday-prefs', body: () => ({ items: [] }), allow: ['EM'] },
   { method: 'GET', url: () => '/vacation/employees/999999?year=2027', allow: ['SA', 'AD', 'MG'] },

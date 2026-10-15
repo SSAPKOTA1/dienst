@@ -107,6 +107,116 @@ describe('schedule export', () => {
   });
 });
 
+describe('month overview export', () => {
+  const month = (token: string, m = '2026-10', hotel = fx.hotelA1) =>
+    get(`/schedule/month/export?month=${m}&hotelIds=${hotel}&format=xlsx`, token);
+
+  it('has a matrix, sums, coverage and notes; drafts are marked; managers see sickness only as "abwesend"', async () => {
+    // a sick day in the past (the manager may enter it within 7 days)
+    expect(
+      (
+        await call(ctx, 'POST', '/schedule/absence', fx.adminA.token, {
+          employeeId: fx.emp.tom,
+          from: '2026-10-14',
+          to: '2026-10-14',
+          type: 'sick_leave',
+        })
+      ).status,
+    ).toBe(201);
+    const a = await month(fx.adminA.token);
+    expect(a.statusCode).toBe(200);
+    expect(a.headers['content-disposition']).toContain('monatsuebersicht_2026-10.xlsx');
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(a.rawPayload as any);
+    expect(wb.worksheets.map((w) => w.name)).toEqual(['Matrix', 'Summen', 'Besetzung', 'Hinweise']);
+    const matrix = rowsOf(wb.getWorksheet('Matrix')!);
+    expect(matrix[0]!.slice(0, 4)).toEqual(['Mitarbeitende', 'Hotel', 'Abteilung', 'Do 01.10.']);
+    expect(matrix[0]).toHaveLength(3 + 31);
+    const maria26 = matrix.find((x) => x[0] === 'Maria T.')![3 + 25]!; // 26 Oct
+    expect(maria26).toContain('06:00–14:00');
+    expect(maria26).toContain('(Entwurf)');
+    expect(matrix.find((x) => x[0] === 'Jon T.')![3 + 26]).toBe('Frei');
+    // sums: admins see the type, managers only "abwesend"
+    const sumHead = rowsOf(wb.getWorksheet('Summen')!)[0]!;
+    expect(sumHead).toContain('Krank (Tage)');
+    const m = new ExcelJS.Workbook();
+    await m.xlsx.load((await month(fx.mgrA1.token)).rawPayload as any);
+    const mHead = rowsOf(m.getWorksheet('Summen')!)[0]!;
+    expect(mHead).not.toContain('Krank (Tage)');
+    expect(mHead).toContain('abwesend (Tage)');
+    expect(JSON.stringify(rowsOf(m.getWorksheet('Matrix')!))).not.toContain('Krank');
+    // coverage has a date cell per department and day
+    const cover = wb.getWorksheet('Besetzung')!;
+    expect(cover.getRow(1).values).toContain('Offen');
+    expect(cover.rowCount).toBeGreaterThan(1);
+  });
+
+  it('respects scope, month format and is audited', async () => {
+    expect((await month(fx.mgrA1.token, '2026-10', fx.hotelB1)).statusCode).toBe(403);
+    expect((await month(maria)).statusCode).toBe(403);
+    expect((await month(fx.adminA.token, '2026-13')).statusCode).toBe(400);
+    const logged = await ctx.db
+      .selectFrom('audit_log')
+      .select('id')
+      .where('action', '=', 'export_month_overview')
+      .execute();
+    expect(logged.length).toBeGreaterThan(0);
+  });
+});
+
+describe('vacation overview export', () => {
+  const vac = (token: string, hotel = fx.hotelA1) =>
+    get(`/vacation/overview/export?year=2026&hotelIds=${hotel}&format=xlsx`, token);
+
+  it('has the overview, every entry and notes, with numbers and dates as real cells', async () => {
+    expect(
+      (
+        await call(ctx, 'POST', '/schedule/absence', fx.adminA.token, {
+          employeeId: fx.emp.maria,
+          from: '2026-11-02',
+          to: '2026-11-03',
+          type: 'annual_leave',
+        })
+      ).status,
+    ).toBe(201);
+    const r = await vac(fx.mgrA1.token);
+    expect(r.statusCode).toBe(200);
+    expect(r.headers['content-disposition']).toContain('urlaub_2026.xlsx');
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(r.rawPayload as any);
+    expect(wb.worksheets.map((w) => w.name)).toEqual(['Übersicht', 'Einträge', 'Hinweise']);
+    const sum = wb.getWorksheet('Übersicht')!;
+    expect((sum.getRow(1).values as any[]).slice(1, 4)).toEqual(['Mitarbeitende', 'Abteilung', 'Anspruch']);
+    const row = (ws: ExcelJS.Worksheet, name: string) => {
+      let found: ExcelJS.Row | undefined;
+      ws.eachRow((x) => {
+        if (x.getCell(1).value === name) found ??= x;
+      });
+      return found!;
+    };
+    const maria = row(sum, 'Maria T.');
+    expect(typeof maria.getCell(3).value).toBe('number'); // entitlement
+    expect(typeof maria.getCell(9).value).toBe('number'); // remaining
+    expect(maria.getCell(9 + 11).value).toBe(2); // November (11th month column)
+    const entries = wb.getWorksheet('Einträge')!;
+    const e = row(entries, 'Maria T.');
+    expect(e.getCell(3).value).toBeInstanceOf(Date);
+    expect(e.getCell(5).value).toBe(2);
+    expect(e.getCell(7).value).toBe('Genehmigt');
+  });
+
+  it('respects scope and is audited', async () => {
+    expect((await vac(fx.mgrA1.token, fx.hotelB1)).statusCode).toBe(403);
+    expect((await vac(maria)).statusCode).toBe(403);
+    const logged = await ctx.db
+      .selectFrom('audit_log')
+      .select('id')
+      .where('action', '=', 'export_vacation_overview')
+      .execute();
+    expect(logged.length).toBeGreaterThan(0);
+  });
+});
+
 describe('timesheet', () => {
   it('xlsx contains approved records only and notes the pending one', async () => {
     const r = await get('/me/timesheet?month=2026-09&format=xlsx', maria);

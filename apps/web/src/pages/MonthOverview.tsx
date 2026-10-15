@@ -2,9 +2,9 @@ import type { HotelDto, Items, ScheduleGridDto } from '@dienst/shared';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useGet } from '../lib/api';
+import { download, useGet } from '../lib/api';
 import { fdate, fnum } from '../lib/format';
-import { PageHead } from '../components/ui';
+import { PageHead, useToast } from '../components/ui';
 import { DOW, dowOf, mondayOfIso, todayIso } from './planning/util';
 
 const ABS_CODE: Record<string, string> = {
@@ -23,6 +23,7 @@ const shiftMonth = (m: string, n: number) =>
 /** Read-only month range overview of the plan (design: "Monatsübersicht"); editing stays in the week view. */
 export function MonthOverview() {
   const { t } = useTranslation();
+  const toast = useToast();
   const [month, setMonth] = useState(() => todayIso().slice(0, 7));
   const hotels = useGet<Items<HotelDto>>('/hotels');
   const hotelIds = (hotels.data?.items ?? []).map((h) => h.id);
@@ -54,6 +55,21 @@ export function MonthOverview() {
             onClick={() => setMonth(shiftMonth(month, 1))}
           >
             →
+          </button>
+          <button
+            className="btn btn-secondary"
+            style={{ marginLeft: 'var(--space-2)' }}
+            data-testid="month-export"
+            disabled={!hotelIds.length}
+            onClick={() =>
+              void download(
+                '/schedule/month/export',
+                { hotelIds, month, format: 'xlsx' },
+                `monatsuebersicht_${month}.xlsx`,
+              ).catch(() => toast(t('Export fehlgeschlagen')))
+            }
+          >
+            {t('Als Excel exportieren')}
           </button>
         </div>
       </PageHead>

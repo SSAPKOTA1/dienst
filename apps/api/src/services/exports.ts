@@ -417,3 +417,241 @@ export function timesheetPdf(t: TimesheetData): Promise<Buffer> {
     doc.end();
   });
 }
+
+// ---------------------------------------------------------------------------------------------
+// vacation overview and month overview for analysis in Excel: header in row 1 with filters, numbers as numbers,
+// dates as real date cells, frozen header and name column
+const asDate = (iso: string) => new Date(`${iso}T00:00:00Z`);
+const DATE_FMT = 'dd.mm.yyyy';
+const SHORT_MONTHS = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+const STATUS_DE: Record<string, string> = { approved: 'Genehmigt', pending: 'Beantragt' };
+const HALF_DE: Record<string, string> = { morning: 'Vormittag', afternoon: 'Nachmittag' };
+
+export interface VacationExportData {
+  year: number;
+  today: string;
+  employees: Array<{
+    displayName: string | null;
+    departmentName: string;
+    entitlement: number | null;
+    carryover: number;
+    carryoverExpiresOn: string | null;
+    taken: number;
+    planned: number;
+    requested: number;
+    remaining: number | null;
+    months: number[];
+    entries: Array<{ from: string; to: string; days: number; halfDay: string | null; status: string }>;
+  }>;
+}
+
+const sheetWithFilter = (wb: ExcelJS.Workbook, name: string, columns: Array<[string, number]>) => {
+  const ws = wb.addWorksheet(name, { views: [{ state: 'frozen', xSplit: 1, ySplit: 1 }] });
+  ws.columns = columns.map(([header, width]) => ({ header, width }));
+  headStyle(ws.getRow(1));
+  ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: columns.length } };
+  return ws;
+};
+
+export function vacationWorkbook(
+  ov: VacationExportData,
+  hotelNames: string[],
+  exportedOn: string,
+): ExcelJS.Workbook {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Dienstplan';
+  const sum = sheetWithFilter(wb, 'Übersicht', [
+    ['Mitarbeitende', 26],
+    ['Abteilung', 20],
+    ['Anspruch', 11],
+    ['Übertrag', 11],
+    ['Übertrag verfällt am', 20],
+    ['Genommen', 11],
+    ['Geplant', 11],
+    ['Beantragt', 11],
+    ['Rest', 9],
+    ...SHORT_MONTHS.map((m): [string, number] => [m, 7]),
+  ]);
+  for (const e of ov.employees) {
+    const row = sum.addRow([
+      e.displayName ?? '',
+      e.departmentName,
+      e.entitlement,
+      e.carryover,
+      e.carryoverExpiresOn ? asDate(e.carryoverExpiresOn) : null,
+      e.taken,
+      e.planned,
+      e.requested,
+      e.remaining,
+      ...e.months.map((n) => n || null),
+    ]);
+    row.getCell(5).numFmt = DATE_FMT;
+  }
+  const list = sheetWithFilter(wb, 'Einträge', [
+    ['Mitarbeitende', 26],
+    ['Abteilung', 20],
+    ['Von', 13],
+    ['Bis', 13],
+    ['Tage', 8],
+    ['Halber Tag', 12],
+    ['Status', 13],
+  ]);
+  for (const e of ov.employees)
+    for (const x of e.entries) {
+      const row = list.addRow([
+        e.displayName ?? '',
+        e.departmentName,
+        asDate(x.from),
+        asDate(x.to),
+        x.days,
+        HALF_DE[x.halfDay ?? ''] ?? 'Nein',
+        STATUS_DE[x.status] ?? x.status,
+      ]);
+      row.getCell(3).numFmt = DATE_FMT;
+      row.getCell(4).numFmt = DATE_FMT;
+    }
+  const info = wb.addWorksheet('Hinweise');
+  info.columns = [{ width: 24 }, { width: 80 }];
+  info.addRows([
+    ['Jahr', ov.year],
+    ['Hotels', hotelNames.join(', ')],
+    ['Stand (heute)', asDate(ov.today)],
+    ['Exportiert am', asDate(exportedOn)],
+    ['Inhalt', 'Nur Jahresurlaub (genehmigt und beantragt). Andere Abwesenheiten sind nicht enthalten.'],
+    [
+      'Genommen / Geplant',
+      'Genehmigte Urlaubstage vor heute bzw. ab heute. Beantragte Tage stehen in "Beantragt".',
+    ],
+    ['Monate', 'Genehmigte Urlaubstage je Monat des Jahres.'],
+  ]);
+  info.getCell('B3').numFmt = DATE_FMT;
+  info.getCell('B4').numFmt = DATE_FMT;
+  info.getColumn(1).font = { bold: true };
+  return wb;
+}
+
+const SENSITIVE_ABSENCES = new Set(['sick_leave', 'child_sick', 'parental_leave', 'maternity_leave']);
+
+/**
+ * One month of the planner grid as a workbook for analysis: a matrix per employee and day, sums per employee and the
+ * coverage per department and day. Draft entries are marked "(Entwurf)" so the file is honest about what is not
+ * final. With `hideSensitive` (managers) sickness and similar absences appear only as "abwesend".
+ */
+export function monthWorkbook(
+  grid: GridResult,
+  hotelNames: Map<number, string>,
+  exportedOn: string,
+  hideSensitive: boolean,
+): ExcelJS.Workbook {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Dienstplan';
+  const dates = grid.days.map((d) => d.date);
+  const rows = (grid.rows as GridRowOut[]).filter((r) => r.kind === 'employee');
+  const label = (type: string) =>
+    hideSensitive && SENSITIVE_ABSENCES.has(type) ? 'abwesend' : (ABSENCE_DE[type] ?? type);
+  const absOn = (empId: number, date: string) =>
+    grid.absences.filter((a) => a.employeeId === empId && a.from <= date && a.to >= date);
+
+  const matrix = wb.addWorksheet('Matrix', { views: [{ state: 'frozen', xSplit: 3, ySplit: 1 }] });
+  matrix.columns = [
+    { header: 'Mitarbeitende', width: 26 },
+    { header: 'Hotel', width: 18 },
+    { header: 'Abteilung', width: 20 },
+    ...dates.map((d) => ({ header: `${WD[isoWeekday(d) - 1]} ${dm(d)}`, width: 16 })),
+  ];
+  headStyle(matrix.getRow(1));
+  matrix.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: 3 + dates.length } };
+  for (const r of rows) {
+    const cells = r.cells.map((c) => {
+      const parts = c.entries.map(
+        (e) =>
+          `${String(e.start).slice(11, 16)}–${String(e.end).slice(11, 16)}${e.shiftName ? ` ${e.shiftName}` : ''}${(e as { status?: string }).status === 'draft' ? ' (Entwurf)' : ''}`,
+      );
+      for (const a of absOn(r.employeeId ?? 0, c.date))
+        parts.push(`${label(a.type)}${a.status === 'pending' ? ' (beantragt)' : ''}`);
+      return parts.join('\n');
+    });
+    matrix.addRow([r.label, r.hotelName ?? '', r.departmentName ?? '', ...cells]);
+  }
+  matrix.eachRow((row, n) => {
+    if (n > 1) row.alignment = { vertical: 'top', wrapText: true };
+  });
+
+  // sums per employee; absence days are calendar days of the month with an approved absence of that type
+  const types = [
+    ...new Set(grid.absences.filter((a) => a.status === 'approved').map((a) => label(a.type))),
+  ].sort();
+  const sums = sheetWithFilter(wb, 'Summen', [
+    ['Mitarbeitende', 26],
+    ['Hotel', 18],
+    ['Abteilung', 20],
+    ['Geplante Stunden', 16],
+    ['Soll', 9],
+    ['Tage mit Schicht', 16],
+    ...types.map((t): [string, number] => [`${t} (Tage)`, 16]),
+  ]);
+  for (const r of rows) {
+    const daysWith = r.cells.filter((c) => c.entries.some((e) => !e.isOtherHotel)).length;
+    const away = types.map((t) => {
+      const days = new Set<string>();
+      for (const d of dates)
+        if (absOn(r.employeeId ?? 0, d).some((a) => a.status === 'approved' && label(a.type) === t))
+          days.add(d);
+      return days.size || null;
+    });
+    sums.addRow([
+      r.label,
+      r.hotelName ?? '',
+      r.departmentName ?? '',
+      r.totalHours,
+      r.targetHours ?? null,
+      daysWith,
+      ...away,
+    ]);
+  }
+
+  const cover = sheetWithFilter(wb, 'Besetzung', [
+    ['Hotel', 18],
+    ['Abteilung', 22],
+    ['Datum', 13],
+    ['Soll', 8],
+    ['Geplant', 9],
+    ['Offen', 8],
+  ]);
+  for (const c of grid.coverage) {
+    const row = cover.addRow([
+      hotelNames.get(c.hotelId) ?? '',
+      c.departmentName,
+      asDate(c.date),
+      c.required,
+      c.assigned,
+      Math.max(0, c.required - c.assigned),
+    ]);
+    row.getCell(3).numFmt = DATE_FMT;
+  }
+
+  const info = wb.addWorksheet('Hinweise');
+  info.columns = [{ width: 24 }, { width: 80 }];
+  info.addRows([
+    ['Zeitraum', `${de(grid.from)} – ${de(grid.to)}`],
+    ['Hotels', [...hotelNames.values()].join(', ')],
+    [
+      'Status',
+      grid.status === 'published'
+        ? 'Veröffentlicht'
+        : 'Enthält Entwürfe oder nicht veröffentlichte Änderungen',
+    ],
+    ['Exportiert am', asDate(exportedOn)],
+    ['Entwürfe', 'Nicht veröffentlichte Schichten sind in der Matrix mit "(Entwurf)" markiert.'],
+    [
+      'Abwesenheiten',
+      'Summen zählen Kalendertage mit genehmigter Abwesenheit. Beantragte stehen nur in der Matrix.',
+    ],
+    ...(hideSensitive
+      ? [['Hinweis', 'Krankheit und ähnliche Abwesenheiten sind als "abwesend" zusammengefasst.']]
+      : []),
+  ]);
+  info.getCell('B4').numFmt = DATE_FMT;
+  info.getColumn(1).font = { bold: true };
+  return wb;
+}

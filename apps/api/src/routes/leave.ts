@@ -103,6 +103,29 @@ export async function vacationRows(
   return employees;
 }
 
+/** The rows of the vacation overview for some hotels (used by the screen and by the Excel export). */
+export async function vacationOverviewFor(db: Db, now: Date, hotels: number[], year: number) {
+  const emps = await db
+    .selectFrom('employee as e')
+    .innerJoin('department as d', 'd.id', 'e.primary_department_id')
+    .select([
+      'e.employee_id',
+      'e.display_name',
+      'e.primary_hotel_id',
+      'e.primary_department_id',
+      'd.name as dept',
+    ])
+    .where('e.primary_hotel_id', 'in', hotels)
+    .where('e.status', '=', 'active')
+    .orderBy('e.last_name')
+    .execute();
+  const tz = (
+    await db.selectFrom('hotel').select('timezone').where('id', '=', hotels[0]!).executeTakeFirstOrThrow()
+  ).timezone;
+  const today = localDate(now, tz);
+  return { year, today, employees: await vacationRows(db, emps, year, today) };
+}
+
 export async function leaveRoutes(app: FastifyInstance) {
   const r = app.withTypeProvider<ZodTypeProvider>();
   const db = app.db;
@@ -302,22 +325,7 @@ export async function leaveRoutes(app: FastifyInstance) {
       const { year } = req.query;
       const hotels = p.scope.hotels(req.query.hotelIds);
       if (!hotels.length) return { year, employees: [] };
-      const emps = await db
-        .selectFrom('employee as e')
-        .innerJoin('department as d', 'd.id', 'e.primary_department_id')
-        .select([
-          'e.employee_id',
-          'e.display_name',
-          'e.primary_hotel_id',
-          'e.primary_department_id',
-          'd.name as dept',
-        ])
-        .where('e.primary_hotel_id', 'in', hotels)
-        .where('e.status', '=', 'active')
-        .orderBy('e.last_name')
-        .execute();
-      const today = localDate(app.clock(), await tzOf(db, hotels[0]!));
-      return { year, today, employees: await vacationRows(db, emps, year, today) };
+      return vacationOverviewFor(db, app.clock(), hotels, year);
     },
   );
 

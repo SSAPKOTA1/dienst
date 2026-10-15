@@ -12,7 +12,7 @@ import type {
 import { useState } from 'react';
 import { Link, NavLink, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { api, useGet, useSend, type ApiError } from '../lib/api';
+import { api, download, useGet, useSend, type ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { fdate, fnum } from '../lib/format';
 import { Dialog, ErrorNote, Field, PageHead, Segmented, useToast } from '../components/ui';
@@ -124,11 +124,18 @@ function VacationOverview() {
           ]}
         />
         <button
-          className="btn btn-primary"
+          className="btn btn-secondary"
           style={{ marginLeft: 'auto' }}
-          onClick={() => setDlg({})}
-          data-testid="vac-entry"
+          data-testid="vac-export"
+          onClick={() =>
+            void download('/vacation/overview/export', { year, format: 'xlsx' }, `urlaub_${year}.xlsx`).catch(
+              () => toast(t('Export fehlgeschlagen')),
+            )
+          }
         >
+          {t('Als Excel exportieren')}
+        </button>
+        <button className="btn btn-primary" onClick={() => setDlg({})} data-testid="vac-entry">
           {t('Urlaub eintragen')}
         </button>
       </div>
