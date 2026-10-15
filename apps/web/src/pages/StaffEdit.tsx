@@ -279,9 +279,14 @@ export function ContractDialog({
   const older = picked ? versions[versions.indexOf(picked) + 1] : undefined;
   const newer = picked ? versions[versions.indexOf(picked) - 1] : undefined;
   const minFrom = picked ? (older ? dayAfter(older.validFrom) : '') : earliest;
-  const fromVersion = (v?: ContractDto | null) => ({
-    validFrom: v?.validFrom ?? (earliest > today ? earliest : today),
-    validTo: v?.validTo ?? '',
+  // a new version starts after the latest one (its terms are copied from the current contract); a correction keeps the dates
+  const fromVersion = (v?: ContractDto | null, forNew = false) => ({
+    validFrom: forNew
+      ? earliest > today
+        ? earliest
+        : today
+      : (v?.validFrom ?? (earliest > today ? earliest : today)),
+    validTo: forNew ? '' : (v?.validTo ?? ''),
     employmentType: v?.employmentType ?? 'full_time',
     workingModel: v?.workingModel ?? 'salary',
     // the target is given per week or per month; the form keeps one number and its basis
@@ -298,12 +303,12 @@ export function ContractDialog({
     monthlyHoursCap: v?.monthlyHoursCap != null ? String(v.monthlyHoursCap) : '',
     getsPublicHoliday: v?.getsPublicHoliday ?? false,
   });
-  const [f, setF] = useState(() => fromVersion(c));
+  const [f, setF] = useState(() => fromVersion(c, true));
   const [days, setDays] = useState<number[]>(c?.workingWeekdays ?? [1, 2, 3, 4, 5]);
   const pick = (t: 'new' | number) => {
     setTarget(t);
     const v = t === 'new' ? c : versions.find((x) => x.id === t);
-    setF(fromVersion(v));
+    setF(fromVersion(v, t === 'new'));
     setDays(v?.workingWeekdays ?? [1, 2, 3, 4, 5]);
   };
   const set = (p: Partial<typeof f>) => setF({ ...f, ...p });
