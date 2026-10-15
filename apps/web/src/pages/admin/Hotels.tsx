@@ -1,3 +1,4 @@
+import { FEDERAL_STATES } from '@dienst/shared';
 import type { CompanyDto, DepartmentDto, HotelDto, Items, ShiftDto } from '@dienst/shared';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -286,14 +287,19 @@ function HotelDialog({
           onChange={(e) => setF({ ...f, city: e.target.value })}
         />
       </Field>
-      <Field label={t('Bundesland (Kürzel)')} htmlFor="hs">
-        <input
+      <Field label={t('Bundesland')} htmlFor="hs">
+        <select
           id="hs"
           className="input"
-          maxLength={2}
           value={f.federalState}
-          onChange={(e) => setF({ ...f, federalState: e.target.value.toUpperCase() })}
-        />
+          onChange={(e) => setF({ ...f, federalState: e.target.value })}
+        >
+          {FEDERAL_STATES.map((s) => (
+            <option key={s.code} value={s.code}>
+              {s.name} ({s.code})
+            </option>
+          ))}
+        </select>
       </Field>
       <Field label={t('Zeitzone')} htmlFor="tz">
         <input

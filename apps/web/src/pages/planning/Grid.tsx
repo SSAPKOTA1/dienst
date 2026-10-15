@@ -26,6 +26,7 @@ import {
   rangeLabel,
   violationText,
   addDaysIso,
+  pickBlockedIsOverridable,
 } from './util';
 
 export interface PlanCtx {
@@ -401,6 +402,8 @@ function CellMenu({ target, onClose }: { target: MenuTarget; onClose: () => void
       {(people ?? [])
         .filter((p) => (p.displayName ?? '').toLowerCase().includes(q.toLowerCase()))
         .map((p) => {
+          // same as drag and drop: a statutory block (e.g. Ruhezeit) can still be tried and goes through the reason / emergency dialog
+          const unplannable = p.blocked && !pickBlockedIsOverridable(p);
           const reason = p.blocked
             ? violationText(p.warnings.find((w) => w.severity === 'block') ?? p.warnings[0], t)
             : null;
@@ -408,7 +411,7 @@ function CellMenu({ target, onClose }: { target: MenuTarget; onClose: () => void
             <button
               key={p.employeeId}
               type="button"
-              disabled={p.blocked}
+              disabled={unplannable}
               onClick={() => pickPerson(p)}
               data-testid={`pick-${p.employeeId}`}
             >
