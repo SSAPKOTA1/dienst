@@ -112,7 +112,14 @@ export function PlannerShell() {
   const { me } = useAuth();
   const count = useGet<ApprovalCountDto>('/approvals/count', undefined, { refetchInterval: 30_000 });
   const open: number = count.data?.total ?? 0;
-  const sections = me?.role === 'manager' ? PLANNER_NAV.filter((s) => s.key !== 'admin') : PLANNER_NAV;
+  // Managers see neither the admin section nor the analytics page (admins and super admins only).
+  const sections =
+    me?.role === 'manager'
+      ? PLANNER_NAV.filter((s) => s.key !== 'admin').map((s) => ({
+          ...s,
+          items: s.items.filter((i) => i.path !== '/analytics'),
+        }))
+      : PLANNER_NAV;
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <header

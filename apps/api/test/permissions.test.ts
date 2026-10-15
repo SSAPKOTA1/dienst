@@ -362,7 +362,7 @@ const rows: Row[] = [
   { method: 'GET', url: () => '/settings/features', allow: ['SA', 'AD', 'MG'] },
   { method: 'PUT', url: () => '/settings/features', body: () => ({}), allow: ['SA', 'AD'] },
   { method: 'GET', url: () => '/me/features', allow: ['SA', 'AD', 'MG', 'EM'] },
-  { method: 'GET', url: () => '/analytics/summary?from=2026-10-01&to=2026-10-31', allow: ['SA', 'AD', 'MG'] },
+  { method: 'GET', url: () => '/analytics/summary?from=2026-10-01&to=2026-10-31', allow: ['SA', 'AD'] },
   { method: 'POST', url: () => '/me/swap-requests', body: () => ({}), allow: ['EM'] },
   { method: 'GET', url: () => '/me/swap-requests', allow: ['EM'] },
   { method: 'PUT', url: () => '/me/swap-requests/999999/accept', allow: ['EM'] },

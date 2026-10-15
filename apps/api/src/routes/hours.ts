@@ -709,7 +709,7 @@ export async function hoursRoutes(app: FastifyInstance) {
   r.get(
     '/analytics/summary',
     {
-      preValidation: planners,
+      preValidation: admins,
       schema: { querystring: z.object({ hotelIds: csvIds, from: isoDate, to: isoDate }) },
     },
     async (req) => {

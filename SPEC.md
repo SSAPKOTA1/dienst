@@ -38,6 +38,7 @@ A person has one `user_account`. Every employee gets a `user_account` and the `e
 | Approve worked time and corrections | x | x | x | |
 | Close / reopen month | x | x | | |
 | Audit log | x | x | | |
+| Auswertung (analytics, trends, patterns) | x | x | | |
 | Own schedule, hours (per visibility), vacation, corrections | | | | x |
 
 Managers see employees by `display_name` only (home-hotel rule in 4.20). They never see email, DOB, phone, contract details beyond hours targets, or PINs.

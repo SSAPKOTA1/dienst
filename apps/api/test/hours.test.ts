@@ -608,7 +608,7 @@ describe('analytics', () => {
       ctx,
       'GET',
       `/analytics/summary?from=2026-09-01&to=2026-09-30&hotelIds=${fx.hotelA1}`,
-      fx.mgrA1.token,
+      fx.adminA.token,
     );
     expect(a.status).toBe(200);
     const rez = a.body.departments.find((d: any) => d.name === 'Rezeption');
@@ -620,12 +620,13 @@ describe('analytics', () => {
     expect(a.body.approvals.buckets).toBeDefined();
     expect(a.body.openSlots).toBeTypeOf('number');
     expect(JSON.stringify(a.body)).not.toMatch(/Maria|Jon|Tom/);
+    // managers have no access to analytics, even for their own hotel
     expect(
       (
         await call(
           ctx,
           'GET',
-          `/analytics/summary?from=2026-09-01&to=2026-09-30&hotelIds=${fx.hotelB1}`,
+          `/analytics/summary?from=2026-09-01&to=2026-09-30&hotelIds=${fx.hotelA1}`,
           fx.mgrA1.token,
         )
       ).status,
