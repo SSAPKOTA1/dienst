@@ -263,25 +263,50 @@ export function ContractDialog({
 }) {
   const { t } = useTranslation();
   const c = e.contract;
-  const save = useSend('PUT', `/employees/${e.employeeId}/contract`);
-  const history = useGet<Items<ContractDto>>(`/employees/${e.employeeId}/contracts`);
-  // a new version has to start after the current one
-  const earliest = c ? dayAfter(c.validFrom) : '';
+  // the history lists the newest version first and can contain versions that start in the future
+  const versions = useGet<Items<ContractDto>>(`/employees/${e.employeeId}/contracts`).data?.items ?? [];
+  const latest = versions[0] ?? c;
+  const save = useSend<Record<string, unknown>>('PUT', (b) =>
+    b.contractId
+      ? `/employees/${e.employeeId}/contracts/${b.contractId}`
+      : `/employees/${e.employeeId}/contract`,
+  );
+  // a new version has to start after the latest version; picking a version corrects that version in place
+  const earliest = latest ? dayAfter(latest.validFrom) : '';
   const today = new Date().toISOString().slice(0, 10);
-  const [f, setF] = useState({
-    validFrom: earliest > today ? earliest : today,
-    employmentType: c?.employmentType ?? 'full_time',
-    workingModel: c?.workingModel ?? 'salary',
-    targetHoursPerWeek: c?.targetHoursPerWeek != null ? String(c.targetHoursPerWeek) : '',
-    vacationDaysPerYear: c ? String(c.vacationDaysPerYear) : '30',
-    monthlyHoursCap: c?.monthlyHoursCap != null ? String(c.monthlyHoursCap) : '',
-    getsPublicHoliday: c?.getsPublicHoliday ?? false,
+  const [target, setTarget] = useState<'new' | number>('new');
+  const picked = versions.find((v) => v.id === target);
+  const older = picked ? versions[versions.indexOf(picked) + 1] : undefined;
+  const newer = picked ? versions[versions.indexOf(picked) - 1] : undefined;
+  const minFrom = picked ? (older ? dayAfter(older.validFrom) : '') : earliest;
+  const fromVersion = (v?: ContractDto | null) => ({
+    validFrom: v?.validFrom ?? (earliest > today ? earliest : today),
+    validTo: v?.validTo ?? '',
+    employmentType: v?.employmentType ?? 'full_time',
+    workingModel: v?.workingModel ?? 'salary',
+    targetHoursPerWeek: v?.targetHoursPerWeek != null ? String(v.targetHoursPerWeek) : '',
+    vacationDaysPerYear: v ? String(v.vacationDaysPerYear) : '30',
+    monthlyHoursCap: v?.monthlyHoursCap != null ? String(v.monthlyHoursCap) : '',
+    getsPublicHoliday: v?.getsPublicHoliday ?? false,
   });
+  const [f, setF] = useState(() => fromVersion(c));
   const [days, setDays] = useState<number[]>(c?.workingWeekdays ?? [1, 2, 3, 4, 5]);
+  const pick = (t: 'new' | number) => {
+    setTarget(t);
+    const v = t === 'new' ? c : versions.find((x) => x.id === t);
+    setF(fromVersion(v));
+    setDays(v?.workingWeekdays ?? [1, 2, 3, 4, 5]);
+  };
   const set = (p: Partial<typeof f>) => setF({ ...f, ...p });
   const num = (v: string) => (v.trim() === '' ? null : Number(v.replace(',', '.')));
+  const validToOk =
+    !picked || (!f.validTo ? !newer : f.validTo >= f.validFrom && (!newer || f.validTo < newer.validFrom));
   const complete =
-    !!f.validFrom && f.validFrom >= earliest && days.length > 0 && num(f.vacationDaysPerYear) !== null;
+    !!f.validFrom &&
+    f.validFrom >= minFrom &&
+    days.length > 0 &&
+    num(f.vacationDaysPerYear) !== null &&
+    validToOk;
   return (
     <Dialog
       title={`${t('Vertrag ändern')}: ${e.displayName ?? ''}`.trim()}
@@ -295,7 +320,9 @@ export function ContractDialog({
             onClick={() =>
               save.mutate(
                 {
+                  contractId: picked?.id,
                   validFrom: f.validFrom,
+                  validTo: picked ? f.validTo || null : undefined,
                   employmentType: f.employmentType,
                   workingModel: f.workingModel,
                   workDaysPerWeek: days.length,
@@ -317,10 +344,10 @@ export function ContractDialog({
         </>
       }
     >
-      {(history.data?.items.length ?? 0) > 0 && (
+      {versions.length > 0 && (
         <div data-testid="contract-history" style={{ fontSize: 12 }}>
           <div style={{ fontWeight: 700, marginBottom: 3 }}>{t('Vertragsverlauf')}</div>
-          {history.data!.items.map((v) => (
+          {versions.map((v) => (
             <div key={v.id} style={{ display: 'flex', gap: 10, fontVariantNumeric: 'tabular-nums' }}>
               <span>
                 {v.validFrom} – {v.validTo ?? t('offen')}
@@ -336,20 +363,49 @@ export function ContractDialog({
           ))}
         </div>
       )}
+      {versions.length > 0 && (
+        <Field label={t('Version')} htmlFor="ec0">
+          <select
+            id="ec0"
+            className="input"
+            value={String(target)}
+            onChange={(x) => pick(x.target.value === 'new' ? 'new' : Number(x.target.value))}
+          >
+            <option value="new">{t('Neue Version')}</option>
+            {versions.map((v) => (
+              <option key={v.id} value={v.id}>
+                {`${t('Version korrigieren')}: ${v.validFrom} – ${v.validTo ?? t('offen')}`}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
       <div style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>
         {t('Die Änderung gilt ab dem gewählten Datum. Frühere Zeiten bleiben unverändert.')}
-        {c ? ` ${t('Aktueller Vertrag seit')} ${c.validFrom}.` : ''}
+        {latest ? ` ${t('Aktueller Vertrag seit')} ${latest.validFrom}.` : ''}
       </div>
       <Field label={t('Gültig ab')} htmlFor="ec1">
         <input
           id="ec1"
           className="input"
           type="date"
-          min={earliest || undefined}
+          min={minFrom || undefined}
           value={f.validFrom}
           onChange={(x) => set({ validFrom: x.target.value })}
         />
       </Field>
+      {picked && (
+        <Field label={t('Gültig bis')} htmlFor="ec1b">
+          <input
+            id="ec1b"
+            className="input"
+            type="date"
+            min={f.validFrom || undefined}
+            value={f.validTo}
+            onChange={(x) => set({ validTo: x.target.value })}
+          />
+        </Field>
+      )}
       <Field label={t('Beschäftigung')} htmlFor="ec2">
         <select
           id="ec2"

@@ -324,6 +324,51 @@ describe('employee list and detail: scope and reduced views', () => {
     expect(bad.status).toBe(400);
   });
 
+  it('corrects a contract version: neighbours follow, bad dates and closed periods are refused', async () => {
+    const list = async () =>
+      (await call(ctx, 'GET', `/employees/${piotr}/contracts`, org.adminA.token)).body.items;
+    const body = (validFrom: string, validTo?: string) => ({
+      validFrom,
+      validTo,
+      employmentType: 'part_time',
+      workingModel: 'salary',
+      workDaysPerWeek: 4,
+      targetHoursPerWeek: 30,
+      vacationDaysPerYear: 28,
+    });
+    const put = (id: number, b: Record<string, unknown>) =>
+      call(ctx, 'PUT', `/employees/${piotr}/contracts/${id}`, org.adminA.token, b);
+    const [newest, older] = await list(); // newest version starts 2026-12-01 (see the test above)
+
+    // moving the start of the newest version to 15 Nov ends the older version on 14 Nov
+    expect((await put(newest!.id, body('2026-11-15'))).status).toBe(200);
+    const after = await list();
+    expect(after[0]!.validFrom).toBe('2026-11-15');
+    expect(after[1]!.validTo).toBe('2026-11-14');
+
+    // not earlier than the start of the previous version
+    expect((await put(newest!.id, body(older!.validFrom))).status).toBe(400);
+    // an end before the start is refused
+    expect((await put(newest!.id, body('2026-11-20', '2026-11-19'))).status).toBe(400);
+    // an unknown version is not found
+    expect((await put(999999, body('2026-11-20'))).status).toBe(404);
+
+    // a closed payroll period blocks the change
+    const [period] = await ctx.db
+      .insertInto('payroll_period')
+      .values({
+        company_id: org.companyA,
+        hotel_id: null,
+        period_start: '2026-11-16',
+        period_end: '2026-11-30',
+        status: 'closed',
+      })
+      .returning('id')
+      .execute();
+    expect((await put(newest!.id, body('2026-11-20'))).status).toBe(409);
+    await ctx.db.deleteFrom('payroll_period').where('id', '=', period!.id).execute();
+  });
+
   it('deactivate keeps an account that has another role or employment', async () => {
     // Tim Two has employee rows in companies A and B (shared account)
     const tim = await ctx.db

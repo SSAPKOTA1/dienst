@@ -880,6 +880,8 @@ export const extraEn: Record<string, string> = {
   'Kette {{k}}: erste Abweichung bei Eintrag {{id}}': 'Chain {{k}}: first mismatch at entry {{id}}',
   '{{n}} ältere Einträge sind nicht prüfbar.': '{{n}} older entries cannot be verified.',
   'Vertrag ändern': 'Change contract',
+  'Neue Version': 'New version',
+  'Version korrigieren': 'Correct version',
   Rollen: 'Roles',
   'Mitarbeiter bearbeiten': 'Edit employee',
   'Kontakt-E-Mail': 'Contact e-mail',

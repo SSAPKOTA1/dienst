@@ -252,27 +252,30 @@ export const contractSchema = z.object({
 });
 export type ContractInput = z.infer<typeof contractSchema>;
 
-export async function insertContract(trx: Trx, employeeId: number, p: Principal, c: ContractInput) {
+/** The stored columns of one contract version, from the form input (shared by new versions and corrections). */
+export function contractValues(c: ContractInput) {
   const weekly = weeklyTarget(c.targetHoursPerWeek, c.targetHoursPerMonth);
   const days = c.workingWeekdays ?? Array.from({ length: c.workDaysPerWeek }, (_, i) => i + 1);
+  return {
+    valid_from: c.validFrom,
+    valid_to: c.validTo ?? null,
+    employment_type: c.employmentType,
+    working_model: c.workingModel,
+    work_days_per_week: c.workDaysPerWeek,
+    working_weekdays: days,
+    target_hours_per_week: c.targetHoursPerWeek ?? null,
+    target_hours_per_month: c.targetHoursPerMonth ?? null,
+    daily_target_hours: weekly != null ? Math.round((weekly / c.workDaysPerWeek) * 100) / 100 : null,
+    vacation_days_per_year: c.vacationDaysPerYear,
+    gets_public_holiday: c.getsPublicHoliday ?? false,
+    monthly_hours_cap: c.monthlyHoursCap ?? null,
+  };
+}
+
+export async function insertContract(trx: Trx, employeeId: number, p: Principal, c: ContractInput) {
   return trx
     .insertInto('employee_contract')
-    .values({
-      employee_id: employeeId,
-      valid_from: c.validFrom,
-      valid_to: c.validTo ?? null,
-      employment_type: c.employmentType,
-      working_model: c.workingModel,
-      work_days_per_week: c.workDaysPerWeek,
-      working_weekdays: days,
-      target_hours_per_week: c.targetHoursPerWeek ?? null,
-      target_hours_per_month: c.targetHoursPerMonth ?? null,
-      daily_target_hours: weekly != null ? Math.round((weekly / c.workDaysPerWeek) * 100) / 100 : null,
-      vacation_days_per_year: c.vacationDaysPerYear,
-      gets_public_holiday: c.getsPublicHoliday ?? false,
-      monthly_hours_cap: c.monthlyHoursCap ?? null,
-      created_by_id: p.adminId,
-    })
+    .values({ ...contractValues(c), employee_id: employeeId, created_by_id: p.adminId })
     .returning('id')
     .executeTakeFirstOrThrow();
 }
