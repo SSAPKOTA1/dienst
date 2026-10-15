@@ -386,6 +386,28 @@ describe('weekday preferences and wish marks on the calendar', () => {
     // an employee cannot read the planner grid
     expect((await grid(emp.tom!, '2027-06-07')).status).toBe(403);
   });
+
+  it('show in the + menu candidates of a shift as well, without reason text', async () => {
+    const cand = async (date: string) => {
+      const r = await call(
+        ctx,
+        'GET',
+        `/schedule/candidates?hotelIds=${fx.hotelA1}&shiftId=${fx.early}&date=${date}&includeBlocked=true`,
+        fx.mgrA1.token,
+      );
+      expect(r.status).toBe(200);
+      return r;
+    };
+    const tomIn = (r: any) => r.body.items.find((c: any) => c.employeeId === fx.emp.tom);
+    const mon = await cand('2027-06-07');
+    expect(tomIn(mon).wishes).toEqual([
+      { kind: 'work', source: 'weekday', shiftName: expect.any(String), priority: null, status: null },
+    ]);
+    const wed = await cand('2027-06-09');
+    expect(tomIn(wed).wishes).toMatchObject([{ kind: 'off', source: 'leave', priority: 1 }]);
+    expect(JSON.stringify(wed.body)).not.toContain('private-reason-xyz');
+    expect(tomIn(await cand('2027-06-08')).wishes).toEqual([]);
+  });
 });
 
 describe('vacation planner overview', () => {
