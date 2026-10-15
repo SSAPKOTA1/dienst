@@ -787,6 +787,7 @@ function DayHeader({ data, lead, trail }: { data: GridData; lead: string; trail?
               <Link
                 to="/events"
                 data-testid="grid-event"
+                data-noprint
                 title={d.events.map((e) => eventTitle(e, t)).join('\n\n')}
                 style={{
                   flexBasis: '100%',
@@ -801,6 +802,18 @@ function DayHeader({ data, lead, trail }: { data: GridData; lead: string; trail?
                 ◆ {t(EVENT_KIND_LABEL[d.events[0].kind])}: {d.events[0].title}
                 {d.events.length > 1 ? ` +${d.events.length - 1}` : ''}
               </Link>
+            )}
+            {d.events.length > 0 && (
+              <div
+                data-printonly
+                style={{ display: 'none', flexBasis: '100%', fontSize: 9, fontWeight: 700, lineHeight: 1.2 }}
+              >
+                {d.events.map((e) => (
+                  <div key={e.id}>
+                    ◆ {t(EVENT_KIND_LABEL[e.kind])}: {e.title}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         );
