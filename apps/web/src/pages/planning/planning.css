@@ -334,4 +334,52 @@
   .pl-scroll {
     overflow: visible !important;
   }
+  /* The printout is the final plan for the wall: nothing of the planning tool shows. */
+  .pl-section {
+    border-right: 0 !important;
+  }
+  .pl-screen-only,
+  .pl-warn,
+  .pl-count,
+  .pl-open-slot,
+  .pl-trail,
+  .pl-abs.pending {
+    display: none !important;
+  }
+  .pl-print-only {
+    display: inline !important;
+  }
+  .pl-cols,
+  .pl-cols-shift {
+    grid-template-columns: 150px repeat(7, minmax(0, 1fr)) !important;
+  }
+  /* no "today" or "past" colouring, no draft or change markers, no hover */
+  .pl-head,
+  .pl-cell,
+  .pl-cell.is-past {
+    background: transparent !important;
+  }
+  .pl-chip.draft,
+  .pl-chip.changed,
+  .pl-chip.removed {
+    background: var(--color-neutral-300);
+    border: 0;
+    padding: 4px 6px;
+    text-decoration: none;
+    color: var(--color-text);
+  }
+  .pl-chip.removed.other,
+  .pl-chip.other {
+    background: transparent;
+  }
+  /* a group heading never stays alone at the bottom of a page */
+  .pl-group {
+    break-after: avoid;
+  }
+  .pl-row {
+    break-inside: avoid;
+  }
+}
+.pl-print-only {
+  display: none;
 }

@@ -1,5 +1,8 @@
 /** English strings for keys that are not in design/i18n-de-en.json. The German text is the key itself. */
 export const extraEn: Record<string, string> = {
+  Abwesend: 'Absent',
+  'Es gibt unveröffentlichte Änderungen. Sie würden mit ausgedruckt. Trotzdem drucken?':
+    'There are unpublished changes. They would be printed too. Print anyway?',
   Sicherheit: 'Security',
   'Sicherheitsschlüssel und Passkeys': 'Security keys and passkeys',
   'Mit einem Sicherheitsschlüssel oder Passkey meldest du dich ohne Code aus der Authenticator-App an. Er funktioniert nur auf dieser Webadresse und kann nicht auf eine gefälschte Seite hereinfallen.':

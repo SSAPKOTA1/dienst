@@ -71,6 +71,23 @@ export const ABSENCE_LABEL: Record<string, string> = {
   maternity_leave: 'Mutterschutz',
   rest_day: 'Ersatzruhetag',
 };
+/**
+ * What a printed plan says for an absence. A sheet on the wall is read by everybody, so only the types
+ * that colleagues may see anyway (same rule as the team feed) keep their name; sickness and every other
+ * health-related type becomes a plain "Abwesend".
+ */
+const PRINT_VISIBLE_ABSENCES = new Set([
+  'annual_leave',
+  'vocational_school',
+  'off_day',
+  'special_leave',
+  'training',
+  'comp_time',
+  'unpaid_leave',
+  'rest_day',
+]);
+export const printAbsenceLabel = (type: string) =>
+  PRINT_VISIBLE_ABSENCES.has(type) ? (ABSENCE_LABEL[type] ?? type) : ABSENCE_LABEL.absent;
 /** under "Mehr" in the + menu */
 export const EXTRA_ABSENCES = [
   'comp_time',

@@ -457,13 +457,25 @@ export function Planning() {
       done: 'Änderungen verworfen.',
     });
 
+  /** The sheet on the wall must show what employees were told: ask before printing unpublished changes. */
+  const printPlan = () => {
+    if (
+      toPublish > 0 &&
+      !window.confirm(
+        t('Es gibt unveröffentlichte Änderungen. Sie würden mit ausgedruckt. Trotzdem drucken?'),
+      )
+    )
+      return;
+    window.print();
+  };
+
   return (
     <main
       className="pl-main-grid"
       data-printmain
       style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 330px', flex: 1, minHeight: 0 }}
     >
-      <section style={{ minWidth: 0, borderRight: '2px solid var(--color-divider)' }}>
+      <section className="pl-section" style={{ minWidth: 0, borderRight: '2px solid var(--color-divider)' }}>
         <div
           style={{
             display: 'flex',
@@ -485,9 +497,13 @@ export function Planning() {
               >
                 KW {isoWeekNo(weekStart)} · {hotelIds.map(hotelName).join(' + ')}
               </span>
-              {weekChip && <span className="tag tag-neutral">{weekChip}</span>}
+              {weekChip && (
+                <span className="tag tag-neutral" data-noprint>
+                  {weekChip}
+                </span>
+              )}
               {data && (
-                <span className="tag tag-neutral" data-testid="week-status">
+                <span className="tag tag-neutral" data-testid="week-status" data-noprint>
                   {data.status === 'published' ? t('Veröffentlicht') : t('Entwurf')}
                 </span>
               )}
@@ -495,10 +511,6 @@ export function Planning() {
             <h1 style={{ margin: '2px 0 0', fontSize: 30, lineHeight: 1.1 }}>
               {weekRangeLabel(weekStart, addDaysIso(weekStart, 6))}
             </h1>
-            <div data-printonly style={{ display: 'none', fontSize: 12, marginTop: 4 }}>
-              {t('Hotels')}: {hotelIds.map(hotelName).join(', ')} · {t('Ansicht')}:{' '}
-              {view === 'employee' ? t('Nach Mitarbeiter') : t('Nach Dienst')}
-            </div>
           </div>
           <div data-noprint style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <button
@@ -541,7 +553,7 @@ export function Planning() {
             <button
               className="btn btn-secondary"
               style={{ marginLeft: 'var(--space-2)' }}
-              onClick={() => window.print()}
+              onClick={printPlan}
             >
               {t('Dienstplan als PDF')}
             </button>
@@ -725,6 +737,7 @@ export function Planning() {
             borderTop: '2px solid var(--color-divider)',
           }}
           data-testid="counters"
+          data-noprint
         >
           {[
             [data?.counts.drafts ?? 0, 'Änderungen', 'drafts'],

@@ -18,6 +18,7 @@ import type {
 } from './types';
 import {
   ABSENCE_LABEL,
+  printAbsenceLabel,
   EXTRA_ABSENCES,
   DOW,
   dayNum,
@@ -221,7 +222,8 @@ function AbsenceChip({ a, cell, rowKey }: { a: GridAbsence; cell: GridCell; rowK
       aria-label={label}
       tabIndex={-1}
     >
-      {label}
+      <span className="pl-screen-only">{label}</span>
+      <span className="pl-print-only">{t(printAbsenceLabel(a.type))}</span>
     </button>
   );
 }
@@ -652,6 +654,7 @@ function Cell({
           <span
             key={i}
             aria-hidden
+            className="pl-open-slot"
             style={{ border: '1px dashed var(--color-neutral-600)', height: 22, pointerEvents: 'none' }}
           />
         ))}
@@ -752,6 +755,7 @@ function DayHeader({ data, lead, trail }: { data: GridData; lead: string; trail?
       })}
       {trail && (
         <div
+          className="pl-trail"
           style={{
             padding: '6px 8px',
             borderLeft: '1px solid var(--color-divider)',
@@ -880,7 +884,7 @@ export function PlanGrid() {
                           {row.startTime}–{row.endTime}
                         </div>
                       )}
-                      <div style={{ fontSize: 11, color: 'var(--color-neutral-700)' }}>
+                      <div data-noprint style={{ fontSize: 11, color: 'var(--color-neutral-700)' }}>
                         {fnum(row.totalHours)} {t('Std.')}
                       </div>
                     </div>
@@ -912,7 +916,10 @@ export function PlanGrid() {
                       >
                         {row.label}
                       </button>
-                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <div
+                        data-noprint
+                        style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}
+                      >
                         {row.personnelNumber && (
                           <span style={{ fontSize: 11, color: 'var(--color-neutral-700)' }}>
                             {row.personnelNumber}
@@ -953,6 +960,7 @@ export function PlanGrid() {
                   ))}
                   {!shiftView && (
                     <div
+                      className="pl-trail"
                       style={{
                         borderLeft: '1px solid var(--color-divider)',
                         padding: '4px 8px',
@@ -979,6 +987,7 @@ export function PlanGrid() {
               data.coverage.some((c) => c.hotelId === g.hotelId && c.departmentId === g.deptId) && (
                 <div
                   className="pl-cols"
+                  data-noprint
                   style={{ borderBottom: '2px solid var(--color-divider)' }}
                   data-testid={`coverage-${g.hotelId}-${g.deptId}`}
                 >
