@@ -645,3 +645,18 @@ export interface PatternsDto {
 
 /** Hours above the target: kept in the time account ('account') or paid out each month ('payout'). */
 export type OvertimeMode = 'account' | 'payout';
+
+/** Kinds of a hotel event (event calendar); the German labels live in the web app. */
+export const HOTEL_EVENT_KINDS = ['messe', 'tagung', 'gruppe', 'event', 'other'] as const;
+export type HotelEventKind = (typeof HOTEL_EVENT_KINDS)[number];
+
+/** One entry of the event calendar of a hotel (start and end date are hotel-local and inclusive). */
+export interface HotelEventDto {
+  id: number;
+  hotelId: number;
+  title: string;
+  kind: HotelEventKind;
+  startDate: string;
+  endDate: string;
+  note: string | null;
+}

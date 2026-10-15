@@ -23,6 +23,7 @@ const OpenShifts = lazy(() => import('./pages/OpenShifts').then((m) => ({ defaul
 const Announcements = lazy(() => import('./pages/Announcements').then((m) => ({ default: m.Announcements })));
 const PortalTeam = lazy(() => import('./pages/PortalTeam').then((m) => ({ default: m.PortalTeam })));
 const MonthOverview = lazy(() => import('./pages/MonthOverview').then((m) => ({ default: m.MonthOverview })));
+const EventCalendar = lazy(() => import('./pages/EventCalendar').then((m) => ({ default: m.EventCalendar })));
 const Security = lazy(() => import('./pages/Security').then((m) => ({ default: m.Security })));
 const Compliance = lazy(() => import('./pages/Compliance').then((m) => ({ default: m.Compliance })));
 const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.Analytics })));
@@ -115,6 +116,7 @@ export function App() {
                 <Route path="/planning" element={<Planning />} />
                 <Route path="/planning/share" element={<SharedPlan />} />
                 <Route path="/month" element={<MonthOverview />} />
+                <Route path="/events" element={<EventCalendar />} />
                 <Route path="/vacation/*" element={<VacationRoutes />} />
                 <Route path="/live" element={<Live />} />
                 <Route path="/open-shifts" element={<OpenShifts />} />

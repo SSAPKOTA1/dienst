@@ -391,6 +391,19 @@ export interface Hotel {
   web_punch_allowed_cidrs: string[] | null;
 }
 
+export interface HotelEvent {
+  created_at: Generated<Timestamp>;
+  created_by_user_id: number;
+  end_date: string;
+  hotel_id: number;
+  id: Generated<number>;
+  kind: string;
+  note: string | null;
+  start_date: string;
+  title: string;
+  updated_at: Generated<Timestamp>;
+}
+
 export interface HotelNfcTag {
   created_at: Generated<Timestamp>;
   created_by_user_id: number;
@@ -875,6 +888,7 @@ export interface DB {
   feed_like: FeedLike;
   feed_post: FeedPost;
   hotel: Hotel;
+  hotel_event: HotelEvent;
   hotel_nfc_tag: HotelNfcTag;
   hour_category: HourCategory;
   import_job: ImportJob;

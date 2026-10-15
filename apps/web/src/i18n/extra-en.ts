@@ -1,5 +1,14 @@
 /** English strings for keys that are not in design/i18n-de-en.json. The German text is the key itself. */
 export const extraEn: Record<string, string> = {
+  Ereigniskalender: 'Event calendar',
+  'Besondere Tage des Hotels. Sie erscheinen im Dienstplan über dem Tag.':
+    'Special days of the hotel. They appear in the shift plan above the day.',
+  'Eintrag anlegen': 'Add entry',
+  'Eintrag bearbeiten': 'Edit entry',
+  Messe: 'Trade fair',
+  Tagung: 'Conference',
+  Event: 'Event',
+  Gespeichert: 'Saved',
   Sicherheit: 'Security',
   'Sicherheitsschlüssel und Passkeys': 'Security keys and passkeys',
   'Mit einem Sicherheitsschlüssel oder Passkey meldest du dich ohne Code aus der Authenticator-App an. Er funktioniert nur auf dieser Webadresse und kann nicht auf eine gefälschte Seite hereinfallen.':

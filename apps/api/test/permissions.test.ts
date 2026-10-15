@@ -90,6 +90,21 @@ const rows: Row[] = [
     allow: ['SA', 'AD'],
   },
   { method: 'GET', url: () => '/nfc-tags', allow: ['SA', 'AD'] },
+  { method: 'GET', url: () => '/hotel-events?from=2026-10-01&to=2026-10-31', allow: ['SA', 'AD', 'MG'] },
+  {
+    method: 'POST',
+    url: () => '/hotel-events',
+    body: () => ({
+      hotelId: org.hotelA1,
+      title: 'T',
+      kind: 'event',
+      startDate: '2026-10-01',
+      endDate: '2026-10-01',
+    }),
+    allow: ['SA', 'AD', 'MG'],
+  },
+  { method: 'PUT', url: () => '/hotel-events/999999', body: () => ({}), allow: ['SA', 'AD', 'MG'] },
+  { method: 'DELETE', url: () => '/hotel-events/999999', allow: ['SA', 'AD', 'MG'] },
   { method: 'GET', url: () => `/holidays?hotelId=${org.hotelA1}&year=2026`, allow: ['SA', 'AD', 'MG', 'EM'] },
   {
     method: 'POST',
