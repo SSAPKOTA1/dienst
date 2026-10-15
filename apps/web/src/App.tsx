@@ -15,6 +15,7 @@ const ForgotPassword = lazy(() =>
   import('./pages/AccountPages').then((m) => ({ default: m.ForgotPassword })),
 );
 const Planning = lazy(() => import('./pages/planning/Planning').then((m) => ({ default: m.Planning })));
+const SharedPlan = lazy(() => import('./pages/planning/SharedPlan').then((m) => ({ default: m.SharedPlan })));
 const Kiosk = lazy(() => import('./pages/Kiosk').then((m) => ({ default: m.Kiosk })));
 const Live = lazy(() => import('./pages/Live').then((m) => ({ default: m.Live })));
 const Requests = lazy(() => import('./pages/Requests').then((m) => ({ default: m.Requests })));
@@ -112,6 +113,7 @@ export function App() {
             <Route element={<Guard roles={['superAdmin', 'admin', 'manager']} />}>
               <Route element={<PlannerShell />}>
                 <Route path="/planning" element={<Planning />} />
+                <Route path="/planning/share" element={<SharedPlan />} />
                 <Route path="/month" element={<MonthOverview />} />
                 <Route path="/vacation/*" element={<VacationRoutes />} />
                 <Route path="/live" element={<Live />} />

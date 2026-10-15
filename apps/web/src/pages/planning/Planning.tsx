@@ -9,7 +9,7 @@ import type {
   ValidateResultDto,
 } from '@dienst/shared';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -125,6 +125,7 @@ export function Planning() {
   const qc = useQueryClient();
   const { me } = useAuth();
   const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
   const today = todayIso();
   const weekStart = mondayOfIso(params.get('week') ?? today);
   const hotelsQ = useGet<Items<HotelDto>>('/hotels');
@@ -544,6 +545,14 @@ export function Planning() {
               onClick={() => window.print()}
             >
               {t('Dienstplan als PDF')}
+            </button>
+            <button
+              className="btn btn-secondary"
+              style={{ marginLeft: 'var(--space-2)' }}
+              data-testid="share-copy"
+              onClick={() => navigate(`/planning/share?hotelIds=${hotelIds.join(',')}&from=${weekStart}`)}
+            >
+              {t('Aushang für Mitarbeitende')}
             </button>
             <button
               className="btn btn-secondary"

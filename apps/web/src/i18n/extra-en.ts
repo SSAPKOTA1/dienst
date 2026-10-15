@@ -881,6 +881,13 @@ export const extraEn: Record<string, string> = {
   '{{n}} ältere Einträge sind nicht prüfbar.': '{{n}} older entries cannot be verified.',
   'Vertrag ändern': 'Change contract',
   'Neue Version': 'New version',
+  'Zurück zum Dienstplan': 'Back to the schedule',
+  'Die Woche ist noch nicht vollständig veröffentlicht. Bitte zuerst veröffentlichen.':
+    'The week is not fully published yet. Please publish it first.',
+  Drucken: 'Print',
+  abwesend: 'away',
+  'Keine Einträge in dieser Woche.': 'No entries in this week.',
+  'Aushang für Mitarbeitende': 'Copy for employees',
   Wochentage: 'Weekdays',
   'Welche Wochentage und Schichten passen gut? Das ist ein Wunsch, kein Anspruch.':
     'Which weekdays and shifts suit you? This is a wish, not an entitlement.',

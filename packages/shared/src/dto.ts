@@ -574,3 +574,26 @@ export interface WebauthnKeyDto {
   createdAt: string;
   lastUsedAt: string | null;
 }
+
+/** The Dienstplan as a copy for employees: published weeks only, full names, every absence just "absent". */
+export interface SharedPlanDto {
+  from: string;
+  to: string;
+  days: Array<{ date: string; holiday: string | null }>;
+  hotels: Array<{
+    id: number;
+    name: string;
+    departments: Array<{
+      id: number;
+      name: string;
+      employees: Array<{
+        name: string;
+        cells: Array<{
+          date: string;
+          entries: Array<{ start: string; end: string; shiftName: string | null }>;
+          absent: boolean;
+        }>;
+      }>;
+    }>;
+  }>;
+}

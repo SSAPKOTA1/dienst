@@ -13,6 +13,8 @@ import { AppError, notFound } from '../lib/errors';
 import { actorOf, getPrincipal, requireRole } from '../lib/auth';
 import { csvIds, idParam, isoDate } from '../lib/http';
 import { buildGrid } from '../services/planning/grid';
+import { buildSharedPlan } from '../services/sharedPlan';
+import { audit } from '../lib/audit';
 import { findCandidates } from '../services/planning/candidates';
 import {
   checkPlan,
@@ -108,6 +110,27 @@ export async function scheduleRoutes(app: FastifyInstance) {
         range: q.range,
         from: q.from,
       });
+    },
+  );
+
+  // The Dienstplan as a copy for employees (published weeks only, full names, neutral absences; see sharedPlan.ts).
+  // Creating a copy is written to the audit log because it hands out names and working times.
+  r.get(
+    '/schedule/shared',
+    {
+      preValidation: planners,
+      schema: { querystring: z.object({ hotelIds: csvIds, from: isoDate }) },
+    },
+    async (req) => {
+      const p = getPrincipal(req);
+      const plan = await buildSharedPlan(db, p, app.clock(), req.query.hotelIds ?? [], req.query.from);
+      await audit(db, actorOf(req), {
+        action: 'schedule_shared_copy',
+        entityType: 'schedule',
+        entityId: plan.hotels[0]?.id ?? 0,
+        new: { hotelIds: plan.hotels.map((h) => h.id), from: plan.from },
+      });
+      return plan;
     },
   );
 
