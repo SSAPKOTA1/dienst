@@ -6,6 +6,7 @@ import type {
   Items,
   CompanyDto,
   HotelDto,
+  HotelEventDto,
   HotelSettingsDto,
   DepartmentDto,
   KioskDeviceDto,
@@ -335,7 +336,13 @@ export type ScheduleGridDto = {
   from: string;
   to: string;
   status: string;
-  days: Array<{ date: string; holiday: string | null; past: boolean; closedHotelIds: number[] }>;
+  days: Array<{
+    date: string;
+    holiday: string | null;
+    past: boolean;
+    closedHotelIds: number[];
+    events: HotelEventDto[];
+  }>;
   rows: Array<{
     key: string;
     kind: string;

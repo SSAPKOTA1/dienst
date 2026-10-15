@@ -13,6 +13,12 @@ export interface CompanyDto {
   graceMinutes: number;
   sickBackdateDays: number;
   pinLength: number;
+  /** minutes after the planned start from which a clock-in counts as late for the notification bar */
+  alertLateCheckinMinutes: number;
+  /** minutes after the planned start without a clock-in before the bar reports a missed check-in */
+  alertMissedCheckinMinutes: number;
+  /** minutes after the planned end while still clocked in before the bar reports a missed check-out (1-59) */
+  alertMissedCheckoutMinutes: number;
 }
 export interface HotelDto {
   id: number;
@@ -204,6 +210,36 @@ export interface NotificationDto {
   payload: unknown;
   read: boolean;
   createdAt: string | null;
+}
+/** One entry of the notification bar of admins and super admins (GET /admin-alerts). */
+export interface AdminAlertDto {
+  id: number;
+  /** late_checkin, missed_checkin, missed_checkout, new_shift_wish, new_leave_wish, new_leave_request */
+  kind: string;
+  read: boolean;
+  createdAt: string | null;
+  hotelId: number;
+  hotelName: string;
+  employeeId: number | null;
+  employeeName: string | null;
+  /** hotel-local start date of the shift, or the day of the wish */
+  date: string | null;
+  from: string | null;
+  to: string | null;
+  plannedStart: string | null;
+  plannedEnd: string | null;
+  /** late check-in: minutes after the planned start */
+  minutes: number | null;
+  /** punch record (late check-in, missed check-out), schedule entry (missed check-in), time off or wish */
+  refId: number | null;
+  /** false once nothing is left to do: leave decided, person clocked in or out in the meantime */
+  open: boolean;
+  /** leave request: pending, approved, rejected or cancelled */
+  status: string | null;
+}
+export interface AdminAlertListDto {
+  items: AdminAlertDto[];
+  unread: number;
 }
 export interface SwapDto {
   id: number;
@@ -645,3 +681,18 @@ export interface PatternsDto {
 
 /** Hours above the target: kept in the time account ('account') or paid out each month ('payout'). */
 export type OvertimeMode = 'account' | 'payout';
+
+/** Kinds of a hotel event (event calendar); the German labels live in the web app. */
+export const HOTEL_EVENT_KINDS = ['messe', 'tagung', 'gruppe', 'event', 'other'] as const;
+export type HotelEventKind = (typeof HOTEL_EVENT_KINDS)[number];
+
+/** One entry of the event calendar of a hotel (start and end date are hotel-local and inclusive). */
+export interface HotelEventDto {
+  id: number;
+  hotelId: number;
+  title: string;
+  kind: HotelEventKind;
+  startDate: string;
+  endDate: string;
+  note: string | null;
+}

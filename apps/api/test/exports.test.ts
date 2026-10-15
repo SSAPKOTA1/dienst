@@ -230,6 +230,36 @@ describe('timesheet', () => {
     expect(rows.flat().join(' ')).toContain('1 noch nicht freigegebene Zeiten');
   });
 
+  it('shows a sick day as not worked but with its credited hours, and totals both', async () => {
+    const abs = await call(ctx, 'POST', '/schedule/absence', fx.adminA.token, {
+      employeeId: fx.emp.maria,
+      from: '2026-09-15', // Tuesday
+      to: '2026-09-16',
+      type: 'sick_leave',
+      reason: 'entered late',
+    });
+    expect(abs.status, JSON.stringify(abs.body)).toBeLessThan(300);
+    const r = await get('/me/timesheet?month=2026-09&format=xlsx', maria);
+    const rows = rowsOf(await sheet(r.rawPayload, 'Stundenzettel'));
+    const head = rows.find((x) => x[0] === 'Datum')!;
+    expect(head[5]).toBe('Stunden gearbeitet');
+    expect(head[6]).toBe('Stunden gutgeschrieben');
+    const sick = rows.find((x) => x[0] === '15.09.2026')!;
+    expect(sick[5]).toBe(''); // nothing worked
+    expect(Number(sick[6])).toBeGreaterThan(0); // hours credited
+    expect(sick[7]).toContain('nicht gearbeitet');
+    const total = rows.find((x) => x[0] === 'Summe')!;
+    const all = rows.find((x) => x[0] === 'Gesamt')!;
+    expect(Number(total[5])).toBe(7.5); // worked hours are unchanged
+    expect(Number(total[6])).toBeCloseTo(Number(sick[6]) * 2);
+    expect(Number(all[5])).toBeCloseTo(7.5 + Number(total[6]));
+    await ctx.db
+      .deleteFrom('time_off')
+      .where('employee_id', '=', fx.emp.maria!)
+      .where('type', '=', 'sick_leave')
+      .execute();
+  });
+
   it('pdf downloads for the employee and for a planner of the home hotel', async () => {
     const me = await get('/me/timesheet?month=2026-09', maria);
     expect(me.statusCode).toBe(200);
