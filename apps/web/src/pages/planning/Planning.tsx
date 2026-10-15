@@ -730,7 +730,7 @@ export function Planning() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(4,minmax(0,1fr))',
+            gridTemplateColumns: 'repeat(4,minmax(0,1fr)) auto',
             borderTop: '2px solid var(--color-divider)',
           }}
           data-testid="counters"
@@ -766,25 +766,32 @@ export function Planning() {
               <span style={{ fontSize: 12, color: 'var(--color-neutral-800)' }}>{t(l as string)}</span>
             </div>
           ))}
-        </div>
-        <div
-          data-noprint
-          data-testid="wish-legend"
-          style={{ padding: '6px var(--space-4)', fontSize: 12, display: 'flex', gap: 16, flexWrap: 'wrap' }}
-        >
-          <span>
-            <span className="pl-wish pl-wish-work" aria-hidden="true">
-              +
-            </span>{' '}
-            {t('Wunsch: arbeiten')}
-          </span>
-          <span>
-            <span className="pl-wish pl-wish-off" aria-hidden="true">
-              −
-            </span>{' '}
-            {t('Wunsch: frei')}
-          </span>
-          <span style={{ color: 'var(--color-neutral-700)' }}>{t('Ein Wunsch ist kein Versprechen.')}</span>
+          <div
+            data-noprint
+            data-testid="wish-legend"
+            title={t('Ein Wunsch ist kein Versprechen.')}
+            style={{
+              padding: '8px var(--space-4)',
+              fontSize: 12,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              gap: 2,
+            }}
+          >
+            <span>
+              <span className="pl-wish pl-wish-work" aria-hidden="true">
+                +
+              </span>{' '}
+              {t('Wunsch: arbeiten')}
+            </span>
+            <span>
+              <span className="pl-wish pl-wish-off" aria-hidden="true">
+                −
+              </span>{' '}
+              {t('Wunsch: frei')}
+            </span>
+          </div>
         </div>
         <DndContext
           sensors={sensors}
