@@ -16,6 +16,7 @@ import { assertNotClosed, vacationDays } from '../services/approvals';
 import { leaveLimitIssues } from '../services/leave';
 import { reverseAbsence } from '../services/planning/absence';
 import { hotelManagerUsers } from '../services/kiosk';
+import { ADMIN_ALERT_KINDS, notifyAdmins } from '../services/adminAlerts';
 import type { Db, Trx } from '../db';
 import type { Principal } from '../lib/scope';
 
@@ -424,6 +425,12 @@ export async function selfRoutes(app: FastifyInstance) {
               payload: JSON.stringify({ timeOffId: t.id, employeeId: emp.employee_id, from, to }),
             })
             .execute();
+        await notifyAdmins(trx, emp.primary_hotel_id, 'new_leave_request', `leave${t.id}`, {
+          timeOffId: t.id,
+          employeeId: emp.employee_id,
+          from,
+          to,
+        });
         await audit(trx, actorOf(req), {
           action: 'absence_requested',
           entityType: 'time_off',
@@ -651,6 +658,7 @@ export async function selfRoutes(app: FastifyInstance) {
         .selectFrom('notification')
         .select(['id', 'kind', 'payload', 'read_at', 'created_at'])
         .where('user_id', '=', p.userId)
+        .where('kind', 'not in', [...ADMIN_ALERT_KINDS])
         .orderBy('id', 'desc')
         .limit(req.query.limit);
       if (req.query.unread === 'true') qb = qb.where('read_at', 'is', null);
@@ -658,6 +666,7 @@ export async function selfRoutes(app: FastifyInstance) {
         .selectFrom('notification')
         .select((eb) => eb.fn.countAll<string>().as('n'))
         .where('user_id', '=', p.userId)
+        .where('kind', 'not in', [...ADMIN_ALERT_KINDS])
         .where('read_at', 'is', null)
         .executeTakeFirstOrThrow();
       return { items: (await qb.execute()).map(notifOut), unread: Number(unread.n) };

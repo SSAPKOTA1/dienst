@@ -613,6 +613,21 @@
                     "type": "integer",
                     "minimum": 4,
                     "maximum": 8
+                  },
+                  "alertLateCheckinMinutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 240
+                  },
+                  "alertMissedCheckinMinutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 240
+                  },
+                  "alertMissedCheckoutMinutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 59
                   }
                 },
                 "required": [
@@ -664,6 +679,21 @@
                     "type": "integer",
                     "minimum": 4,
                     "maximum": 8
+                  },
+                  "alertLateCheckinMinutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 240
+                  },
+                  "alertMissedCheckinMinutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 240
+                  },
+                  "alertMissedCheckoutMinutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 59
                   }
                 }
               }
@@ -8078,6 +8108,71 @@
       }
     },
     "/api/v1/me/vacation-notices/{id}/ack": {
+      "put": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/admin-alerts": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "in": "query",
+            "name": "unread",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/admin-alerts/read-all": {
+      "put": {
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/admin-alerts/{id}/read": {
       "put": {
         "parameters": [
           {

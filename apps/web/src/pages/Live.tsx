@@ -1,5 +1,6 @@
 import type { HotelDto, Items, LiveDto } from '@dienst/shared';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { api, useGet } from '../lib/api';
@@ -22,6 +23,20 @@ export function Live() {
   const live = useGet<LiveDto>('/live', undefined, { refetchInterval: 15_000 });
   const [close, setClose] = useState<LiveItem | null>(null);
   const g = live.data?.groups;
+  // deep link from the notification bar: ?record=<time entry> highlights the row, &close=1 opens the close dialog
+  const [params] = useSearchParams();
+  const focus = Number(params.get('record')) || null;
+  const [autoOpened, setAutoOpened] = useState(false);
+  useEffect(() => {
+    if (!focus) return;
+    document.getElementById(`live-row-${focus}`)?.scrollIntoView({ block: 'center' });
+    if (params.get('close') !== '1' || autoOpened || !g) return;
+    const hit = [...g.clockedIn, ...g.needsReview].find((x) => (x as LiveItem).punchRecordId === focus);
+    if (hit) {
+      setAutoOpened(true);
+      setClose(hit as LiveItem);
+    }
+  }, [focus, g, params, autoOpened]);
   const names = (hotels.data?.items ?? []).map((h) => h.name).join(' + ');
   const server = live.data?.serverTime;
   const cols: Array<{ key: string; title: string; items: LiveItem[]; empty: string }> = [
@@ -122,7 +137,11 @@ export function Live() {
             {c.items.map((it) => (
               <div
                 key={`${it.punchRecordId ?? it.entryId}`}
+                id={it.punchRecordId ? `live-row-${it.punchRecordId}` : undefined}
+                aria-current={focus && it.punchRecordId === focus ? 'true' : undefined}
                 style={{
+                  outline: focus && it.punchRecordId === focus ? '3px solid var(--color-accent)' : undefined,
+                  outlineOffset: -3,
                   padding: 'var(--space-2) var(--space-4)',
                   borderBottom: '1px solid var(--color-divider)',
                   display: 'flex',

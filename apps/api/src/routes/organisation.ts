@@ -29,6 +29,10 @@ export async function organisationRoutes(app: FastifyInstance) {
     graceMinutes: z.number().int().min(0).max(60).optional(),
     sickBackdateDays: z.number().int().min(0).max(60).optional(),
     pinLength: z.number().int().min(4).max(8).optional(),
+    alertLateCheckinMinutes: z.number().int().min(1).max(240).optional(),
+    alertMissedCheckinMinutes: z.number().int().min(1).max(240).optional(),
+    // below the 60 minutes after which the auto check-out closes the record
+    alertMissedCheckoutMinutes: z.number().int().min(1).max(59).optional(),
   });
   const companyOut = (c: Selectable<DB['company']>): CompanyDto => ({
     id: c.id,
@@ -36,6 +40,9 @@ export async function organisationRoutes(app: FastifyInstance) {
     graceMinutes: c.grace_period_minutes,
     sickBackdateDays: c.sick_backdate_days,
     pinLength: c.pin_length,
+    alertLateCheckinMinutes: c.alert_late_checkin_minutes,
+    alertMissedCheckinMinutes: c.alert_missed_checkin_minutes,
+    alertMissedCheckoutMinutes: c.alert_missed_checkout_minutes,
   });
 
   r.post(
@@ -52,6 +59,15 @@ export async function organisationRoutes(app: FastifyInstance) {
             grace_period_minutes: b.graceMinutes ?? 15,
             sick_backdate_days: b.sickBackdateDays ?? 7,
             pin_length: b.pinLength ?? 6,
+            ...(b.alertLateCheckinMinutes !== undefined && {
+              alert_late_checkin_minutes: b.alertLateCheckinMinutes,
+            }),
+            ...(b.alertMissedCheckinMinutes !== undefined && {
+              alert_missed_checkin_minutes: b.alertMissedCheckinMinutes,
+            }),
+            ...(b.alertMissedCheckoutMinutes !== undefined && {
+              alert_missed_checkout_minutes: b.alertMissedCheckoutMinutes,
+            }),
             created_by_id: p.superAdminId!,
           })
           .returningAll()
@@ -99,6 +115,15 @@ export async function organisationRoutes(app: FastifyInstance) {
             ...(b.graceMinutes !== undefined && { grace_period_minutes: b.graceMinutes }),
             ...(b.sickBackdateDays !== undefined && { sick_backdate_days: b.sickBackdateDays }),
             ...(b.pinLength !== undefined && { pin_length: b.pinLength }),
+            ...(b.alertLateCheckinMinutes !== undefined && {
+              alert_late_checkin_minutes: b.alertLateCheckinMinutes,
+            }),
+            ...(b.alertMissedCheckinMinutes !== undefined && {
+              alert_missed_checkin_minutes: b.alertMissedCheckinMinutes,
+            }),
+            ...(b.alertMissedCheckoutMinutes !== undefined && {
+              alert_missed_checkout_minutes: b.alertMissedCheckoutMinutes,
+            }),
           })
           .where('id', '=', old.id)
           .returningAll()

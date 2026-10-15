@@ -6,6 +6,7 @@ import { expireSwaps, runAutoCheckout, wipeExpiredCredentials } from './autoChec
 import { runVacationJobs } from '../services/vacationJobs';
 import { runOffboarding, runReminders } from '../services/reminders';
 import { runRetention } from '../services/privacy';
+import { runAdminAlerts } from '../services/adminAlerts';
 
 /** Advisory lock id of the job leader (migrations use 7002). */
 const JOBS_LOCK = 7003;
@@ -24,6 +25,7 @@ export async function runJobsOnce(db: Db, clock: () => Date, log: Log): Promise<
     ['auto_checkout', () => runAutoCheckout(db, clock())],
     ['credential_wipe', () => wipeExpiredCredentials(db, clock())],
     ['swap_expiry', () => expireSwaps(db, clock())],
+    ['admin_alerts', () => runAdminAlerts(db, clock())],
   ];
   await Promise.allSettled(
     jobs.map(([job, run]) =>

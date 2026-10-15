@@ -43,6 +43,9 @@ const rows: Row[] = [
     allow: ['SA'],
   },
   { method: 'GET', url: () => '/hotels', allow: ['SA', 'AD', 'MG'] },
+  { method: 'GET', url: () => '/admin-alerts', allow: ['SA', 'AD'] },
+  { method: 'PUT', url: () => '/admin-alerts/read-all', allow: ['SA', 'AD'] },
+  { method: 'PUT', url: () => '/admin-alerts/999999/read', allow: ['SA', 'AD'] },
   { method: 'GET', url: () => `/hotels/${org.hotelA1}/settings`, allow: ['SA', 'AD', 'MG'] },
   {
     method: 'PUT',

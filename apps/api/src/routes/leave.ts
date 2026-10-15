@@ -11,6 +11,7 @@ import { csvIds, idParam, isoDate } from '../lib/http';
 import { localDate } from '../lib/time';
 import { vacationDays } from '../services/approvals';
 import { notifyEmployee } from '../services/planning/ops';
+import { notifyAdmins } from '../services/adminAlerts';
 import { remainingDays } from '../services/vacation';
 import { requireFeature } from '../services/features';
 import { carryOver, sendNotices } from '../services/vacationJobs';
@@ -484,6 +485,12 @@ export async function leaveRoutes(app: FastifyInstance) {
           companyId: emp.company_id,
           new: { date: b.date, shiftId: b.shiftId },
         });
+        await notifyAdmins(trx, shift.hotel_id, 'new_shift_wish', `swish${w.id}`, {
+          wishId: w.id,
+          employeeId: emp.employee_id,
+          date: b.date,
+          shiftId: b.shiftId,
+        });
         return w;
       });
       return reply.status(201).send(shiftWishOut(row));
@@ -621,6 +628,12 @@ export async function leaveRoutes(app: FastifyInstance) {
           hotelId: emp.primary_hotel_id,
           companyId: emp.company_id,
           new: { from: b.from, to: b.to },
+        });
+        await notifyAdmins(trx, emp.primary_hotel_id, 'new_leave_wish', `lwish${w.id}`, {
+          wishId: w.id,
+          employeeId: emp.employee_id,
+          from: b.from,
+          to: b.to,
         });
         return w;
       });
