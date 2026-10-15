@@ -75,7 +75,7 @@ export const extraEn: Record<string, string> = {
   'Abteilung hinzufügen': 'Add department',
   Unternehmen: 'Company',
   Stadt: 'City',
-  'Bundesland (Kürzel)': 'Federal state (code)',
+  Bundesland: 'Federal state',
   Zeitzone: 'Time zone',
   'Abteilung bearbeiten': 'Edit department',
   nie: 'never',

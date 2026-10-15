@@ -718,8 +718,24 @@
                   "federalState": {
                     "nullable": true,
                     "type": "string",
-                    "minLength": 2,
-                    "maxLength": 2
+                    "enum": [
+                      "BW",
+                      "BY",
+                      "BE",
+                      "BB",
+                      "HB",
+                      "HH",
+                      "HE",
+                      "MV",
+                      "NI",
+                      "NW",
+                      "RP",
+                      "SL",
+                      "SN",
+                      "ST",
+                      "SH",
+                      "TH"
+                    ]
                   },
                   "timezone": {
                     "type": "string",
@@ -801,8 +817,24 @@
                   "federalState": {
                     "nullable": true,
                     "type": "string",
-                    "minLength": 2,
-                    "maxLength": 2
+                    "enum": [
+                      "BW",
+                      "BY",
+                      "BE",
+                      "BB",
+                      "HB",
+                      "HH",
+                      "HE",
+                      "MV",
+                      "NI",
+                      "NW",
+                      "RP",
+                      "SL",
+                      "SN",
+                      "ST",
+                      "SH",
+                      "TH"
+                    ]
                   },
                   "timezone": {
                     "type": "string",
@@ -1752,6 +1784,35 @@
                   "scope",
                   "date",
                   "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/holidays/generate": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "year": {
+                    "type": "integer",
+                    "minimum": 2000,
+                    "maximum": 2100
+                  }
+                },
+                "required": [
+                  "year"
                 ]
               }
             }

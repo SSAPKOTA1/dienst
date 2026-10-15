@@ -4,6 +4,7 @@ import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { FEDERAL_STATE_CODES } from '@dienst/rules';
 import { AppError, notFound } from '../lib/errors';
 import { actorOf, getPrincipal, requireRole } from '../lib/auth';
 import { audit } from '../lib/audit';
@@ -130,7 +131,7 @@ export async function organisationRoutes(app: FastifyInstance) {
     companyId: z.number().int().positive(),
     name: z.string().min(1).max(255),
     city: z.string().max(100).nullish(),
-    federalState: z.string().length(2).nullish(),
+    federalState: z.enum(FEDERAL_STATE_CODES).nullish(),
     timezone: z.string().min(3).max(50).optional(),
   });
 
