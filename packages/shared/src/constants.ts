@@ -61,3 +61,23 @@ export const PATTERN_MIN_GROUP_SICK = 10;
 export const LATE_GRACE_MINUTES = 15;
 export const LONG_STAY_MINUTES = 30;
 export type MenuAbsenceType = (typeof MENU_ABSENCE_TYPES)[number];
+
+/** Federal states a hotel can be in (drives the state-level public holidays). */
+export const FEDERAL_STATES = [
+  { code: 'BW', name: 'Baden-Württemberg' },
+  { code: 'BY', name: 'Bayern' },
+  { code: 'BE', name: 'Berlin' },
+  { code: 'BB', name: 'Brandenburg' },
+  { code: 'HB', name: 'Bremen' },
+  { code: 'HH', name: 'Hamburg' },
+  { code: 'HE', name: 'Hessen' },
+  { code: 'MV', name: 'Mecklenburg-Vorpommern' },
+  { code: 'NI', name: 'Niedersachsen' },
+  { code: 'NW', name: 'Nordrhein-Westfalen' },
+  { code: 'RP', name: 'Rheinland-Pfalz' },
+  { code: 'SL', name: 'Saarland' },
+  { code: 'SN', name: 'Sachsen' },
+  { code: 'ST', name: 'Sachsen-Anhalt' },
+  { code: 'SH', name: 'Schleswig-Holstein' },
+  { code: 'TH', name: 'Thüringen' },
+] as const;

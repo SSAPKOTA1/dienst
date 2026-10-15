@@ -185,8 +185,8 @@ export async function runSeed(db: Db, now: Date): Promise<SeedResult> {
     })
     .execute();
 
-  // --- holidays 2026-2027
-  for (const y of [2026, 2027]) {
+  // --- holidays 2026-2030, all federal states
+  for (const y of [2026, 2027, 2028, 2029, 2030]) {
     for (const h of holidaysFor(y)) {
       await db
         .insertInto('public_holiday')
