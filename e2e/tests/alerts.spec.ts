@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { addDays, apiToken, isoDate, login, mondayOf } from './helpers';
 
-// far enough ahead that the seed has no vacation, wishes or entries in these weeks
-const monday = isoDate(addDays(mondayOf(), 63));
-const friday = isoDate(addDays(mondayOf(), 67));
+// far from the weeks other specs use (portal.spec requests vacation about 60 days out for the same employee)
+const monday = isoDate(addDays(mondayOf(), 140));
+const friday = isoDate(addDays(mondayOf(), 144));
 
 test.describe('Meldungen', () => {
   test('admin: a new vacation request shows up in the bell and is approved from the panel; managers have no bell', async ({
