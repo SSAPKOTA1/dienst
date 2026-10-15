@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { nextUsername, usernameBase } from '@dienst/rules';
+import type { OvertimeMode } from '@dienst/shared';
 import { randomInt } from 'node:crypto';
 import type { Trx } from '../db';
 import { AppError, notFound } from '../lib/errors';
@@ -45,6 +46,8 @@ export const employeeCreateSchema = z.object({
   getsPublicHoliday: z.boolean().optional(),
   openingBalanceHours: z.number().min(-1000).max(1000).optional(),
   isFloater: z.boolean().optional(),
+  /** omitted: the default of the home hotel */
+  overtimeMode: z.enum(['account', 'payout']).optional(),
   phone: z.string().max(40).nullish(),
   preferredLanguage: z.enum(['de', 'en']).optional(),
 });
@@ -102,7 +105,7 @@ export async function createEmployee(
   p.scope.assertHotel(b.primaryHotelId);
   const hotel = await trx
     .selectFrom('hotel')
-    .select(['id', 'company_id'])
+    .select(['id', 'company_id', 'default_overtime_mode'])
     .where('id', '=', b.primaryHotelId)
     .executeTakeFirst();
   if (!hotel) throw notFound('Hotel');
@@ -229,6 +232,7 @@ export async function createEmployee(
     vacationDaysPerYear: b.vacationDaysPerYear,
     monthlyHoursCap: b.monthlyHoursCap ?? null,
     getsPublicHoliday: b.getsPublicHoliday ?? false,
+    overtimeMode: b.overtimeMode ?? (hotel.default_overtime_mode as OvertimeMode),
   });
   await ensureAllowance(trx, emp.employee_id, Number(now.toISOString().slice(0, 4)), {
     allocated: b.vacationDaysAllocatedThisYear ?? undefined,
@@ -249,30 +253,36 @@ export const contractSchema = z.object({
   vacationDaysPerYear: z.number().min(0).max(60),
   monthlyHoursCap: z.number().min(0).max(350).nullish(),
   getsPublicHoliday: z.boolean().optional(),
+  /** hours above the target: kept in the time account or paid out each month; omitted keeps the current setting */
+  overtimeMode: z.enum(['account', 'payout']).optional(),
 });
 export type ContractInput = z.infer<typeof contractSchema>;
 
-export async function insertContract(trx: Trx, employeeId: number, p: Principal, c: ContractInput) {
+/** The stored columns of one contract version, from the form input (shared by new versions and corrections). */
+export function contractValues(c: ContractInput) {
   const weekly = weeklyTarget(c.targetHoursPerWeek, c.targetHoursPerMonth);
   const days = c.workingWeekdays ?? Array.from({ length: c.workDaysPerWeek }, (_, i) => i + 1);
+  return {
+    valid_from: c.validFrom,
+    valid_to: c.validTo ?? null,
+    employment_type: c.employmentType,
+    working_model: c.workingModel,
+    work_days_per_week: c.workDaysPerWeek,
+    working_weekdays: days,
+    target_hours_per_week: c.targetHoursPerWeek ?? null,
+    target_hours_per_month: c.targetHoursPerMonth ?? null,
+    daily_target_hours: weekly != null ? Math.round((weekly / c.workDaysPerWeek) * 100) / 100 : null,
+    vacation_days_per_year: c.vacationDaysPerYear,
+    gets_public_holiday: c.getsPublicHoliday ?? false,
+    monthly_hours_cap: c.monthlyHoursCap ?? null,
+    ...(c.overtimeMode ? { overtime_mode: c.overtimeMode } : {}),
+  };
+}
+
+export async function insertContract(trx: Trx, employeeId: number, p: Principal, c: ContractInput) {
   return trx
     .insertInto('employee_contract')
-    .values({
-      employee_id: employeeId,
-      valid_from: c.validFrom,
-      valid_to: c.validTo ?? null,
-      employment_type: c.employmentType,
-      working_model: c.workingModel,
-      work_days_per_week: c.workDaysPerWeek,
-      working_weekdays: days,
-      target_hours_per_week: c.targetHoursPerWeek ?? null,
-      target_hours_per_month: c.targetHoursPerMonth ?? null,
-      daily_target_hours: weekly != null ? Math.round((weekly / c.workDaysPerWeek) * 100) / 100 : null,
-      vacation_days_per_year: c.vacationDaysPerYear,
-      gets_public_holiday: c.getsPublicHoliday ?? false,
-      monthly_hours_cap: c.monthlyHoursCap ?? null,
-      created_by_id: p.adminId,
-    })
+    .values({ ...contractValues(c), employee_id: employeeId, created_by_id: p.adminId })
     .returning('id')
     .executeTakeFirstOrThrow();
 }

@@ -66,6 +66,7 @@ describe('the catalogue', () => {
       ['DAILY_OVER_8H', ['soft', 'hard'], 'soft'],
       ['REST_PERIOD_SHORT', ['reason', 'hard'], 'reason'],
       ['MONTHLY_CAP', ['soft', 'hard'], 'soft'],
+      ['WEEKLY_AVERAGE', ['soft', 'hard'], 'soft'],
       ['SUNDAY_LIMIT', ['soft', 'hard'], 'soft'],
       ['NIGHT_WORKER', ['soft', 'hard'], 'soft'],
       ['ABSENCE_CONFLICT', ['soft', 'hard'], 'hard'],

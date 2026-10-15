@@ -21,6 +21,111 @@ const planners = requireRole('superAdmin', 'admin', 'manager');
 const admins = requireRole('superAdmin', 'admin');
 const EM = requireRole('employee');
 
+/** One vacation row per employee for a year: the same numbers the overview and the employee page show. */
+export async function vacationRows(
+  db: Db,
+  emps: Array<{
+    employee_id: number;
+    display_name: string | null;
+    primary_hotel_id: number;
+    primary_department_id: number;
+    dept: string;
+  }>,
+  year: number,
+  today: string,
+) {
+  const ids = emps.map((e) => e.employee_id);
+  const allow = ids.length
+    ? await db
+        .selectFrom('employee_vacation_allowance')
+        .selectAll()
+        .where('year', '=', year)
+        .where('employee_id', 'in', ids)
+        .execute()
+    : [];
+  const offs = ids.length
+    ? await db
+        .selectFrom('time_off')
+        .selectAll()
+        .where('employee_id', 'in', ids)
+        .where('type', '=', 'annual_leave')
+        .where('status', 'in', ['approved', 'pending'])
+        .where('start_date', '<=', `${year}-12-31`)
+        .where('end_date', '>=', `${year}-01-01`)
+        .orderBy('start_date')
+        .execute()
+    : [];
+  const employees = [];
+  for (const e of emps) {
+    const a = allow.find((x) => x.employee_id === e.employee_id);
+    const months = Array<number>(12).fill(0);
+    let taken = 0;
+    let planned = 0;
+    let requested = 0;
+    const entries = [];
+    for (const t of offs.filter((x) => x.employee_id === e.employee_id)) {
+      const days = (await vacationDays(db, e.employee_id, t.start_date, t.end_date)).filter((d) =>
+        d.startsWith(String(year)),
+      );
+      const w = t.half_day ? 0.5 : 1;
+      for (const d of days) {
+        if (t.status === 'approved') months[Number(d.slice(5, 7)) - 1]! += w;
+        if (t.status === 'pending') requested += w;
+        else if (d < today) taken += w;
+        else planned += w;
+      }
+      entries.push({
+        id: t.id,
+        from: t.start_date,
+        to: t.end_date,
+        days: t.time_off_days,
+        halfDay: t.half_day,
+        status: t.status,
+      });
+    }
+    employees.push({
+      employeeId: e.employee_id,
+      displayName: e.display_name,
+      hotelId: e.primary_hotel_id,
+      departmentId: e.primary_department_id,
+      departmentName: e.dept,
+      entitlement: a?.allocated_days ?? null,
+      carryover: a ? a.carried_statutory_days + a.carried_contractual_days : 0,
+      carryoverExpiresOn: a?.carryover_expires_on ?? null,
+      taken,
+      planned,
+      requested,
+      remaining: a ? remainingDays(a) : null,
+      months,
+      entries,
+    });
+  }
+  return employees;
+}
+
+/** The rows of the vacation overview for some hotels (used by the screen and by the Excel export). */
+export async function vacationOverviewFor(db: Db, now: Date, hotels: number[], year: number) {
+  const emps = await db
+    .selectFrom('employee as e')
+    .innerJoin('department as d', 'd.id', 'e.primary_department_id')
+    .select([
+      'e.employee_id',
+      'e.display_name',
+      'e.primary_hotel_id',
+      'e.primary_department_id',
+      'd.name as dept',
+    ])
+    .where('e.primary_hotel_id', 'in', hotels)
+    .where('e.status', '=', 'active')
+    .orderBy('e.last_name')
+    .execute();
+  const tz = (
+    await db.selectFrom('hotel').select('timezone').where('id', '=', hotels[0]!).executeTakeFirstOrThrow()
+  ).timezone;
+  const today = localDate(now, tz);
+  return { year, today, employees: await vacationRows(db, emps, year, today) };
+}
+
 export async function leaveRoutes(app: FastifyInstance) {
   const r = app.withTypeProvider<ZodTypeProvider>();
   const db = app.db;
@@ -220,7 +325,24 @@ export async function leaveRoutes(app: FastifyInstance) {
       const { year } = req.query;
       const hotels = p.scope.hotels(req.query.hotelIds);
       if (!hotels.length) return { year, employees: [] };
-      const emps = await db
+      return vacationOverviewFor(db, app.clock(), hotels, year);
+    },
+  );
+
+  // One employee's vacation for a year, with the same figures as the overview row (see vacationRows).
+  r.get(
+    '/vacation/employees/:id',
+    {
+      preValidation: planners,
+      schema: {
+        params: idParam,
+        querystring: z.object({ year: z.coerce.number().int().min(2000).max(2100) }),
+      },
+    },
+    async (req) => {
+      const p = getPrincipal(req);
+      const { year } = req.query;
+      const row = await db
         .selectFrom('employee as e')
         .innerJoin('department as d', 'd.id', 'e.primary_department_id')
         .select([
@@ -230,78 +352,13 @@ export async function leaveRoutes(app: FastifyInstance) {
           'e.primary_department_id',
           'd.name as dept',
         ])
-        .where('e.primary_hotel_id', 'in', hotels)
-        .where('e.status', '=', 'active')
-        .orderBy('e.last_name')
-        .execute();
-      const ids = emps.map((e) => e.employee_id);
-      const allow = ids.length
-        ? await db
-            .selectFrom('employee_vacation_allowance')
-            .selectAll()
-            .where('year', '=', year)
-            .where('employee_id', 'in', ids)
-            .execute()
-        : [];
-      const offs = ids.length
-        ? await db
-            .selectFrom('time_off')
-            .selectAll()
-            .where('employee_id', 'in', ids)
-            .where('type', '=', 'annual_leave')
-            .where('status', 'in', ['approved', 'pending'])
-            .where('start_date', '<=', `${year}-12-31`)
-            .where('end_date', '>=', `${year}-01-01`)
-            .orderBy('start_date')
-            .execute()
-        : [];
-      const today = localDate(app.clock(), await tzOf(db, hotels[0]!));
-      const employees = [];
-      for (const e of emps) {
-        const a = allow.find((x) => x.employee_id === e.employee_id);
-        const months = Array<number>(12).fill(0);
-        let taken = 0;
-        let planned = 0;
-        let requested = 0;
-        const entries = [];
-        for (const t of offs.filter((x) => x.employee_id === e.employee_id)) {
-          const days = (await vacationDays(db, e.employee_id, t.start_date, t.end_date)).filter((d) =>
-            d.startsWith(String(year)),
-          );
-          const w = t.half_day ? 0.5 : 1;
-          for (const d of days) {
-            if (t.status === 'approved') months[Number(d.slice(5, 7)) - 1]! += w;
-            if (t.status === 'pending') requested += w;
-            else if (d < today) taken += w;
-            else planned += w;
-          }
-          entries.push({
-            id: t.id,
-            from: t.start_date,
-            to: t.end_date,
-            days: t.time_off_days,
-            halfDay: t.half_day,
-            status: t.status,
-          });
-        }
-        employees.push({
-          employeeId: e.employee_id,
-          displayName: e.display_name,
-          hotelId: e.primary_hotel_id,
-          departmentId: e.primary_department_id,
-          departmentName: e.dept,
-          entitlement: a?.allocated_days ?? null,
-          carryover: a ? a.carried_statutory_days + a.carried_contractual_days : 0,
-          carryoverExpiresOn: a?.carryover_expires_on ?? null,
-          taken,
-          planned,
-          requested,
-          remaining: a ? remainingDays(a) : null,
-          months,
-          entries,
-        });
-      }
-      return { year, today, employees };
+        .where('e.employee_id', '=', req.params.id)
+        .executeTakeFirst();
+      // the home hotel must be one the caller may see (same rule as the overview); otherwise "not found"
+      if (!row || !p.scope.hotels().includes(row.primary_hotel_id)) throw notFound('Employee');
+      const today = localDate(app.clock(), await tzOf(db, row.primary_hotel_id));
+      const [employee] = await vacationRows(db, [row], year, today);
+      return { year, today, employee };
     },
   );
 
@@ -443,6 +500,87 @@ export async function leaveRoutes(app: FastifyInstance) {
       .execute();
     return { items: rows.map(shiftWishOut) };
   });
+
+  // Recurring weekday preferences: "good" or "bad" per weekday, optionally with a preferred shift. Shown to planners
+  // on the calendar; never a promise. PUT replaces the whole list (an empty list clears it).
+  r.get('/me/weekday-prefs', { preValidation: EM, preHandler: wishFeature }, async (req) => {
+    const emp = await myEmployee(db, getPrincipal(req));
+    const rows = await db
+      .selectFrom('employee_weekday_pref')
+      .select(['weekday', 'preference', 'shift_id'])
+      .where('employee_id', '=', emp.employee_id)
+      .orderBy('weekday')
+      .execute();
+    return {
+      items: rows.map((w) => ({ weekday: w.weekday, preference: w.preference, shiftId: w.shift_id })),
+    };
+  });
+  r.put(
+    '/me/weekday-prefs',
+    {
+      preValidation: EM,
+      preHandler: wishFeature,
+      schema: {
+        body: z.object({
+          items: z
+            .array(
+              z.object({
+                weekday: z.number().int().min(1).max(7),
+                preference: z.enum(['good', 'bad']),
+                shiftId: z.number().int().positive().nullish(),
+              }),
+            )
+            .max(7),
+        }),
+      },
+    },
+    async (req) => {
+      const p = getPrincipal(req);
+      const items = req.body.items;
+      if (new Set(items.map((i) => i.weekday)).size !== items.length)
+        throw new AppError('VALIDATION', 'Each weekday may appear only once');
+      await tx(async (trx) => {
+        const emp = await myEmployee(trx, p);
+        const hs = await trx
+          .selectFrom('employee_hotel')
+          .select('hotel_id')
+          .where('employee_id', '=', emp.employee_id)
+          .execute();
+        for (const i of items.filter((x) => x.shiftId)) {
+          const shift = await trx
+            .selectFrom('shift')
+            .select('hotel_id')
+            .where('id', '=', i.shiftId!)
+            .executeTakeFirst();
+          if (!shift || !hs.some((h) => h.hotel_id === shift.hotel_id))
+            throw new AppError('VALIDATION', 'Unknown shift');
+          if (i.preference === 'bad')
+            throw new AppError('VALIDATION', 'A shift can only go with a good weekday');
+        }
+        await trx.deleteFrom('employee_weekday_pref').where('employee_id', '=', emp.employee_id).execute();
+        if (items.length)
+          await trx
+            .insertInto('employee_weekday_pref')
+            .values(
+              items.map((i) => ({
+                employee_id: emp.employee_id,
+                weekday: i.weekday,
+                preference: i.preference,
+                shift_id: i.shiftId ?? null,
+              })),
+            )
+            .execute();
+        await audit(trx, actorOf(req), {
+          action: 'weekday_prefs_set',
+          entityType: 'employee',
+          entityId: emp.employee_id,
+          hotelId: emp.primary_hotel_id,
+          new: { items },
+        });
+      });
+      return { items };
+    },
+  );
 
   r.post(
     '/me/leave-wishes',

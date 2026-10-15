@@ -59,6 +59,21 @@ export function HotelPlatformSettings({ hotelId }: { hotelId: number }) {
             <option value="start_stop">{t('Pause starten und beenden')}</option>
           </select>
         </Field>
+        <Field
+          label={t('Überstunden: Standard für neue Mitarbeitende')}
+          htmlFor={`ot-${hotelId}`}
+          hint={t('Gilt für neue Verträge. Jeder Vertrag kann abweichen.')}
+        >
+          <select
+            id={`ot-${hotelId}`}
+            className="input"
+            value={s.data.defaultOvertimeMode}
+            onChange={(e) => apply({ defaultOvertimeMode: e.target.value })}
+          >
+            <option value="account">{t('Im Zeitkonto behalten')}</option>
+            <option value="payout">{t('Auszahlen')}</option>
+          </select>
+        </Field>
         <Field label={t('Anmeldung am Tablet')} htmlFor={`ki-${hotelId}`}>
           <select
             id={`ki-${hotelId}`}

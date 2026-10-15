@@ -38,6 +38,7 @@ A person has one `user_account`. Every employee gets a `user_account` and the `e
 | Approve worked time and corrections | x | x | x | |
 | Close / reopen month | x | x | | |
 | Audit log | x | x | | |
+| Auswertung (analytics, trends, patterns) | x | x | | |
 | Own schedule, hours (per visibility), vacation, corrections | | | | x |
 
 Managers see employees by `display_name` only (home-hotel rule in 4.20). They never see email, DOB, phone, contract details beyond hours targets, or PINs.
@@ -136,6 +137,7 @@ Each check returns `{code, severity: 'block'|'needs_reason'|'warn', message, det
 | `MINOR_DAILY` | employee under 18 and working minutes that day > 480 | block |
 | `MINOR_REST` | employee under 18 and gap to a neighbouring entry < 720 min | block, `emergencyOverride` by AD/SA with reason |
 | `MONTHLY_CAP` | contract `monthly_hours_cap` set and planned hours in the month exceed it | warn |
+| `WEEKLY_AVERAGE` | planned working time of the 26 ISO weeks up to the entry's week (including the entry), divided by the weeks the person was employed (1 to 26), exceeds 48 h per week (ArbZG § 3) | warn; configurable to hard |
 | `VACATION_EXCEEDS` | planned annual leave days exceed remaining allowance | needs_reason |
 
 Aggregate: `blocked` if any block; else `needs_reason` if any needs_reason (the caller must send `overrideReason`, 5-300 chars); else `ok` (warnings listed). With `emergencyOverride: true` (role AD or SA, `overrideReason` required) the codes `DAILY_LIMIT`, `MINOR_REST` and `REST_PERIOD` (when < 600) are downgraded to `needs_reason`; everything else stays blocked. Every override is audit-logged with rule code and reason.
@@ -198,7 +200,7 @@ Onboarding (single create and import) always links a login, in the same transact
 Allocated vacation for the current year = request override, else `proratedVacationDays(contract.vacation_days_per_year, contract_start_date, year)`; `used` = request value or 0.
 
 ### 4.15 Time account (computed, read-only)
-Only for employees whose contract has `working_model = 'salary'` and a weekly or monthly target; otherwise the value is `null` and the UI hides it.
+For every employee whose contract has a weekly or monthly target, hourly or salaried (changed from salary-only, owner decision for flexible hours); otherwise the value is `null` and the UI hides it. `employee_contract.overtime_mode` decides what happens to hours above the target: `account` keeps them in the balance, `payout` takes each month's surplus out of the balance as a derived line `payout_auto` (payroll pays it; the app stores no wages) while a shortfall stays. Migration 019; the hotel only provides the default for new employees (`hotel.default_overtime_mode`).
 ```
 balance(asOf) = opening_balance_hours
               + sum(paid_hours of APPROVED punch records with local shift_date in [contractStart, asOf-1])

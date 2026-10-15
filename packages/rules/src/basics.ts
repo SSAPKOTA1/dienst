@@ -136,3 +136,15 @@ export function resolveRequired(
   const d = weekdayDefaults instanceof Map ? weekdayDefaults.get(wd) : weekdayDefaults[wd];
   return d ?? 0;
 }
+
+/** The reference period of the weekly average: 26 weeks (ArbZG § 3, "six months or 24 weeks"). */
+export const WEEKLY_AVERAGE_WEEKS = 26;
+
+/**
+ * Average working minutes per week: the planned minutes of the window plus the new entry, divided by the number of
+ * weeks of the window the person was employed (at least 1).
+ */
+export const weeklyAverageMinutes = (windowMinutes: number, ownMinutes: number, weeks: number): number =>
+  Math.round(((windowMinutes + ownMinutes) / Math.max(1, weeks)) * 100) / 100;
+
+export const weeklyAverageExceeds = (avgMinutes: number, limit = 2880): boolean => avgMinutes > limit;

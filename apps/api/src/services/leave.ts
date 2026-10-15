@@ -29,7 +29,8 @@ export async function leaveLimitIssues(
     .where('id', '=', e.primary_department_id)
     .executeTakeFirstOrThrow();
   const needCount = bl.some((b) => b.max_concurrent_absent != null) || dept.max_concurrent_absent != null;
-  const absentOthers: Record<string, number> = {};
+  // a Map, not a plain object: the keys are dates that come from the request, and a Map has no prototype to pollute
+  const absentCount = new Map<string, number>();
   if (needCount) {
     let qb = db
       .selectFrom('time_off as t')
@@ -44,7 +45,7 @@ export async function leaveLimitIssues(
     if (excludeTimeOffId) qb = qb.where('t.id', '<>', excludeTimeOffId);
     for (const o of await qb.execute())
       for (const d of days)
-        if (o.start_date <= d && o.end_date >= d) absentOthers[d] = (absentOthers[d] ?? 0) + 1;
+        if (o.start_date <= d && o.end_date >= d) absentCount.set(d, (absentCount.get(d) ?? 0) + 1);
   }
   const blackouts: BlackoutRule[] = bl.map((b) => ({
     id: b.id,
@@ -58,7 +59,7 @@ export async function leaveLimitIssues(
     days,
     departmentId: e.primary_department_id,
     blackouts,
-    absentOthers,
+    absentOthers: Object.fromEntries(absentCount),
     departmentCap: dept.max_concurrent_absent,
   });
 }

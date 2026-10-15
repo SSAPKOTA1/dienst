@@ -33,6 +33,7 @@ import {
   sundayNightReport,
 } from '../services/hours';
 import { featureEnabled } from '../services/features';
+import { buildPatterns } from '../services/analyticsPatterns';
 import type { Db, Trx } from '../db';
 import type { Principal } from '../lib/scope';
 
@@ -325,6 +326,8 @@ export async function hoursRoutes(app: FastifyInstance) {
         'Arbeitsstunden',
         ...data.categories.map((c) => `Std ${c.name}`),
         ...data.absenceCodes.map((c) => `Tage ${c}`),
+        'Überstunden',
+        'Überstunden auszuzahlen Std',
         'Zeitkonto Std',
       ];
       const lines = data.rows.map((x) => [
@@ -334,6 +337,8 @@ export async function hoursRoutes(app: FastifyInstance) {
         x.workedHours,
         ...data.categories.map((c) => x.categoryHours[c.code] ?? 0),
         ...data.absenceCodes.map((c) => x.absenceDays[c] ?? 0),
+        x.overtimeMode === 'payout' ? 'Auszahlung' : x.overtimeMode === 'account' ? 'Zeitkonto' : '',
+        x.overtimeToPayHours ?? '',
         x.timeAccountHours ?? '',
       ]);
       const fname = `lohnexport_${q.month}`;
@@ -706,10 +711,35 @@ export async function hoursRoutes(app: FastifyInstance) {
   });
 
   // ------------------------------------------------------------------ analytics
+  // Patterns over time as totals per hotel, department or shift (never per employee); admins and super admins only.
+  r.get(
+    '/analytics/patterns',
+    {
+      preValidation: admins,
+      schema: {
+        querystring: z.object({
+          hotelIds: csvIds,
+          from: isoDate,
+          to: isoDate,
+          level: z.enum(['hotel', 'department', 'shift']).default('department'),
+          granularity: z.enum(['week', 'month']).default('month'),
+        }),
+      },
+    },
+    async (req) => {
+      const q = req.query;
+      if (q.to < q.from) throw new AppError('VALIDATION', 'to must not be before from');
+      if ((Date.parse(q.to) - Date.parse(q.from)) / 86400000 > 800)
+        throw new AppError('VALIDATION', 'The range is limited to about two years');
+      const hotels = getPrincipal(req).scope.hotels(q.hotelIds);
+      return buildPatterns(db as Db, hotels, q.from, q.to, q.level, q.granularity);
+    },
+  );
+
   r.get(
     '/analytics/summary',
     {
-      preValidation: planners,
+      preValidation: admins,
       schema: { querystring: z.object({ hotelIds: csvIds, from: isoDate, to: isoDate }) },
     },
     async (req) => {

@@ -9,7 +9,7 @@ import type {
   ValidateResultDto,
 } from '@dienst/shared';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -125,6 +125,7 @@ export function Planning() {
   const qc = useQueryClient();
   const { me } = useAuth();
   const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
   const today = todayIso();
   const weekStart = mondayOfIso(params.get('week') ?? today);
   const hotelsQ = useGet<Items<HotelDto>>('/hotels');
@@ -548,6 +549,14 @@ export function Planning() {
             <button
               className="btn btn-secondary"
               style={{ marginLeft: 'var(--space-2)' }}
+              data-testid="share-copy"
+              onClick={() => navigate(`/planning/share?hotelIds=${hotelIds.join(',')}&from=${weekStart}`)}
+            >
+              {t('Aushang für Mitarbeitende')}
+            </button>
+            <button
+              className="btn btn-secondary"
+              style={{ marginLeft: 'var(--space-2)' }}
               data-testid="export-xlsx"
               onClick={() =>
                 void download(
@@ -721,7 +730,7 @@ export function Planning() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(4,minmax(0,1fr))',
+            gridTemplateColumns: 'repeat(4,minmax(0,1fr)) auto',
             borderTop: '2px solid var(--color-divider)',
           }}
           data-testid="counters"
@@ -757,6 +766,32 @@ export function Planning() {
               <span style={{ fontSize: 12, color: 'var(--color-neutral-800)' }}>{t(l as string)}</span>
             </div>
           ))}
+          <div
+            data-noprint
+            data-testid="wish-legend"
+            title={t('Ein Wunsch ist kein Versprechen.')}
+            style={{
+              padding: '8px var(--space-4)',
+              fontSize: 12,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              gap: 2,
+            }}
+          >
+            <span>
+              <span className="pl-wish pl-wish-work" aria-hidden="true">
+                +
+              </span>{' '}
+              {t('Wunsch: arbeiten')}
+            </span>
+            <span>
+              <span className="pl-wish pl-wish-off" aria-hidden="true">
+                −
+              </span>{' '}
+              {t('Wunsch: frei')}
+            </span>
+          </div>
         </div>
         <DndContext
           sensors={sensors}

@@ -1,11 +1,12 @@
 import { countedDays, timeAccountBalance, addDays } from '@dienst/rules';
+import type { OvertimeMode } from '@dienst/shared';
 import type { DbOrTrx } from '../db';
 import { resolveHolidays } from './holidays';
 
 export interface LedgerLine {
   /** YYYY-MM, or the entry date for manual lines */
   month: string;
-  type: 'opening_balance' | 'worked' | 'absence_credit' | 'target' | 'correction' | 'payout';
+  type: 'opening_balance' | 'worked' | 'absence_credit' | 'target' | 'correction' | 'payout' | 'payout_auto';
   hours: number;
   note?: string | null;
   entryId?: number;
@@ -14,6 +15,8 @@ export interface Ledger {
   balanceHours: number;
   asOf: string;
   lines: LedgerLine[];
+  /** what happens to hours above the target (current contract) */
+  overtimeMode: OvertimeMode;
 }
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
@@ -34,7 +37,9 @@ const monthsBetween = (from: string, to: string): string[] => {
 /**
  * SPEC 4.15 and the backlog ledger. The lines opening balance, worked (approved hours), absence credit and target are derived
  * from approved data; correction and payout lines are the stored manual entries. Their sum is the balance.
- * Returns null when the employee has no time account (hourly or no target).
+ * Every employee with a weekly or monthly target has a time account, hourly or salaried. With overtime mode 'payout' the
+ * hours above the target of a month are paid out: a derived line `payout_auto` takes them out of the balance, so only
+ * the shortfall carries on. Returns null when the contract has no target.
  */
 export async function buildLedger(db: DbOrTrx, employeeId: number, today: string): Promise<Ledger | null> {
   const emp = await db
@@ -51,7 +56,7 @@ export async function buildLedger(db: DbOrTrx, employeeId: number, today: string
     .orderBy('valid_from', 'desc')
     .limit(1)
     .executeTakeFirst();
-  if (!c || c.working_model !== 'salary') return null;
+  if (!c) return null;
   const weekly =
     c.target_hours_per_week ??
     (c.target_hours_per_month != null ? (c.target_hours_per_month * 12) / 52 : null);
@@ -86,6 +91,7 @@ export async function buildLedger(db: DbOrTrx, employeeId: number, today: string
       asOf: today,
       balanceHours: r2(emp.opening_balance_hours + manualSum),
       lines: [opening, ...manualLines],
+      overtimeMode: c.overtime_mode as OvertimeMode,
     };
 
   const punches = await db
@@ -156,6 +162,7 @@ export async function buildLedger(db: DbOrTrx, employeeId: number, today: string
     const days = Math.round((Date.parse(b) - Date.parse(a)) / 86400000) + 1;
     targets.push((monthly * days) / dim - daily * unpaidDays.filter((d) => d.startsWith(m)).length);
   }
+  let paidOut = 0;
   months.forEach((m, i) => {
     const worked = punches
       .filter((p) => p.shift_date.startsWith(m))
@@ -164,11 +171,22 @@ export async function buildLedger(db: DbOrTrx, employeeId: number, today: string
     if (worked) lines.push({ month: m, type: 'worked', hours: r2(worked) });
     if (credit) lines.push({ month: m, type: 'absence_credit', hours: r2(credit) });
     lines.push({ month: m, type: 'target', hours: -r2(targets[i]!) });
+    // payout mode: the month's surplus over the target is paid out and leaves the balance (a shortfall stays)
+    const surplus = r2(worked + credit - targets[i]!);
+    if (c.overtime_mode === 'payout' && surplus > 0) {
+      lines.push({ month: m, type: 'payout_auto', hours: -surplus });
+      paidOut += surplus;
+    }
   });
-  return { asOf: today, balanceHours: r2(balance + manualSum), lines: [...lines, ...manualLines] };
+  return {
+    asOf: today,
+    balanceHours: r2(balance + manualSum - paidOut),
+    lines: [...lines, ...manualLines],
+    overtimeMode: c.overtime_mode as OvertimeMode,
+  };
 }
 
-/** SPEC 4.15. Returns null when the employee has no time account (hourly or no target). */
+/** SPEC 4.15. Returns null when the employee has no time account (no weekly or monthly target). */
 export async function computeTimeAccount(
   db: DbOrTrx,
   employeeId: number,

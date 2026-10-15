@@ -4,6 +4,7 @@ import { computeTimeAccount } from '../src/services/timeAccount';
 import {
   call,
   ctxHolder,
+  empBody,
   employeeTokens,
   planFixture,
   startApp,
@@ -15,6 +16,8 @@ import {
 let ctx: TestCtx;
 let fx: PlanFx;
 let emp: Record<string, string>;
+/** an hourly employee without any weekly or monthly target: the only kind without a time account */
+let noTarget: number;
 
 const get = (url: string, token: string) =>
   ctx.app.inject({ method: 'GET', url: `/api/v1${url}`, headers: { authorization: `Bearer ${token}` } });
@@ -49,6 +52,21 @@ beforeAll(async () => {
   ctxHolder.ctx = ctx;
   fx = await planFixture(ctx);
   emp = await employeeTokens(ctx, fx, ['maria', 'jon', 'cap']);
+  noTarget = (
+    await call(
+      ctx,
+      'POST',
+      '/employees',
+      fx.adminA.token,
+      empBody(fx, {
+        firstName: 'Free',
+        lastName: 'Lance',
+        workingModel: 'hourly',
+        targetHoursPerWeek: null,
+        targetHoursPerMonth: null,
+      }),
+    )
+  ).body.employeeId;
 });
 afterAll(async () => stopApp(ctx));
 
@@ -119,10 +137,10 @@ describe('time account ledger', () => {
         })
       ).status,
     ).toBe(400);
-    // hourly employees have no account
+    // an employee without a target has no account; an hourly one with a target has
     expect(
       (
-        await call(ctx, 'POST', `/employees/${fx.emp.cap}/time-account/entries`, fx.adminA.token, {
+        await call(ctx, 'POST', `/employees/${noTarget}/time-account/entries`, fx.adminA.token, {
           date: '2026-10-01',
           type: 'correction',
           hours: 1,
@@ -134,9 +152,13 @@ describe('time account ledger', () => {
       (await call(ctx, 'GET', `/employees/${fx.emp.maria}/time-account/ledger`, fx.mgrA2.token)).status,
     ).toBe(403);
     expect(
-      (await call(ctx, 'GET', `/employees/${fx.emp.cap}/time-account/ledger`, fx.adminA.token)).body
+      (await call(ctx, 'GET', `/employees/${noTarget}/time-account/ledger`, fx.adminA.token)).body
         .balanceHours,
     ).toBeNull();
+    expect(
+      (await call(ctx, 'GET', `/employees/${fx.emp.cap}/time-account/ledger`, fx.adminA.token)).body
+        .balanceHours,
+    ).toBeTypeOf('number');
   });
 
   it('comp time needs a sufficient balance (reason otherwise) and a time account', async () => {
@@ -160,7 +182,7 @@ describe('time account ledger', () => {
       (
         await call(ctx, 'POST', '/schedule/absence', fx.adminA.token, {
           ...abs,
-          employeeId: fx.emp.cap,
+          employeeId: noTarget,
           from: '2026-12-08',
           to: '2026-12-08',
         })
@@ -608,7 +630,7 @@ describe('analytics', () => {
       ctx,
       'GET',
       `/analytics/summary?from=2026-09-01&to=2026-09-30&hotelIds=${fx.hotelA1}`,
-      fx.mgrA1.token,
+      fx.adminA.token,
     );
     expect(a.status).toBe(200);
     const rez = a.body.departments.find((d: any) => d.name === 'Rezeption');
@@ -620,12 +642,13 @@ describe('analytics', () => {
     expect(a.body.approvals.buckets).toBeDefined();
     expect(a.body.openSlots).toBeTypeOf('number');
     expect(JSON.stringify(a.body)).not.toMatch(/Maria|Jon|Tom/);
+    // managers have no access to analytics, even for their own hotel
     expect(
       (
         await call(
           ctx,
           'GET',
-          `/analytics/summary?from=2026-09-01&to=2026-09-30&hotelIds=${fx.hotelB1}`,
+          `/analytics/summary?from=2026-09-01&to=2026-09-30&hotelIds=${fx.hotelA1}`,
           fx.mgrA1.token,
         )
       ).status,

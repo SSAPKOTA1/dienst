@@ -318,6 +318,76 @@ describe('wishes', () => {
   });
 });
 
+describe('weekday preferences and wish marks on the calendar', () => {
+  const grid = (token: string, from: string) =>
+    call(ctx, 'GET', `/schedule/grid?hotelIds=${fx.hotelA1}&view=employee&range=week&from=${from}`, token);
+  const cellOf = (g: any, employeeId: number, date: string) =>
+    g.body.rows.find((r: any) => r.employeeId === employeeId).cells.find((c: any) => c.date === date);
+
+  it('are saved per employee, validated and replaced as a whole', async () => {
+    const put = (body: unknown, token = emp.tom!) => call(ctx, 'PUT', '/me/weekday-prefs', token, body);
+    expect(
+      (
+        await put({
+          items: [
+            { weekday: 1, preference: 'good', shiftId: fx.early },
+            { weekday: 7, preference: 'bad' },
+          ],
+        })
+      ).status,
+    ).toBe(200);
+    const list = await call(ctx, 'GET', '/me/weekday-prefs', emp.tom!);
+    expect(list.body.items).toEqual([
+      { weekday: 1, preference: 'good', shiftId: fx.early },
+      { weekday: 7, preference: 'bad', shiftId: null },
+    ]);
+    // a weekday twice, a shift of another hotel, a shift with "bad", a manager
+    expect(
+      (
+        await put({
+          items: [
+            { weekday: 2, preference: 'good' },
+            { weekday: 2, preference: 'bad' },
+          ],
+        })
+      ).status,
+    ).toBe(400);
+    expect(
+      (await put({ items: [{ weekday: 2, preference: 'good', shiftId: fx.early2 }] }, emp.jon!)).status,
+    ).toBe(400); // Jon works at hotel A1 only
+    expect((await put({ items: [{ weekday: 2, preference: 'bad', shiftId: fx.early }] })).status).toBe(400);
+    expect((await put({ items: [] }, fx.mgrA1.token)).status).toBe(403);
+    // the failed saves left the list as it was
+    expect((await call(ctx, 'GET', '/me/weekday-prefs', emp.tom!)).body.items).toHaveLength(2);
+  });
+
+  it('show on the grid for planners: weekday preference, a dated wish wins, no reason text', async () => {
+    // Tom: Monday good (early), Sunday bad; plus a leave wish on Wednesday 2027-06-09 with a private reason
+    const lw = await call(ctx, 'POST', '/me/leave-wishes', emp.tom!, {
+      from: '2027-06-09',
+      to: '2027-06-09',
+      priority: 1,
+      reason: 'private-reason-xyz',
+    });
+    expect(lw.status).toBe(201);
+    const g = await grid(fx.mgrA1.token, '2027-06-07'); // Monday of that week
+    expect(g.status).toBe(200);
+    const tom = fx.emp.tom!;
+    expect(cellOf(g, tom, '2027-06-07').wishes).toEqual([
+      { kind: 'work', source: 'weekday', shiftName: expect.any(String), priority: null, status: null },
+    ]);
+    expect(cellOf(g, tom, '2027-06-13').wishes).toMatchObject([{ kind: 'off', source: 'weekday' }]);
+    expect(cellOf(g, tom, '2027-06-09').wishes).toMatchObject([
+      { kind: 'off', source: 'leave', priority: 1 },
+    ]);
+    expect(cellOf(g, tom, '2027-06-08').wishes).toEqual([]);
+    // the reason never leaves the portal and the wish decision screen
+    expect(JSON.stringify(g.body)).not.toContain('private-reason-xyz');
+    // an employee cannot read the planner grid
+    expect((await grid(emp.tom!, '2027-06-07')).status).toBe(403);
+  });
+});
+
 describe('vacation planner overview', () => {
   it('lists entitlement, carryover, taken, planned and requested per employee', async () => {
     await call(ctx, 'POST', '/me/time-off-requests', emp.tom!, { from: '2027-06-07', to: '2027-06-08' });
@@ -333,6 +403,75 @@ describe('vacation planner overview', () => {
       (await call(ctx, 'GET', `/vacation/overview?year=2027&hotelIds=${fx.hotelA2}`, fx.mgrA1.token)).status,
     ).toBe(403);
     expect((await call(ctx, 'GET', '/vacation/overview?year=2027', emp.jon!)).status).toBe(403);
+  });
+});
+
+describe('vacation detail of one employee', () => {
+  const detail = (id: number, token: string, year = 2027) =>
+    call(ctx, 'GET', `/vacation/employees/${id}?year=${year}`, token);
+
+  it('shows the same figures as the overview row; outside the caller scope it is not found', async () => {
+    const o = await call(ctx, 'GET', `/vacation/overview?year=2027&hotelIds=${fx.hotelA1}`, fx.mgrA1.token);
+    const jon = o.body.employees.find((e: any) => e.displayName === 'Jon T.');
+    const d = await detail(jon.employeeId, fx.mgrA1.token);
+    expect(d.status).toBe(200);
+    expect(d.body.employee).toEqual(jon);
+    expect(d.body.year).toBe(2027);
+    // a manager of another hotel and an employee have no access
+    expect((await detail(jon.employeeId, fx.mgrA2.token)).status).toBe(404);
+    expect((await detail(jon.employeeId, emp.jon!)).status).toBe(403);
+  });
+
+  it('edits an absence in one transaction: the new dates replace the old ones, a failing edit keeps the old', async () => {
+    const created = await call(ctx, 'POST', '/schedule/absence', fx.adminA.token, {
+      employeeId: fx.emp.maria,
+      from: '2027-09-06',
+      to: '2027-09-07',
+      type: 'annual_leave',
+    });
+    expect(created.status).toBe(201);
+    const id = created.body.absenceId;
+    const entries = async () => (await detail(fx.emp.maria!, fx.adminA.token)).body.employee.entries;
+
+    expect((await entries()).some((e: any) => e.from === '2027-09-06' && e.to === '2027-09-07')).toBe(true);
+    const ok = await call(ctx, 'PUT', `/schedule/absence/${id}`, fx.adminA.token, {
+      from: '2027-09-07',
+      to: '2027-09-08',
+      type: 'annual_leave',
+    });
+    expect(ok.status).toBe(200);
+    const after = await entries();
+    expect(after.some((e: any) => e.from === '2027-09-06')).toBe(false);
+    const moved = after.find((e: any) => e.from === '2027-09-07' && e.to === '2027-09-08');
+    expect(moved).toBeDefined();
+
+    // an end before the start is refused and the absence stays as it was
+    const bad = await call(ctx, 'PUT', `/schedule/absence/${moved.id}`, fx.adminA.token, {
+      from: '2027-09-10',
+      to: '2027-09-09',
+      type: 'annual_leave',
+    });
+    expect(bad.status).toBe(400);
+    expect((await entries()).some((e: any) => e.id === moved.id)).toBe(true);
+    // an unknown absence and a wrong role
+    expect(
+      (
+        await call(ctx, 'PUT', '/schedule/absence/999999', fx.adminA.token, {
+          from: '2027-09-10',
+          to: '2027-09-10',
+          type: 'annual_leave',
+        })
+      ).status,
+    ).toBe(404);
+    expect(
+      (
+        await call(ctx, 'PUT', `/schedule/absence/${moved.id}`, emp.maria!, {
+          from: '2027-09-10',
+          to: '2027-09-10',
+          type: 'annual_leave',
+        })
+      ).status,
+    ).toBe(403);
   });
 });
 

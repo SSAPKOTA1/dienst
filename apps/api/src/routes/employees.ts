@@ -1,4 +1,4 @@
-import type { ContractDto, EmployeeDetailDto, EmployeeSummaryDto } from '@dienst/shared';
+import type { ContractDto, EmployeeDetailDto, EmployeeSummaryDto, OvertimeMode } from '@dienst/shared';
 import type { DB } from '../db';
 import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
@@ -15,6 +15,7 @@ import { csvIds, idParam, isoDate, pageQuery, paged } from '../lib/http';
 import { issueInvitation, sendInvitationMail } from '../services/accounts';
 import {
   contractSchema,
+  contractValues,
   createEmployee,
   employeeCreateSchema,
   insertContract,
@@ -99,6 +100,7 @@ const contractOut = (c: Selectable<DB['employee_contract']>): ContractDto => ({
   vacationDaysPerYear: c.vacation_days_per_year,
   monthlyHoursCap: c.monthly_hours_cap,
   getsPublicHoliday: c.gets_public_holiday,
+  overtimeMode: c.overtime_mode as OvertimeMode,
 });
 
 export async function employeeDetail(
@@ -597,7 +599,11 @@ export async function employeeRoutes(app: FastifyInstance) {
               .execute();
           }
         }
-        const row = await insertContract(trx, e.employee_id, p, b);
+        // a new version keeps the overtime setting of the previous one unless a new one is given
+        const row = await insertContract(trx, e.employee_id, p, {
+          ...b,
+          overtimeMode: b.overtimeMode ?? (prev?.overtime_mode as OvertimeMode | undefined),
+        });
         await audit(trx, actorOf(req), {
           action: 'contract_changed',
           entityType: 'employee_contract',
@@ -610,6 +616,81 @@ export async function employeeRoutes(app: FastifyInstance) {
         return row.id;
       });
       return { contractId: id };
+    },
+  );
+
+  // Corrects one existing contract version (its start, end or terms). Neighbouring versions are adjusted so the
+  // history stays gapless and non-overlapping. Versions that overlap a closed payroll period cannot be changed.
+  r.put(
+    '/employees/:id/contracts/:contractId',
+    {
+      preValidation: requireRole(AD, SA),
+      schema: {
+        params: z.object({ id: idParam.shape.id, contractId: idParam.shape.id }),
+        body: contractSchema,
+      },
+    },
+    async (req) => {
+      const p = getPrincipal(req);
+      const b = req.body;
+      await tx(async (trx) => {
+        const { e } = await employeeView(trx, p, req.params.id);
+        const versions = await trx
+          .selectFrom('employee_contract')
+          .selectAll()
+          .where('employee_id', '=', e.employee_id)
+          .orderBy('valid_from', 'asc')
+          .execute();
+        const idx = versions.findIndex((v) => v.id === req.params.contractId);
+        if (idx < 0) throw notFound('Contract');
+        const cur = versions[idx]!;
+        const prev = versions[idx - 1];
+        const next = versions[idx + 1];
+        if (b.validTo && b.validTo < b.validFrom)
+          throw new AppError('VALIDATION', 'validTo must not be before validFrom');
+        if (prev && b.validFrom <= prev.valid_from)
+          throw new AppError(
+            'VALIDATION',
+            'validFrom must be after the start of the previous contract version',
+          );
+        if (next && (!b.validTo || b.validTo >= next.valid_from))
+          throw new AppError('VALIDATION', 'validTo must end before the next contract version starts', {
+            nextValidFrom: next.valid_from,
+          });
+        // a closed payroll period must not change, neither the old nor the new dates of this version
+        const from = [cur.valid_from, b.validFrom].sort()[0]!;
+        const to = [cur.valid_to ?? '9999-12-31', b.validTo ?? '9999-12-31'].sort().at(-1)!;
+        const closed = await trx
+          .selectFrom('payroll_period')
+          .select('id')
+          .where('company_id', '=', e.company_id)
+          .where((eb) => eb.or([eb('hotel_id', 'is', null), eb('hotel_id', '=', e.primary_hotel_id)]))
+          .where('status', '=', 'closed')
+          .where('period_start', '<=', to)
+          .where('period_end', '>=', from)
+          .executeTakeFirst();
+        if (closed)
+          throw new AppError('PERIOD_CLOSED', 'The payroll period is closed', { periodId: closed.id });
+        if (prev) {
+          await trx
+            .updateTable('employee_contract')
+            .set({ valid_to: addDays(b.validFrom, -1) })
+            .where('id', '=', prev.id)
+            .execute();
+        }
+        const values = contractValues(b);
+        await trx.updateTable('employee_contract').set(values).where('id', '=', cur.id).execute();
+        await audit(trx, actorOf(req), {
+          action: 'contract_corrected',
+          entityType: 'employee_contract',
+          entityId: cur.id,
+          companyId: e.company_id,
+          hotelId: e.primary_hotel_id,
+          old: contractOut(cur),
+          new: b,
+        });
+      });
+      return { contractId: req.params.contractId };
     },
   );
 

@@ -933,6 +933,13 @@
                     "items": {
                       "type": "string"
                     }
+                  },
+                  "defaultOvertimeMode": {
+                    "type": "string",
+                    "enum": [
+                      "account",
+                      "payout"
+                    ]
                   }
                 }
               }
@@ -2012,6 +2019,13 @@
                   "isFloater": {
                     "type": "boolean"
                   },
+                  "overtimeMode": {
+                    "type": "string",
+                    "enum": [
+                      "account",
+                      "payout"
+                    ]
+                  },
                   "phone": {
                     "nullable": true,
                     "type": "string",
@@ -2354,6 +2368,13 @@
                   },
                   "getsPublicHoliday": {
                     "type": "boolean"
+                  },
+                  "overtimeMode": {
+                    "type": "string",
+                    "enum": [
+                      "account",
+                      "payout"
+                    ]
                   }
                 },
                 "required": [
@@ -2377,6 +2398,133 @@
             },
             "in": "path",
             "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/employees/{id}/contracts/{contractId}": {
+      "put": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "validFrom": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  "validTo": {
+                    "nullable": true,
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  "employmentType": {
+                    "type": "string",
+                    "enum": [
+                      "full_time",
+                      "part_time",
+                      "minijob",
+                      "werkstudent",
+                      "apprentice",
+                      "short_term",
+                      "other"
+                    ]
+                  },
+                  "workingModel": {
+                    "type": "string",
+                    "enum": [
+                      "hourly",
+                      "salary"
+                    ]
+                  },
+                  "workDaysPerWeek": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 7
+                  },
+                  "workingWeekdays": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 7
+                    }
+                  },
+                  "targetHoursPerWeek": {
+                    "nullable": true,
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 80
+                  },
+                  "targetHoursPerMonth": {
+                    "nullable": true,
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 350
+                  },
+                  "vacationDaysPerYear": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 60
+                  },
+                  "monthlyHoursCap": {
+                    "nullable": true,
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 350
+                  },
+                  "getsPublicHoliday": {
+                    "type": "boolean"
+                  },
+                  "overtimeMode": {
+                    "type": "string",
+                    "enum": [
+                      "account",
+                      "payout"
+                    ]
+                  }
+                },
+                "required": [
+                  "validFrom",
+                  "employmentType",
+                  "workingModel",
+                  "workDaysPerWeek",
+                  "vacationDaysPerYear"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "contractId",
             "required": true
           }
         ],
@@ -2995,6 +3143,34 @@
             },
             "in": "query",
             "name": "range",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "in": "query",
+            "name": "from",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/schedule/shared": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "hotelIds",
             "required": false
           },
           {
@@ -4323,6 +4499,92 @@
     },
     "/api/v1/schedule/absence/{id}": {
       "delete": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "put": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  "to": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "sick_leave",
+                      "off_day",
+                      "annual_leave",
+                      "unpaid_leave",
+                      "vocational_school",
+                      "comp_time",
+                      "special_leave",
+                      "child_sick",
+                      "training",
+                      "parental_leave",
+                      "maternity_leave",
+                      "rest_day"
+                    ]
+                  },
+                  "halfDay": {
+                    "type": "string",
+                    "enum": [
+                      "morning",
+                      "afternoon"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "certificateStatus": {
+                    "type": "string",
+                    "enum": [
+                      "not_required",
+                      "pending",
+                      "received"
+                    ]
+                  },
+                  "overrideReason": {
+                    "type": "string",
+                    "minLength": 5,
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "from",
+                  "to",
+                  "type"
+                ]
+              }
+            }
+          }
+        },
         "parameters": [
           {
             "schema": {
@@ -6561,6 +6823,87 @@
         }
       }
     },
+    "/api/v1/vacation/overview/export": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 2000,
+              "maximum": 2100
+            },
+            "in": "query",
+            "name": "year",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "hotelIds",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": "xlsx",
+              "type": "string",
+              "enum": [
+                "xlsx"
+              ]
+            },
+            "in": "query",
+            "name": "format",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/schedule/month/export": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+            },
+            "in": "query",
+            "name": "month",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "hotelIds",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": "xlsx",
+              "type": "string",
+              "enum": [
+                "xlsx"
+              ]
+            },
+            "in": "query",
+            "name": "format",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
     "/api/v1/timesheets": {
       "get": {
         "parameters": [
@@ -6964,6 +7307,38 @@
         }
       }
     },
+    "/api/v1/vacation/employees/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 2000,
+              "maximum": 2100
+            },
+            "in": "query",
+            "name": "year",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
     "/api/v1/me/shifts": {
       "get": {
         "responses": {
@@ -7018,6 +7393,69 @@
         }
       },
       "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/me/weekday-prefs": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "put": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "items": {
+                    "maxItems": 7,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "weekday": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 7
+                        },
+                        "preference": {
+                          "type": "string",
+                          "enum": [
+                            "good",
+                            "bad"
+                          ]
+                        },
+                        "shiftId": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": 0,
+                          "exclusiveMinimum": true,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "weekday",
+                        "preference"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "items"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Default Response"
@@ -8026,7 +8464,9 @@
                       "messages",
                       "documents",
                       "calendar_feed",
-                      "team_calendar"
+                      "team_calendar",
+                      "analytics_late",
+                      "analytics_long_stay"
                     ]
                   },
                   "enabled": {
@@ -8063,6 +8503,70 @@
     },
     "/api/v1/me/features": {
       "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/patterns": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "hotelIds",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "in": "query",
+            "name": "from",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "in": "query",
+            "name": "to",
+            "required": true
+          },
+          {
+            "schema": {
+              "default": "department",
+              "type": "string",
+              "enum": [
+                "hotel",
+                "department",
+                "shift"
+              ]
+            },
+            "in": "query",
+            "name": "level",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": "month",
+              "type": "string",
+              "enum": [
+                "week",
+                "month"
+              ]
+            },
+            "in": "query",
+            "name": "granularity",
+            "required": false
+          }
+        ],
         "responses": {
           "200": {
             "description": "Default Response"

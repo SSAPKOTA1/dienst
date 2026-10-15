@@ -601,7 +601,15 @@ describe('rule profiles (only stricter than the law)', () => {
       minorDailyMaxMinutes: 480,
       sundaysFreeMin: 15,
       nightWorkerNights: 48,
+      weeklyAverageMaxMinutes: 2880,
     });
+  });
+
+  it('the weekly average limit may only be stricter: at most 2880, at least 1200', () => {
+    expect(validateLimits({ weeklyAverageMaxMinutes: 2880 })).toEqual([]);
+    expect(validateLimits({ weeklyAverageMaxMinutes: 2400 })).toEqual([]);
+    expect(validateLimits({ weeklyAverageMaxMinutes: 2881 })).toHaveLength(1);
+    expect(validateLimits({ weeklyAverageMaxMinutes: 1199 })).toHaveLength(1);
   });
 });
 

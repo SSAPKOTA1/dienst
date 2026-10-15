@@ -242,6 +242,7 @@ export interface EmployeeContract {
   gets_public_holiday: Generated<boolean>;
   id: Generated<number>;
   monthly_hours_cap: Numeric | null;
+  overtime_mode: Generated<string>;
   rest_vacation_days_per_year: Numeric | null;
   target_hours_per_month: Numeric | null;
   target_hours_per_week: Numeric | null;
@@ -336,6 +337,16 @@ export interface EmployeeVacationAllowance {
   year: number;
 }
 
+export interface EmployeeWeekdayPref {
+  created_at: Generated<Timestamp>;
+  employee_id: number;
+  id: Generated<number>;
+  preference: string;
+  shift_id: number | null;
+  updated_at: Generated<Timestamp>;
+  weekday: number;
+}
+
 export interface FeedComment {
   author_name: string;
   author_user_id: number;
@@ -368,6 +379,7 @@ export interface Hotel {
   company_id: number;
   created_at: Generated<Timestamp | null>;
   deactivated_at: Timestamp | null;
+  default_overtime_mode: Generated<string>;
   employee_hours_visibility: Generated<string>;
   federal_state: string | null;
   id: Generated<number>;
@@ -858,6 +870,7 @@ export interface DB {
   employee_qualification: EmployeeQualification;
   employee_shift_wish: EmployeeShiftWish;
   employee_vacation_allowance: EmployeeVacationAllowance;
+  employee_weekday_pref: EmployeeWeekdayPref;
   feed_comment: FeedComment;
   feed_like: FeedLike;
   feed_post: FeedPost;

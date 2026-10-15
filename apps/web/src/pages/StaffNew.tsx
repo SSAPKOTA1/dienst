@@ -38,6 +38,7 @@ export function StaffNew() {
     workingModel: 'salary',
     workingWeekdays: [1, 2, 3, 4, 5],
     targetKind: 'week' as 'week' | 'month',
+    overtime: '' as '' | 'account' | 'payout',
     target: '40',
     vacationDaysPerYear: '30',
     allocated: '',
@@ -94,6 +95,7 @@ export function StaffNew() {
           ...(f.targetKind === 'week'
             ? { targetHoursPerWeek: num(f.target) }
             : { targetHoursPerMonth: num(f.target) }),
+          ...(f.overtime ? { overtimeMode: f.overtime } : {}),
           vacationDaysPerYear: num(f.vacationDaysPerYear),
           vacationDaysAllocatedThisYear: num(f.allocated),
           vacationDaysUsedThisYear: num(f.used),
@@ -491,6 +493,18 @@ export function StaffNew() {
                     { value: 'month', label: t('Monat') },
                   ]}
                 />
+              </Field>
+              <Field label={t('Überstunden')} htmlFor="ot">
+                <select
+                  id="ot"
+                  className="input"
+                  value={f.overtime}
+                  onChange={(e) => set({ overtime: e.target.value as '' | 'account' | 'payout' })}
+                >
+                  <option value="">{t('Standard des Hotels')}</option>
+                  <option value="account">{t('Im Zeitkonto behalten')}</option>
+                  <option value="payout">{t('Auszahlen')}</option>
+                </select>
               </Field>
               <Field label={t('Urlaubstage pro Jahr')} htmlFor="vac">
                 <input

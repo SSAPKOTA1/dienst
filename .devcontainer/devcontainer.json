@@ -1,0 +1,15 @@
+{
+  "name": "Dienst",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "forwardPorts": [5173, 3000, 8025],
+  "portsAttributes": {
+    "5173": { "label": "Web app", "onAutoForward": "openBrowser" },
+    "3000": { "label": "API", "onAutoForward": "silent" },
+    "8025": { "label": "Mail (MailHog)", "onAutoForward": "silent" }
+  },
+  "postCreateCommand": "corepack enable && pnpm install --frozen-lockfile && (test -f .env || cp .env.example .env)",
+  "remoteUser": "node"
+}

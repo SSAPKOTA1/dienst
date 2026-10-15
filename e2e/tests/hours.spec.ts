@@ -58,14 +58,25 @@ test.describe('Stunden und Regeln', () => {
     await page.getByRole('button', { name: 'Sonntage und Nächte' }).click();
     await expect(page.getByTestId('compliance-sundays').locator('tbody tr').first()).toBeVisible();
 
+    await page.goto('/staff');
+    // analytics is for admins and super admins only: managers have no menu entry (and the server refuses the data)
+    await expect(page.getByRole('link', { name: 'Auswertung' })).toHaveCount(0);
+    await page.getByText(/^Maria G/).first().click();
+    await expect(page.getByTestId('ledger-balance')).toContainText('h');
+    await expect(page.getByTestId('ledger-line').first()).toBeVisible();
+  });
+
+  test('admin sees the analytics summary and the patterns; late arrivals and long stays are off by default', async ({ page }) => {
+    await login(page, 'admin@demo.test', { totp: true, role: /Administration/ });
     await page.goto('/analytics');
     await expect(page.getByTestId('an-pending')).toContainText(/\d/);
     await expect(page.getByTestId('an-table').locator('tbody tr').first()).toBeVisible();
     await expect(page.getByText('Es gibt keine Rangliste')).toBeVisible();
-
-    await page.goto('/staff');
-    await page.getByText(/^Maria G/).first().click();
-    await expect(page.getByTestId('ledger-balance')).toContainText('h');
-    await expect(page.getByTestId('ledger-line').first()).toBeVisible();
+    // the patterns: sickness and overtime are there; the behaviour panels stay off until the company agrees them
+    await expect(page.getByTestId('patterns')).toBeVisible();
+    await expect(page.getByTestId('pattern-sick')).toBeVisible();
+    await expect(page.getByTestId('pattern-overtime')).toBeVisible();
+    await expect(page.getByTestId('pattern-late-off')).toBeVisible();
+    await expect(page.getByTestId('pattern-longStay-off')).toBeVisible();
   });
 });

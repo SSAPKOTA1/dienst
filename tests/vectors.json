@@ -373,5 +373,63 @@
       "opening": 5,
       "expected": 15
     }
+  ],
+  "weeklyAverage": [
+    {
+      "windowMinutes": 0,
+      "ownMinutes": 2400,
+      "weeks": 1,
+      "expectedAverageMinutes": 2400,
+      "exceeds": false
+    },
+    {
+      "windowMinutes": 0,
+      "ownMinutes": 2881,
+      "weeks": 1,
+      "expectedAverageMinutes": 2881,
+      "exceeds": true
+    },
+    {
+      "windowMinutes": 0,
+      "ownMinutes": 2880,
+      "weeks": 1,
+      "expectedAverageMinutes": 2880,
+      "exceeds": false
+    },
+    {
+      "windowMinutes": 74880,
+      "ownMinutes": 480,
+      "weeks": 26,
+      "expectedAverageMinutes": 2898.46,
+      "exceeds": true
+    },
+    {
+      "windowMinutes": 74400,
+      "ownMinutes": 480,
+      "weeks": 26,
+      "expectedAverageMinutes": 2880,
+      "exceeds": false
+    },
+    {
+      "windowMinutes": 60000,
+      "ownMinutes": 0,
+      "weeks": 26,
+      "expectedAverageMinutes": 2307.69,
+      "exceeds": false
+    },
+    {
+      "windowMinutes": 9000,
+      "ownMinutes": 600,
+      "weeks": 4,
+      "expectedAverageMinutes": 2400,
+      "exceeds": false
+    },
+    {
+      "windowMinutes": 12000,
+      "ownMinutes": 600,
+      "weeks": 4,
+      "expectedAverageMinutes": 3150,
+      "exceeds": true
+    }
   ]
 }

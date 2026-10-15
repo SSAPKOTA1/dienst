@@ -21,6 +21,8 @@ export const RESTRICTIONS: readonly Restriction[] = [
   // 10 h <= rest < 11 h: allowed with a reason (compensation); below 10 h is statutory and always blocked
   { code: 'REST_PERIOD_SHORT', levels: ['reason', 'hard'], default: 'reason' },
   { code: 'MONTHLY_CAP', levels: ['soft', 'hard'], default: 'soft' },
+  // average of more than 48 h per week over 26 weeks: a warning first, can be made strict
+  { code: 'WEEKLY_AVERAGE', levels: ['soft', 'hard'], default: 'soft' },
   { code: 'SUNDAY_LIMIT', levels: ['soft', 'hard'], default: 'soft' },
   { code: 'NIGHT_WORKER', levels: ['soft', 'hard'], default: 'soft' },
   { code: 'ABSENCE_CONFLICT', levels: ['soft', 'hard'], default: 'hard' },

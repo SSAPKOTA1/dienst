@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { download, useGet, useSend } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
-import { fdate, fnum, fsigned } from '../../lib/format';
+import { WEEKDAYS, fdate, fnum, fsigned } from '../../lib/format';
 import { Dialog, ErrorNote, Field, useToast } from '../../components/ui';
 import { LedgerTable } from '../../components/Ledger';
 import { PortalExtras } from '../PortalExtras';
@@ -130,6 +130,7 @@ export function PortalWishes() {
           {t('Schichtwunsch')}
         </button>
       </div>
+      <WeekdayPrefs />
       {[
         ...(leave.data?.items ?? []).map((w) => ({ ...w, kind: 'leave' as const })),
         ...(shift.data?.items ?? []).map((w) => ({ ...w, kind: 'shift' as const })),
@@ -168,6 +169,102 @@ export function PortalWishes() {
     </section>
   );
 }
+type PrefItem = { weekday: number; preference: 'good' | 'bad'; shiftId: number | null };
+
+/** Recurring preferences per weekday ("good" with an optional shift, or "rather off"). Planners see them on the
+ *  calendar as small marks; they are never a promise. */
+function WeekdayPrefs() {
+  const { t } = useTranslation();
+  const toast = useToast();
+  const saved = useGet<{ items: PrefItem[] }>('/me/weekday-prefs');
+  const shifts = useGet<MyShiftList>('/me/shifts');
+  const save = useSend<{ items: PrefItem[] }>('PUT', '/me/weekday-prefs');
+  const [draft, setDraft] = useState<Record<number, { pref: string; shiftId: string }> | null>(null);
+  const current = (day: number) =>
+    draft?.[day] ??
+    (() => {
+      const x = saved.data?.items.find((i) => i.weekday === day);
+      return { pref: x?.preference ?? '', shiftId: x?.shiftId ? String(x.shiftId) : '' };
+    })();
+  const set = (day: number, v: Partial<{ pref: string; shiftId: string }>) => {
+    const base = Object.fromEntries([1, 2, 3, 4, 5, 6, 7].map((d) => [d, current(d)]));
+    setDraft({ ...base, [day]: { ...current(day), ...v } });
+  };
+  return (
+    <div style={line} data-testid="weekday-prefs">
+      <div style={{ fontWeight: 700, marginBottom: 4 }}>{t('Wochentage')}</div>
+      <div style={{ fontSize: 12, marginBottom: 6 }}>
+        {t('Welche Wochentage und Schichten passen gut? Das ist ein Wunsch, kein Anspruch.')}
+      </div>
+      {[1, 2, 3, 4, 5, 6, 7].map((day) => {
+        const c = current(day);
+        return (
+          <div key={day} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
+            <label htmlFor={`wp-${day}`} style={{ width: 28 }}>
+              {t(WEEKDAYS[day - 1]!)}
+            </label>
+            <select
+              id={`wp-${day}`}
+              className="input"
+              value={c.pref}
+              onChange={(e) =>
+                set(day, { pref: e.target.value, shiftId: e.target.value === 'good' ? c.shiftId : '' })
+              }
+            >
+              <option value="">{t('keine Angabe')}</option>
+              <option value="good">{t('passt gut')}</option>
+              <option value="bad">{t('lieber frei')}</option>
+            </select>
+            {c.pref === 'good' && (
+              <select
+                className="input"
+                aria-label={t('Schicht')}
+                value={c.shiftId}
+                onChange={(e) => set(day, { shiftId: e.target.value })}
+              >
+                <option value="">{t('egal')}</option>
+                {(shifts.data?.items ?? []).map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        );
+      })}
+      <button
+        className="btn btn-secondary"
+        disabled={!draft || save.isPending}
+        onClick={() =>
+          save.mutate(
+            {
+              items: [1, 2, 3, 4, 5, 6, 7]
+                .map((day) => ({ day, c: current(day) }))
+                .filter((x) => x.c.pref)
+                .map((x) => ({
+                  weekday: x.day,
+                  preference: x.c.pref as 'good' | 'bad',
+                  shiftId: x.c.pref === 'good' && x.c.shiftId ? Number(x.c.shiftId) : null,
+                })),
+            },
+            {
+              onSuccess: () => {
+                setDraft(null);
+                void saved.refetch();
+                toast(t('Gespeichert.'));
+              },
+            },
+          )
+        }
+      >
+        {t('Speichern')}
+      </button>
+      <ErrorNote error={save.error} />
+    </div>
+  );
+}
+
 const WISH_STATUS: Record<string, string> = {
   pending: 'offen',
   granted: 'erfüllt',

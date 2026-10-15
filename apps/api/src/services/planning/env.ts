@@ -15,6 +15,7 @@ import {
   type SeverityConfig,
   type ShiftWishRule,
   type Violation,
+  WEEKLY_AVERAGE_WEEKS,
 } from '@dienst/rules';
 import type { DbOrTrx } from '../../db';
 import { localDate, localMinutes } from '../../lib/time';
@@ -108,6 +109,8 @@ export class PlanEnv {
   qualifications = new Map<number, Array<{ id: number; validUntil: string | null }>>();
   /** qualification required per shift id (only shifts that require one) */
   shiftQualification = new Map<number, number>();
+  /** planned working minutes per entry, the 26 weeks before the range and the range itself (weekly average) */
+  weekHistory = new Map<number, Array<{ id: number; date: string; minutes: number }>>();
   /** compact year history per employee for the Sunday and night statistics */
   calendar = new Map<number, Array<{ id: number; date: string; sunday: boolean; night: boolean }>>();
 
@@ -310,6 +313,25 @@ export class PlanEnv {
       if (sev && Object.keys(sev).length) env.severities.set(p.id, sev);
     }
     if (ids.length) {
+      // the weekly average: all planned entries of the 26 weeks up to the last week of the range
+      const weekFrom = addDays(mondayOf(opts.from), -(WEEKLY_AVERAGE_WEEKS - 1) * 7);
+      const weekRows = await db
+        .selectFrom('schedule')
+        .select(['id', 'employee_id', 'shift_date', 'planned_start', 'planned_end', 'planned_break_minutes'])
+        .where('employee_id', 'in', ids)
+        .where('status', '<>', 'cancelled')
+        .where('shift_date', '>=', weekFrom)
+        .where('shift_date', '<=', addDays(opts.to, 7))
+        .execute();
+      for (const r of weekRows) {
+        const list = env.weekHistory.get(r.employee_id) ?? [];
+        list.push({
+          id: r.id,
+          date: r.shift_date,
+          minutes: (r.planned_end.getTime() - r.planned_start.getTime()) / 60000 - r.planned_break_minutes,
+        });
+        env.weekHistory.set(r.employee_id, list);
+      }
       const yearFrom = addDays(opts.from, -366);
       const yearTo = addDays(opts.to, 366);
       // the calendar only feeds the Sunday and night-work statistics: skip day shifts on weekdays in the database
@@ -417,6 +439,37 @@ export class PlanEnv {
     };
   }
 
+  /**
+   * The window of the weekly average for the entry's date: the 26 ISO weeks up to and including its week. The other
+   * planned entries count (the entry itself and the ignored ones do not); `weeks` is the number of those weeks the
+   * person has been employed, so a new employee is not diluted by weeks before the contract.
+   */
+  private weekly(
+    s: Subject,
+    emp: PlanEmployee,
+    date: string,
+    ignore: Set<number>,
+    virtual: Subject[],
+  ): { windowMinutes: number; weeks: number } {
+    const monday = mondayOf(date);
+    const from = addDays(monday, -(WEEKLY_AVERAGE_WEEKS - 1) * 7);
+    const to = addDays(monday, 6);
+    let windowMinutes = (this.weekHistory.get(s.employeeId) ?? [])
+      .filter((h) => h.date >= from && h.date <= to && !ignore.has(h.id) && h.id !== s.entryId)
+      .reduce((a, h) => a + h.minutes, 0);
+    for (const v of virtual) {
+      if (v === s || v.employeeId !== s.employeeId) continue;
+      const l = this.slotLocal(v.hotelId, v.startMs, v.endMs);
+      if (l.localDate >= from && l.localDate <= to)
+        windowMinutes += (v.endMs - v.startMs) / 60000 - v.breakMinutes;
+    }
+    const firstStart = emp.contracts.map((c) => c.validFrom).sort()[0];
+    const employedWeeks = firstStart
+      ? Math.floor((Date.parse(monday) - Date.parse(mondayOf(firstStart))) / (7 * 86400000)) + 1
+      : WEEKLY_AVERAGE_WEEKS;
+    return { windowMinutes, weeks: Math.max(1, Math.min(WEEKLY_AVERAGE_WEEKS, employedWeeks)) };
+  }
+
   check(s: Subject, virtual: Subject[] = [], skip: string[] = []): Violation[] {
     const emp = this.employees.get(s.employeeId);
     if (!emp) throw new Error(`employee ${s.employeeId} not loaded`);
@@ -468,6 +521,7 @@ export class PlanEnv {
       },
       limits: this.limits.get(s.hotelId),
       severities: this.severities.get(s.hotelId),
+      weekly: this.weekly(s, emp, local.localDate, ignore, virtual),
       calendar: {
         sundayDates: (this.calendar.get(s.employeeId) ?? [])
           .filter((c) => c.sunday && !ignore.has(c.id) && c.date !== local.localDate)

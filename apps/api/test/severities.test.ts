@@ -33,7 +33,7 @@ describe('reading and changing the settings', () => {
       const r = await get(t, t === fx.saToken ? `?companyId=${fx.companyA}` : '');
       expect(r.status).toBe(200);
       expect(r.body.customised).toBe(false);
-      expect(r.body.restrictions).toHaveLength(10);
+      expect(r.body.restrictions).toHaveLength(11);
       expect(level(r, 'DAILY_OVER_8H')).toBe('soft');
       expect(level(r, 'ABSENCE_CONFLICT')).toBe('hard');
       expect(level(r, 'UNAVAILABLE')).toBe('reason');

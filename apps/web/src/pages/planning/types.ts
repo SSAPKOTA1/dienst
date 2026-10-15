@@ -22,11 +22,21 @@ export interface GridEntry {
   readOnly?: boolean;
 }
 
+/** A wish or weekday preference of the employee for one day (never a promise; no reason text on the grid). */
+export interface GridWish {
+  kind: 'work' | 'off';
+  source: 'date' | 'leave' | 'weekday';
+  shiftName: string | null;
+  priority: number | null;
+  status: string | null;
+}
+
 export interface GridCell {
   date: string;
   locked: 'past' | 'closed' | null;
   entries: GridEntry[];
   absenceIds?: number[];
+  wishes?: GridWish[];
   required?: number;
   assigned?: number;
   open?: number;

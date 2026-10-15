@@ -58,6 +58,8 @@ export interface HotelSettingsDto {
   kioskIdentification: string;
   allowWebPunch: boolean;
   webPunchAllowedCidrs: string[];
+  /** what new employees of this hotel get: keep hours above the target ('account') or pay them out ('payout') */
+  defaultOvertimeMode: OvertimeMode;
 }
 export interface DepartmentDto {
   id: number;
@@ -268,6 +270,8 @@ export interface ContractDto {
   vacationDaysPerYear: number | string;
   monthlyHoursCap: number | string | null;
   getsPublicHoliday: boolean;
+  /** hours above the target: kept in the time account or paid out each month */
+  overtimeMode: OvertimeMode;
 }
 
 export interface Paged<T> extends Items<T> {
@@ -574,3 +578,61 @@ export interface WebauthnKeyDto {
   createdAt: string;
   lastUsedAt: string | null;
 }
+
+/** The Dienstplan as a copy for employees: published weeks only, full names, every absence just "absent". */
+export interface SharedPlanDto {
+  from: string;
+  to: string;
+  days: Array<{ date: string; holiday: string | null }>;
+  hotels: Array<{
+    id: number;
+    name: string;
+    departments: Array<{
+      id: number;
+      name: string;
+      employees: Array<{
+        name: string;
+        cells: Array<{
+          date: string;
+          entries: Array<{ start: string; end: string; shiftName: string | null }>;
+          absent: boolean;
+        }>;
+      }>;
+    }>;
+  }>;
+}
+
+/** Analytics patterns (totals per hotel, department or shift; a null value is hidden because the group is too small). */
+export type PatternLevel = 'hotel' | 'department' | 'shift';
+export type PatternGranularity = 'week' | 'month';
+
+export interface PatternMetric {
+  unit: 'percent' | 'hours';
+  values: Array<number | null>;
+  total: number | null;
+  /** Monday to Sunday over the whole range */
+  byWeekday: Array<number | null>;
+}
+export interface PatternGroup {
+  key: string;
+  name: string;
+  hotelName: string;
+  metrics: {
+    sick: PatternMetric;
+    overtime: PatternMetric;
+    late: PatternMetric | null;
+    longStay: PatternMetric | null;
+  };
+}
+export interface PatternsDto {
+  from: string;
+  to: string;
+  level: PatternLevel;
+  granularity: PatternGranularity;
+  periods: string[];
+  thresholds: { min: number; minSick: number };
+  groups: PatternGroup[];
+}
+
+/** Hours above the target: kept in the time account ('account') or paid out each month ('payout'). */
+export type OvertimeMode = 'account' | 'payout';

@@ -2,16 +2,20 @@ import type { FastifyInstance, FastifyReply } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { AppError } from '../lib/errors';
-import { getPrincipal, requireRole } from '../lib/auth';
+import { actorOf, getPrincipal, requireRole } from '../lib/auth';
+import { audit } from '../lib/audit';
 import { csvIds, isoDate } from '../lib/http';
 import { buildGrid } from '../services/planning/grid';
 import { assertPlannerEmployee } from '../services/planning/absence';
+import { vacationOverviewFor } from './leave';
 import {
   buildTimesheet,
+  monthWorkbook,
   scheduleWorkbook,
   timesheetPdf,
   timesheetWorkbook,
   toBuffer,
+  vacationWorkbook,
 } from '../services/exports';
 
 const planners = requireRole('superAdmin', 'admin', 'manager');
@@ -64,6 +68,80 @@ export async function exportRoutes(app: FastifyInstance) {
         : [];
       const buf = await toBuffer(scheduleWorkbook(grid, names));
       return send(reply, buf, XLSX, `dienstplan_${grid.from}_${grid.to}.xlsx`);
+    },
+  );
+
+  const hotelNameMap = async (ids: number[]) =>
+    new Map(
+      ids.length
+        ? (
+            await db.selectFrom('hotel').select(['id', 'name']).where('id', 'in', ids).orderBy('id').execute()
+          ).map((h) => [h.id, h.name] as [number, string])
+        : [],
+    );
+  const exportedOn = () => app.clock().toISOString().slice(0, 10);
+
+  // Vacation overview of a year as Excel (annual leave only). Same roles and scope as the screen; audited.
+  r.get(
+    '/vacation/overview/export',
+    {
+      preValidation: planners,
+      schema: {
+        querystring: z.object({
+          year: z.coerce.number().int().min(2000).max(2100),
+          hotelIds: csvIds,
+          format: z.enum(['xlsx']).default('xlsx'),
+        }),
+      },
+    },
+    async (req, reply) => {
+      const p = getPrincipal(req);
+      const hotels = p.scope.hotels(req.query.hotelIds);
+      if (!hotels.length) throw new AppError('VALIDATION', 'No hotels to export');
+      const ov = await vacationOverviewFor(db, app.clock(), hotels, req.query.year);
+      const names = await hotelNameMap(hotels);
+      const buf = await toBuffer(vacationWorkbook(ov, [...names.values()], exportedOn()));
+      await audit(db, actorOf(req), {
+        action: 'export_vacation_overview',
+        entityType: 'hotel',
+        entityId: hotels[0]!,
+        new: { year: req.query.year, hotelIds: hotels },
+      });
+      return send(reply, buf, XLSX, `urlaub_${req.query.year}.xlsx`);
+    },
+  );
+
+  // Month overview as Excel for analysis. Same roles and scope as the grid; managers get sickness only as "abwesend".
+  r.get(
+    '/schedule/month/export',
+    {
+      preValidation: planners,
+      schema: {
+        querystring: z.object({
+          month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'YYYY-MM'),
+          hotelIds: csvIds,
+          format: z.enum(['xlsx']).default('xlsx'),
+        }),
+      },
+    },
+    async (req, reply) => {
+      const p = getPrincipal(req);
+      const q = req.query;
+      const grid = await buildGrid(db, p, app.clock(), {
+        hotelIds: q.hotelIds ?? [],
+        view: 'employee',
+        range: 'month',
+        from: `${q.month}-01`,
+      });
+      const names = await hotelNameMap(grid.hotelIds);
+      const buf = await toBuffer(monthWorkbook(grid, names, exportedOn(), p.role === 'manager'));
+      await audit(db, actorOf(req), {
+        action: 'export_month_overview',
+        entityType: 'hotel',
+        entityId: grid.hotelIds[0] ?? 0,
+        new: { month: q.month, hotelIds: grid.hotelIds },
+      });
+      return send(reply, buf, XLSX, `monatsuebersicht_${q.month}.xlsx`);
     },
   );
 

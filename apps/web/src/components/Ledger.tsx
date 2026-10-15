@@ -9,6 +9,7 @@ const TYPE_LABEL: Record<string, string> = {
   opening_balance: 'Anfangsstand',
   worked: 'Gearbeitet (freigegeben)',
   absence_credit: 'Gutschrift Abwesenheit',
+  payout_auto: 'Auszahlung Überstunden',
   target: 'Soll',
   correction: 'Korrektur',
   payout: 'Auszahlung',
