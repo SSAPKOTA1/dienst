@@ -237,6 +237,17 @@ interface MenuTarget {
   returnTo: HTMLElement | null;
 }
 
+function wishLabel(w: GridWish, t: (k: string) => string): string {
+  return [
+    w.kind === 'work' ? t('Wunsch: arbeiten') : t('Wunsch: frei'),
+    w.shiftName,
+    w.source === 'weekday' ? t('jeden Wochentag') : null,
+    w.priority ? `${t('Priorität')} ${w.priority}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
 function CellMenu({ target, onClose }: { target: MenuTarget; onClose: () => void }) {
   const { t } = useTranslation();
   const ctx = usePlan();
@@ -408,6 +419,14 @@ function CellMenu({ target, onClose }: { target: MenuTarget; onClose: () => void
                     {reason.title}: {reason.msg}
                   </span>
                 )}
+                {p.wishes.length > 0 && (
+                  <span
+                    style={{ display: 'block', fontSize: 11, fontStyle: 'italic' }}
+                    data-testid={`pick-wish-${p.employeeId}`}
+                  >
+                    {p.wishes.map((w) => wishLabel(w, t)).join(' · ')}
+                  </span>
+                )}
                 {!p.blocked && p.warnings.length > 0 && (
                   <span style={{ display: 'block', fontSize: 11, color: 'var(--warn)' }}>
                     {violationText(p.warnings[0], t).title}
@@ -547,15 +566,7 @@ function Cell({
     .filter(Boolean)
     .join(' ');
   const dow = t(DOW[dowOf(cell.date)]);
-  const wishText = (w: GridWish) =>
-    [
-      w.kind === 'work' ? t('Wunsch: arbeiten') : t('Wunsch: frei'),
-      w.shiftName,
-      w.source === 'weekday' ? t('jeden Wochentag') : null,
-      w.priority ? `${t('Priorität')} ${w.priority}` : null,
-    ]
-      .filter(Boolean)
-      .join(' · ');
+  const wishText = (w: GridWish) => wishLabel(w, t);
   const wishes = cell.wishes ?? [];
   const desc = `${row.label}, ${dow} ${dayNum(cell.date)}, ${empty ? t('Leer') : [...live.map((e) => `${e.shiftName ?? ''} ${rangeLabel(e.start, e.end)}`), ...absences.map((a) => t(ABSENCE_LABEL[a.type] ?? a.type))].join(', ')}${wishes.length ? `, ${wishes.map(wishText).join(', ')}` : ''}${locked ? `, ${t('Vergangen · gesperrt')}` : ''}${shiftView ? `, ${cell.assigned}/${cell.required}` : ''}`;
   const openMenu = () => {

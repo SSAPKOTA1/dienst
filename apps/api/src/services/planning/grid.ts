@@ -4,7 +4,6 @@ import {
   countedDays,
   eachDay,
   isMinor,
-  isoWeekday,
   mondayOf,
   openSlots as openSlotsFn,
   workingMinutes,
@@ -18,6 +17,7 @@ import { loadStaffing, requiredOn } from '../staffing';
 import { changesInRange, latestSnapshot, type Change } from './changes';
 import { PlanEnv, type EntryRow, type PlanEmployee } from './env';
 import { hoursOf } from './ops';
+import { loadDayWishes } from './wishes';
 
 export interface GridParams {
   hotelIds: number[];
@@ -347,69 +347,12 @@ export async function buildGrid(db: Db, p: Principal, now: Date, prm: GridParams
           .execute()) as EntryRow[])
       : [];
     // wishes of the listed employees (never a promise; shown as small marks on the calendar, without the reason)
-    const wishIds = emps.map((e) => e.id);
-    const shiftWishes = wishIds.length
-      ? await db
-          .selectFrom('employee_shift_wish as w')
-          .innerJoin('shift as s', 's.id', 'w.shift_id')
-          .select(['w.employee_id', 'w.date', 'w.priority', 'w.status', 's.name as shift_name'])
-          .where('w.employee_id', 'in', wishIds)
-          .where('w.date', '>=', from)
-          .where('w.date', '<=', to)
-          .where('w.status', 'in', ['pending', 'granted'])
-          .execute()
-      : [];
-    const leaveWishes = wishIds.length
-      ? await db
-          .selectFrom('employee_leave_wish')
-          .select(['employee_id', 'start_date', 'end_date', 'priority', 'status'])
-          .where('employee_id', 'in', wishIds)
-          .where('start_date', '<=', to)
-          .where('end_date', '>=', from)
-          .where('status', 'in', ['pending', 'granted'])
-          .execute()
-      : [];
-    const weekdayPrefs = wishIds.length
-      ? await db
-          .selectFrom('employee_weekday_pref as w')
-          .leftJoin('shift as s', 's.id', 'w.shift_id')
-          .select(['w.employee_id', 'w.weekday', 'w.preference', 's.name as shift_name'])
-          .where('w.employee_id', 'in', wishIds)
-          .execute()
-      : [];
-    const wishesFor = (employeeId: number, date: string) => {
-      const dated = [
-        ...shiftWishes
-          .filter((w) => w.employee_id === employeeId && w.date === date)
-          .map((w) => ({
-            kind: 'work' as const,
-            source: 'date' as const,
-            shiftName: w.shift_name,
-            priority: w.priority,
-            status: w.status,
-          })),
-        ...leaveWishes
-          .filter((w) => w.employee_id === employeeId && w.start_date <= date && w.end_date >= date)
-          .map((w) => ({
-            kind: 'off' as const,
-            source: 'leave' as const,
-            shiftName: null as string | null,
-            priority: w.priority,
-            status: w.status,
-          })),
-      ];
-      // a wish for this very day wins over the recurring weekday preference
-      if (dated.length) return dated;
-      return weekdayPrefs
-        .filter((w) => w.employee_id === employeeId && w.weekday === isoWeekday(date))
-        .map((w) => ({
-          kind: w.preference === 'good' ? ('work' as const) : ('off' as const),
-          source: 'weekday' as const,
-          shiftName: w.shift_name,
-          priority: null as number | null,
-          status: null as string | null,
-        }));
-    };
+    const wishesFor = await loadDayWishes(
+      db,
+      emps.map((e) => e.id),
+      from,
+      to,
+    );
     for (const e of sorted) {
       const g = primaryGroup(e);
       const contract = env.contractAt(e, from) ?? env.contractAt(e, to);

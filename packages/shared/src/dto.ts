@@ -539,7 +539,16 @@ export interface CandidateDto {
   targetHours: number | null;
   /** at least one finding blocks the assignment */
   blocked: boolean;
+  /** the employee's wishes and weekday preferences for the day (no reason text) */
+  wishes: CandidateWishDto[];
   warnings: ViolationDto[];
+}
+export interface CandidateWishDto {
+  kind: 'work' | 'off';
+  source: 'date' | 'leave' | 'weekday';
+  shiftName: string | null;
+  priority: number | null;
+  status: string | null;
 }
 export interface ValidateResultDto {
   status: 'ok' | 'needs_reason' | 'blocked';

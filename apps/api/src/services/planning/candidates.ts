@@ -5,6 +5,7 @@ import { AppError, notFound } from '../../lib/errors';
 import type { Principal } from '../../lib/scope';
 import { PlanEnv } from './env';
 import { slotFromInput } from './ops';
+import { loadDayWishes } from './wishes';
 
 export interface CandidateParams {
   hotelIds: number[];
@@ -64,6 +65,7 @@ export async function findCandidates(
     ids = inDept.map((x) => x.employee_id);
   }
   const env = await PlanEnv.create(db, now, { employeeIds: ids, from: prm.date, to: prm.date });
+  const wishesFor = await loadDayWishes(db, ids, prm.date, prm.date);
   const slot = await slotFromInput(db, env, {
     hotelId,
     shiftId: prm.shiftId,
@@ -102,6 +104,7 @@ export async function findCandidates(
           ? Math.round(weekly * 10) / 10
           : null,
       blocked,
+      wishes: wishesFor(id, prm.date),
       warnings: v.map((x) => ({
         code: x.code,
         severity: x.severity,
