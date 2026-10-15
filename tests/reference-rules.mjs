@@ -40,3 +40,8 @@ export function timeAccountBalance({ opening = 0, monthlyTarget, startIso, asOfI
   target -= dailyTarget * unpaidDays;
   return Math.round((opening + approvedPaidHours + creditHours - target) * 100) / 100;
 }
+// weekly average (ArbZG 3): working minutes of the window plus the new entry, per week the person was employed
+export const WEEKLY_AVERAGE_WEEKS = 26;
+export const weeklyAverageMinutes = (windowMinutes, ownMinutes, weeks) =>
+  Math.round(((windowMinutes + ownMinutes) / Math.max(1, weeks)) * 100) / 100;
+export const weeklyAverageExceeds = (avgMinutes, limit = 2880) => avgMinutes > limit;

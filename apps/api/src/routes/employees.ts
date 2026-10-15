@@ -1,4 +1,4 @@
-import type { ContractDto, EmployeeDetailDto, EmployeeSummaryDto } from '@dienst/shared';
+import type { ContractDto, EmployeeDetailDto, EmployeeSummaryDto, OvertimeMode } from '@dienst/shared';
 import type { DB } from '../db';
 import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
@@ -100,6 +100,7 @@ const contractOut = (c: Selectable<DB['employee_contract']>): ContractDto => ({
   vacationDaysPerYear: c.vacation_days_per_year,
   monthlyHoursCap: c.monthly_hours_cap,
   getsPublicHoliday: c.gets_public_holiday,
+  overtimeMode: c.overtime_mode as OvertimeMode,
 });
 
 export async function employeeDetail(
@@ -598,7 +599,11 @@ export async function employeeRoutes(app: FastifyInstance) {
               .execute();
           }
         }
-        const row = await insertContract(trx, e.employee_id, p, b);
+        // a new version keeps the overtime setting of the previous one unless a new one is given
+        const row = await insertContract(trx, e.employee_id, p, {
+          ...b,
+          overtimeMode: b.overtimeMode ?? (prev?.overtime_mode as OvertimeMode | undefined),
+        });
         await audit(trx, actorOf(req), {
           action: 'contract_changed',
           entityType: 'employee_contract',

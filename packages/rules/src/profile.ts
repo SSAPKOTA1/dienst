@@ -16,6 +16,8 @@ export interface RuleLimits {
   sundaysFreeMin: number;
   /** nights per year from which a person counts as night worker (ArbZG § 2: 48) */
   nightWorkerNights: number;
+  /** average working minutes per week over 26 weeks (ArbZG § 3: 48 h) */
+  weeklyAverageMaxMinutes: number;
 }
 
 export const DEFAULT_LIMITS: RuleLimits = {
@@ -27,6 +29,7 @@ export const DEFAULT_LIMITS: RuleLimits = {
   minorDailyMaxMinutes: 480,
   sundaysFreeMin: 15,
   nightWorkerNights: 48,
+  weeklyAverageMaxMinutes: 2880,
 };
 
 /** A profile may only be stricter than the statutory baseline. Returns one message per violated key. */
@@ -54,6 +57,9 @@ export function validateLimits(p: Partial<RuleLimits>): string[] {
   if (l.nightWorkerNights > DEFAULT_LIMITS.nightWorkerNights)
     errs.push('nightWorkerNights: may not exceed 48');
   if (l.nightWorkerNights < 1) errs.push('nightWorkerNights: at least 1');
+  if (l.weeklyAverageMaxMinutes > DEFAULT_LIMITS.weeklyAverageMaxMinutes)
+    errs.push('weeklyAverageMaxMinutes: may not exceed 2880');
+  if (l.weeklyAverageMaxMinutes < 1200) errs.push('weeklyAverageMaxMinutes: at least 1200');
   return errs;
 }
 

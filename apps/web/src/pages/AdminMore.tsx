@@ -221,6 +221,7 @@ const RULES: Array<[string, string, string]> = [
   ['PAST_DAY', 'Vergangene Tage', 'Arbeitsschichten gesperrt'],
   ['PERIOD_CLOSED', 'Abgeschlossener Monat', 'gesperrt bis zur Wiedereröffnung'],
   ['MONTHLY_CAP', 'Monatliche Stundengrenze', 'Warnung, einstellbar (weich oder hart)'],
+  ['WEEKLY_AVERAGE', 'Wochendurchschnitt über 48 h (26 Wochen)', 'Warnung, einstellbar (weich oder hart)'],
 ];
 const KIOSK_RULES: Array<[string, string]> = [
   ['Toleranz beim Einstempeln', '±7 Minuten, innerhalb wird die geplante Zeit bezahlt'],

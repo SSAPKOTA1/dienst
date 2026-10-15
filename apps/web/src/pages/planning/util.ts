@@ -146,6 +146,11 @@ export function violationText(v: Violation, t: TFunction): { title: string; msg:
         title: t('Monatsgrenze'),
         msg: `${fnum(num(d.plannedHours))} h ${t('geplant')} · ${t('Grenze')} ${fnum(num(d.cap))} h`,
       };
+    case 'WEEKLY_AVERAGE':
+      return {
+        title: t('Wochendurchschnitt'),
+        msg: `${fnum(num(d.averageHours))} h ${t('im Schnitt pro Woche')} · ${t('Grenze')} ${fnum(num(d.limitHours))} h · ${d.weeks} ${t('Wochen')}`,
+      };
     case 'VACATION_EXCEEDS':
       return {
         title: t('Resturlaub reicht nicht'),

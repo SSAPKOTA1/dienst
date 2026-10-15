@@ -242,6 +242,7 @@ export interface EmployeeContract {
   gets_public_holiday: Generated<boolean>;
   id: Generated<number>;
   monthly_hours_cap: Numeric | null;
+  overtime_mode: Generated<string>;
   rest_vacation_days_per_year: Numeric | null;
   target_hours_per_month: Numeric | null;
   target_hours_per_week: Numeric | null;
@@ -378,6 +379,7 @@ export interface Hotel {
   company_id: number;
   created_at: Generated<Timestamp | null>;
   deactivated_at: Timestamp | null;
+  default_overtime_mode: Generated<string>;
   employee_hours_visibility: Generated<string>;
   federal_state: string | null;
   id: Generated<number>;

@@ -19,6 +19,8 @@ import {
   timeAccountBalance,
   overlapsNightWindow,
   ageOn,
+  weeklyAverageMinutes,
+  weeklyAverageExceeds,
 } from '../src';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -101,5 +103,12 @@ describe('tests/vectors.json', () => {
     expect(ageOn('2009-02-14', '2026-10-01')).toBe(17);
     expect(ageOn('2008-10-02', '2026-10-01')).toBe(17);
     expect(ageOn('2008-10-01', '2026-10-01')).toBe(18);
+  });
+  it('weeklyAverage', () => {
+    for (const r of v.weeklyAverage) {
+      const avg = weeklyAverageMinutes(r.windowMinutes, r.ownMinutes, r.weeks);
+      expect(avg, JSON.stringify(r)).toBe(r.expectedAverageMinutes);
+      expect(weeklyAverageExceeds(avg), JSON.stringify(r)).toBe(r.exceeds);
+    }
   });
 });

@@ -1,5 +1,5 @@
 // Planning rule checks (SPEC 4.3). Pure: callers load the data, nothing here reads a clock or a database.
-import { isoWeekday } from './basics';
+import { isoWeekday, weeklyAverageExceeds, weeklyAverageMinutes } from './basics';
 import { DEFAULT_LIMITS, type RuleLimits } from './profile';
 import { applySeverities, type SeverityConfig } from './severity';
 import { isNightWork, sundaysInYear } from './hours';
@@ -71,6 +71,11 @@ export interface CheckInput {
     /** distinct local dates of other night entries in the 12 months before the entry */
     nightDates: string[];
   };
+  /**
+   * planned working minutes of the employee's other entries in the 26 weeks up to and including the week of the
+   * entry, and the number of those weeks the employee was employed (1 to 26); omitted: no weekly average check
+   */
+  weekly?: { windowMinutes: number; weeks: number };
   /** codes to skip, e.g. PAST_DAY when only warnings of existing entries are wanted */
   skip?: string[];
 }
@@ -174,6 +179,18 @@ export function checkEntry(i: CheckInput): Violation[] {
         v('MONTHLY_CAP', 'warn', 'Planned hours exceed the monthly cap', {
           plannedHours: Math.round((planned / 60) * 100) / 100,
           cap: i.monthlyHoursCap,
+        }),
+      );
+  }
+  // --- weekly average over 26 weeks (ArbZG § 3); a warning by default, configurable
+  if (i.weekly) {
+    const avg = weeklyAverageMinutes(i.weekly.windowMinutes, workingMinutes(e), i.weekly.weeks);
+    if (weeklyAverageExceeds(avg, lim.weeklyAverageMaxMinutes))
+      add(
+        v('WEEKLY_AVERAGE', 'warn', 'The weekly working time averages more than 48 hours over 26 weeks', {
+          averageHours: Math.round((avg / 60) * 100) / 100,
+          limitHours: lim.weeklyAverageMaxMinutes / 60,
+          weeks: i.weekly.weeks,
         }),
       );
   }

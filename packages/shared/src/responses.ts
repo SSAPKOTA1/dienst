@@ -553,6 +553,7 @@ export type RulesSettingsDto = {
     minorDailyMaxMinutes: number;
     sundaysFreeMin: number;
     nightWorkerNights: number;
+    weeklyAverageMaxMinutes: number;
   };
   limits: {
     dailyMaxMinutes: number;
@@ -563,6 +564,7 @@ export type RulesSettingsDto = {
     minorDailyMaxMinutes: number;
     sundaysFreeMin: number;
     nightWorkerNights: number;
+    weeklyAverageMaxMinutes: number;
   };
   customised: boolean;
   profileName: string | null;
@@ -811,4 +813,5 @@ export type HotelSettingsFull = {
   kioskIdentification: string;
   allowWebPunch: boolean;
   webPunchAllowedCidrs: string[];
+  defaultOvertimeMode: 'account' | 'payout';
 };

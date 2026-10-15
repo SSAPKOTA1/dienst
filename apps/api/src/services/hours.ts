@@ -167,6 +167,10 @@ export interface PayrollRow {
   categoryHours: Record<string, number>;
   absenceDays: Record<string, number>;
   timeAccountHours: number | null;
+  /** the contract's setting for hours above the target; null without a time account */
+  overtimeMode: 'account' | 'payout' | null;
+  /** payout mode: the hours above the target of this month that payroll pays out */
+  overtimeToPayHours: number | null;
 }
 
 export async function buildPayroll(db: Db, hotelIds: number[], month: string, nowDate: string) {
@@ -274,6 +278,15 @@ export async function buildPayroll(db: Db, hotelIds: number[], month: string, no
       ),
       absenceDays,
       timeAccountHours: ledger?.balanceHours ?? null,
+      overtimeMode: ledger?.overtimeMode ?? null,
+      overtimeToPayHours:
+        ledger?.overtimeMode === 'payout'
+          ? Math.round(
+              -ledger.lines
+                .filter((l) => l.type === 'payout_auto' && l.month === month)
+                .reduce((a, l) => a + l.hours, 0) * 100,
+            ) / 100
+          : null,
     });
   }
   return {

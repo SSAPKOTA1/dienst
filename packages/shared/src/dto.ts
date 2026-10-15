@@ -58,6 +58,8 @@ export interface HotelSettingsDto {
   kioskIdentification: string;
   allowWebPunch: boolean;
   webPunchAllowedCidrs: string[];
+  /** what new employees of this hotel get: keep hours above the target ('account') or pay them out ('payout') */
+  defaultOvertimeMode: OvertimeMode;
 }
 export interface DepartmentDto {
   id: number;
@@ -268,6 +270,8 @@ export interface ContractDto {
   vacationDaysPerYear: number | string;
   monthlyHoursCap: number | string | null;
   getsPublicHoliday: boolean;
+  /** hours above the target: kept in the time account or paid out each month */
+  overtimeMode: OvertimeMode;
 }
 
 export interface Paged<T> extends Items<T> {
@@ -629,3 +633,6 @@ export interface PatternsDto {
   thresholds: { min: number; minSick: number };
   groups: PatternGroup[];
 }
+
+/** Hours above the target: kept in the time account ('account') or paid out each month ('payout'). */
+export type OvertimeMode = 'account' | 'payout';

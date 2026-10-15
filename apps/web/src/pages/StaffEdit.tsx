@@ -284,7 +284,16 @@ export function ContractDialog({
     validTo: v?.validTo ?? '',
     employmentType: v?.employmentType ?? 'full_time',
     workingModel: v?.workingModel ?? 'salary',
-    targetHoursPerWeek: v?.targetHoursPerWeek != null ? String(v.targetHoursPerWeek) : '',
+    // the target is given per week or per month; the form keeps one number and its basis
+    targetKind: (v?.targetHoursPerWeek == null && v?.targetHoursPerMonth != null ? 'month' : 'week') as
+      'week' | 'month',
+    target:
+      v?.targetHoursPerWeek != null
+        ? String(v.targetHoursPerWeek)
+        : v?.targetHoursPerMonth != null
+          ? String(v.targetHoursPerMonth)
+          : '',
+    overtimeMode: (v?.overtimeMode ?? 'account') as 'account' | 'payout',
     vacationDaysPerYear: v ? String(v.vacationDaysPerYear) : '30',
     monthlyHoursCap: v?.monthlyHoursCap != null ? String(v.monthlyHoursCap) : '',
     getsPublicHoliday: v?.getsPublicHoliday ?? false,
@@ -327,7 +336,10 @@ export function ContractDialog({
                   workingModel: f.workingModel,
                   workDaysPerWeek: days.length,
                   workingWeekdays: [...days].sort(),
-                  targetHoursPerWeek: num(f.targetHoursPerWeek),
+                  ...(f.targetKind === 'week'
+                    ? { targetHoursPerWeek: num(f.target) }
+                    : { targetHoursPerMonth: num(f.target) }),
+                  overtimeMode: f.overtimeMode,
                   vacationDaysPerYear: num(f.vacationDaysPerYear),
                   monthlyHoursCap: num(f.monthlyHoursCap),
                   getsPublicHoliday: f.getsPublicHoliday,
@@ -354,7 +366,11 @@ export function ContractDialog({
               </span>
               <span>{t(EMPLOYMENT.find(([k]) => k === v.employmentType)?.[1] ?? v.employmentType)}</span>
               <span>
-                {v.targetHoursPerWeek ?? '–'} {t('Std.')}
+                {v.targetHoursPerWeek ?? v.targetHoursPerMonth ?? '–'} {t('Std.')}
+                {v.targetHoursPerWeek == null && v.targetHoursPerMonth != null ? ` / ${t('Monat')}` : ''}
+              </span>
+              <span>
+                {v.overtimeMode === 'payout' ? t('Überstunden ausgezahlt') : t('Überstunden im Zeitkonto')}
               </span>
               <span>
                 {v.vacationDaysPerYear} {t('Urlaubstage')}
@@ -459,14 +475,35 @@ export function ContractDialog({
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--space-3)' }}>
-        <Field label={t('Soll pro Woche')} htmlFor="ec3">
+        <Field label={f.targetKind === 'week' ? t('Soll pro Woche') : t('Soll pro Monat')} htmlFor="ec3">
           <input
             id="ec3"
             className="input"
             inputMode="decimal"
-            value={f.targetHoursPerWeek}
-            onChange={(x) => set({ targetHoursPerWeek: x.target.value })}
+            value={f.target}
+            onChange={(x) => set({ target: x.target.value })}
           />
+        </Field>
+        <Field label={t('Soll gilt je')}>
+          <Segmented
+            value={f.targetKind}
+            onChange={(v) => set({ targetKind: v })}
+            options={[
+              { value: 'week', label: t('Woche') },
+              { value: 'month', label: t('Monat') },
+            ]}
+          />
+        </Field>
+        <Field label={t('Überstunden')} htmlFor="ec3b">
+          <select
+            id="ec3b"
+            className="input"
+            value={f.overtimeMode}
+            onChange={(x) => set({ overtimeMode: x.target.value as 'account' | 'payout' })}
+          >
+            <option value="account">{t('Im Zeitkonto behalten')}</option>
+            <option value="payout">{t('Auszahlen')}</option>
+          </select>
         </Field>
         <Field label={t('Urlaubstage pro Jahr')} htmlFor="ec4">
           <input

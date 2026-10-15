@@ -1,4 +1,4 @@
-import type { CompanyDto, HotelDto, HotelSettingsDto } from '@dienst/shared';
+import type { CompanyDto, HotelDto, HotelSettingsDto, OvertimeMode } from '@dienst/shared';
 import type { DB } from '../db';
 import type { Selectable } from 'kysely';
 import type { FastifyInstance } from 'fastify';
@@ -243,6 +243,7 @@ export async function organisationRoutes(app: FastifyInstance) {
     kioskIdentification: h.kiosk_identification,
     allowWebPunch: h.allow_web_punch,
     webPunchAllowedCidrs: h.web_punch_allowed_cidrs ?? [],
+    defaultOvertimeMode: h.default_overtime_mode as OvertimeMode,
   });
   r.put(
     '/hotels/:id/active',
@@ -310,6 +311,7 @@ export async function organisationRoutes(app: FastifyInstance) {
       kioskIdentification: z.enum(['name_pin', 'badge_pin']),
       allowWebPunch: z.boolean(),
       webPunchAllowedCidrs: cidrList,
+      defaultOvertimeMode: z.enum(['account', 'payout']),
     })
     .partial()
     .refine((b) => Object.keys(b).length > 0, 'Nothing to change');
@@ -342,6 +344,7 @@ export async function organisationRoutes(app: FastifyInstance) {
             ...(b.kioskIdentification ? { kiosk_identification: b.kioskIdentification } : {}),
             ...(b.allowWebPunch !== undefined ? { allow_web_punch: b.allowWebPunch } : {}),
             ...(b.webPunchAllowedCidrs ? { web_punch_allowed_cidrs: b.webPunchAllowedCidrs } : {}),
+            ...(b.defaultOvertimeMode ? { default_overtime_mode: b.defaultOvertimeMode } : {}),
           })
           .where('id', '=', old.id)
           .returningAll()

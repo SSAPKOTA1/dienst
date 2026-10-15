@@ -45,6 +45,43 @@ const other = (day: number, from: number, to: number, id = 1): RuleOther => ({
 });
 const codes = (i: CheckInput) => checkEntry(i).map((x) => `${x.code}:${x.severity}`);
 
+describe('weekly average (ArbZG § 3, 26 weeks)', () => {
+  // the entry is 7.5 working hours (8 h minus a 30 min break) = 450 minutes
+  it('warns when the average over the window exceeds 48 hours, and not at exactly 48', () => {
+    // (74430 + 450) / 26 = 2880: exactly the limit, no warning
+    expect(codes(input({}, { weekly: { windowMinutes: 74430, weeks: 26 } }))).toEqual([]);
+    // one minute more tips it over
+    expect(codes(input({}, { weekly: { windowMinutes: 74431, weeks: 26 } }))).toEqual([
+      'WEEKLY_AVERAGE:warn',
+    ]);
+  });
+
+  it('is skipped without weekly data, and counts only the weeks the person was employed', () => {
+    expect(codes(input({}, {}))).toEqual([]);
+    // 4 weeks employed: (11000 + 450) / 4 = 2862.5, below the limit
+    expect(codes(input({}, { weekly: { windowMinutes: 11000, weeks: 4 } }))).toEqual([]);
+    expect(codes(input({}, { weekly: { windowMinutes: 11100, weeks: 4 } }))).toEqual(['WEEKLY_AVERAGE:warn']);
+  });
+
+  it('carries the figures, accepts a stricter limit and can be made strict (hard) but never an override', () => {
+    const w = checkEntry(input({}, { weekly: { windowMinutes: 80000, weeks: 26 } }))[0]!;
+    expect(w.details).toMatchObject({ limitHours: 48, weeks: 26 });
+    expect(w.details.averageHours).toBeGreaterThan(48);
+    // a stricter company limit of 40 h warns earlier: (63000 + 450) / 26 = 2440 min = 40.7 h, under the legal 48 h
+    expect(
+      codes(
+        input({}, { weekly: { windowMinutes: 63000, weeks: 26 }, limits: { weeklyAverageMaxMinutes: 2400 } }),
+      ),
+    ).toEqual(['WEEKLY_AVERAGE:warn']);
+    // configured hard: planning is blocked, and the emergency override leaves it alone
+    const hard = checkEntry(
+      input({}, { weekly: { windowMinutes: 80000, weeks: 26 }, severities: { WEEKLY_AVERAGE: 'hard' } }),
+    );
+    expect(hard.map((x) => `${x.code}:${x.severity}`)).toEqual(['WEEKLY_AVERAGE:block']);
+    expect(aggregate(hard, { role: 'admin', emergencyOverride: true }).status).toBe('blocked');
+  });
+});
+
 describe('checkEntry', () => {
   it('a plain shift is clean', () => expect(codes(input())).toEqual([]));
 

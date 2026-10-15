@@ -34,6 +34,7 @@ const LIMITS: Array<[string, string, string]> = [
   ['minorDailyMaxMinutes', 'Jugendliche: Höchstarbeitszeit pro Tag (Min.)', 'gesetzlich höchstens 480'],
   ['sundaysFreeMin', 'Freie Sonntage pro Jahr (mindestens)', 'gesetzlich mindestens 15'],
   ['nightWorkerNights', 'Nächte pro Jahr bis Nachtarbeitnehmer', 'gesetzlich höchstens 48'],
+  ['weeklyAverageMaxMinutes', 'Wochendurchschnitt über 26 Wochen (Min.)', 'gesetzlich höchstens 2880'],
 ];
 
 /** Limits as data: the form only accepts values that are stricter than the statutory baseline (the server enforces it). */
@@ -137,6 +138,10 @@ const RESTRICTION_LABEL: Record<string, [string, string]> = {
     'Die Ruhezeit ist kürzer als 11, aber mindestens 10 Stunden. Darunter ist es immer gesperrt.',
   ],
   MONTHLY_CAP: ['Monatliche Stundengrenze', 'Die geplanten Stunden überschreiten die Grenze im Vertrag.'],
+  WEEKLY_AVERAGE: [
+    'Wochendurchschnitt über 48 Stunden',
+    'Die durchschnittliche Wochenarbeitszeit der letzten 26 Wochen liegt über der Grenze.',
+  ],
   SUNDAY_LIMIT: ['Weniger als 15 freie Sonntage', 'Der Mitarbeiter hätte im Jahr zu wenige freie Sonntage.'],
   NIGHT_WORKER: [
     'Nachtarbeitnehmer',

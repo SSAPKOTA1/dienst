@@ -326,6 +326,8 @@ export async function hoursRoutes(app: FastifyInstance) {
         'Arbeitsstunden',
         ...data.categories.map((c) => `Std ${c.name}`),
         ...data.absenceCodes.map((c) => `Tage ${c}`),
+        'Überstunden',
+        'Überstunden auszuzahlen Std',
         'Zeitkonto Std',
       ];
       const lines = data.rows.map((x) => [
@@ -335,6 +337,8 @@ export async function hoursRoutes(app: FastifyInstance) {
         x.workedHours,
         ...data.categories.map((c) => x.categoryHours[c.code] ?? 0),
         ...data.absenceCodes.map((c) => x.absenceDays[c] ?? 0),
+        x.overtimeMode === 'payout' ? 'Auszahlung' : x.overtimeMode === 'account' ? 'Zeitkonto' : '',
+        x.overtimeToPayHours ?? '',
         x.timeAccountHours ?? '',
       ]);
       const fname = `lohnexport_${q.month}`;

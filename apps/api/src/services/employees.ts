@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { nextUsername, usernameBase } from '@dienst/rules';
+import type { OvertimeMode } from '@dienst/shared';
 import { randomInt } from 'node:crypto';
 import type { Trx } from '../db';
 import { AppError, notFound } from '../lib/errors';
@@ -45,6 +46,8 @@ export const employeeCreateSchema = z.object({
   getsPublicHoliday: z.boolean().optional(),
   openingBalanceHours: z.number().min(-1000).max(1000).optional(),
   isFloater: z.boolean().optional(),
+  /** omitted: the default of the home hotel */
+  overtimeMode: z.enum(['account', 'payout']).optional(),
   phone: z.string().max(40).nullish(),
   preferredLanguage: z.enum(['de', 'en']).optional(),
 });
@@ -102,7 +105,7 @@ export async function createEmployee(
   p.scope.assertHotel(b.primaryHotelId);
   const hotel = await trx
     .selectFrom('hotel')
-    .select(['id', 'company_id'])
+    .select(['id', 'company_id', 'default_overtime_mode'])
     .where('id', '=', b.primaryHotelId)
     .executeTakeFirst();
   if (!hotel) throw notFound('Hotel');
@@ -229,6 +232,7 @@ export async function createEmployee(
     vacationDaysPerYear: b.vacationDaysPerYear,
     monthlyHoursCap: b.monthlyHoursCap ?? null,
     getsPublicHoliday: b.getsPublicHoliday ?? false,
+    overtimeMode: b.overtimeMode ?? (hotel.default_overtime_mode as OvertimeMode),
   });
   await ensureAllowance(trx, emp.employee_id, Number(now.toISOString().slice(0, 4)), {
     allocated: b.vacationDaysAllocatedThisYear ?? undefined,
@@ -249,6 +253,8 @@ export const contractSchema = z.object({
   vacationDaysPerYear: z.number().min(0).max(60),
   monthlyHoursCap: z.number().min(0).max(350).nullish(),
   getsPublicHoliday: z.boolean().optional(),
+  /** hours above the target: kept in the time account or paid out each month; omitted keeps the current setting */
+  overtimeMode: z.enum(['account', 'payout']).optional(),
 });
 export type ContractInput = z.infer<typeof contractSchema>;
 
@@ -269,6 +275,7 @@ export function contractValues(c: ContractInput) {
     vacation_days_per_year: c.vacationDaysPerYear,
     gets_public_holiday: c.getsPublicHoliday ?? false,
     monthly_hours_cap: c.monthlyHoursCap ?? null,
+    ...(c.overtimeMode ? { overtime_mode: c.overtimeMode } : {}),
   };
 }
 
