@@ -201,4 +201,10 @@ export const OVERRIDABLE = new Set(['DAILY_LIMIT', 'MINOR_REST', 'REST_PERIOD'])
 export const isOverridable = (v: Violation) =>
   v.severity === 'block' && OVERRIDABLE.has(v.code) && !v.details?.configuredHard;
 
+/** picker rule: every blocking finding is one the server lets the emergency override lift, as for a drop */
+export const pickBlockedIsOverridable = (c: { warnings: Violation[] }) => {
+  const blocks = c.warnings.filter((w) => w.severity === 'block');
+  return blocks.length > 0 && blocks.every(isOverridable);
+};
+
 export { fdate };
