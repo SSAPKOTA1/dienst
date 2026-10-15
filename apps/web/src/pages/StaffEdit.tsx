@@ -535,7 +535,7 @@ export function ContractDialog({
           checked={f.getsPublicHoliday}
           onChange={(x) => set({ getsPublicHoliday: x.target.checked })}
         />
-        {t('Feiertage werden bezahlt')}
+        {t('Feiertagsarbeit gibt einen Tag Zeitgutschrift')}
       </label>
       <ErrorNote error={save.error} />
     </Dialog>
