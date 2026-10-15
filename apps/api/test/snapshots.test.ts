@@ -366,6 +366,8 @@ describe('substitute finder', () => {
     expect(r.status).toBe(200);
     const byName = new Map(r.body.items.map((c: any) => [c.displayName, c]));
     expect((byName.get('Jon T.') as any).blocked).toBe(true); // 8 h rest after the late shift
+    const jonBlocks = (byName.get('Jon T.') as any).warnings.filter((w: any) => w.severity === 'block');
+    expect(jonBlocks.map((w: any) => w.code)).toEqual(['REST_PERIOD']); // the + menu may still offer it, like a drop
     expect((byName.get('Lena T.') as any).blocked).toBe(true); // overlap
     expect((byName.get('Maria T.') as any).blocked).toBe(false);
     for (const c of r.body.items) expect(typeof c.blocked).toBe('boolean');

@@ -171,6 +171,36 @@ describe('rules', () => {
     expect(fine.status).toBe(201);
   });
 
+  it('rest period < 10 h: same server path for drag and drop and the + menu, admin emergency override with reason, audited', async () => {
+    const prev = await create(fx.adminA.token, { employeeId: fx.emp.jon, shiftId: fx.late, date: D(7) }); // ends 22:00
+    const body = { employeeId: fx.emp.jon, shiftId: fx.early, date: D(8) }; // 8 h gap
+    const mgr = await create(fx.mgrA1.token, {
+      ...body,
+      emergencyOverride: true,
+      overrideReason: 'Notfall bei Ausfall',
+    });
+    expect(codes(mgr)).toEqual(['REST_PERIOD']); // managers still blocked
+    expect((await create(fx.adminA.token, { ...body, emergencyOverride: true })).body.error.code).toBe(
+      'REASON_REQUIRED',
+    );
+    const done = await create(fx.adminA.token, {
+      ...body,
+      emergencyOverride: true,
+      overrideReason: 'Notfall bei Ausfall',
+    });
+    expect(done.status).toBe(201);
+    const aud = await ctx.db
+      .selectFrom('audit_log')
+      .select('new_values')
+      .where('action', '=', 'rule_override')
+      .orderBy('id', 'desc')
+      .limit(1)
+      .executeTakeFirstOrThrow();
+    expect(JSON.stringify(aud.new_values)).toContain('REST_PERIOD');
+    await del(fx.adminA.token, done.body.entry.id);
+    await del(fx.adminA.token, prev.body.entry.id);
+  });
+
   it('daily limit: warning above 8 h, blocked above 10 h, emergency override only for admins with a reason', async () => {
     const warn = await create(fx.adminA.token, {
       employeeId: fx.emp.maria,
