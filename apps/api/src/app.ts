@@ -43,6 +43,7 @@ import { webPunchRoutes } from './routes/webPunch';
 import { exportRoutes } from './routes/exports';
 import { importRoutes } from './routes/imports';
 import { leaveRoutes } from './routes/leave';
+import { adminAlertRoutes } from './routes/adminAlerts';
 import { hoursRoutes } from './routes/hours';
 import { swapRoutes } from './routes/swaps';
 import { openShiftRoutes } from './routes/openShifts';
@@ -254,6 +255,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       await api.register(exportRoutes);
       await api.register(importRoutes);
       await api.register(leaveRoutes);
+      await api.register(adminAlertRoutes);
       await api.register(hoursRoutes);
       await api.register(swapRoutes);
       await api.register(openShiftRoutes);

@@ -28,6 +28,7 @@ Every query is limited on the server to the companies and hotels of the signed-i
 
 ## 3. Daily and monthly operation
 
+- **Alerts (bell at the top right, administrators and super admins only):** lists what needs attention, newest first: clocked in late (default: more than 10 min after the shift start), not clocked in (15 min after the shift start without a punch, not on approved leave), not clocked out (still clocked in 30 min after the shift end), new shift wish, new vacation wish and new vacation request. Vacation requests are approved or rejected in the list itself; the other items open the Live page, the plan or the vacation planner. Administrators see their own hotels only, super admins all. The super admin sets the thresholds per company under Setup → Companies.
 - **Requests, live, compliance:** see the user manual, sections 4–6. Plan for managers to clear open requests daily.
 - **Month close:** _Admin → Overview → Month close_. Closing fails while approvals or corrections are open (the list is shown). Afterwards planning, punches, corrections and absences in that range are locked. **Reopen** only with a reason; both actions are logged. Then export hours: timesheets (PDF/Excel), payroll export (hours only), attendance CSV.
 - **Background jobs:** auto-checkout, vacation carry-over, reminders, offboarding, retention. They run in a separate worker process (`RUN_JOBS`); alerts fire when they stall.

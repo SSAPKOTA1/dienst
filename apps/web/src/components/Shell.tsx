@@ -6,6 +6,7 @@ import { PLANNER_NAV } from '../nav';
 import { useAuth, homePathFor, type AvailableRole } from '../lib/auth';
 import { useGet } from '../lib/api';
 import { LangSwitch } from './LangSwitch';
+import { AdminAlertsBell } from './AdminAlerts';
 import { roleLabel } from '../pages/Login';
 
 export function AccountMenu() {
@@ -170,6 +171,7 @@ export function PlannerShell() {
             flexWrap: 'wrap',
           }}
         >
+          {(me?.role === 'superAdmin' || me?.role === 'admin') && <AdminAlertsBell />}
           <LangSwitch />
           <AccountMenu />
         </div>

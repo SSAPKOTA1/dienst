@@ -153,6 +153,9 @@ export interface CalendarFeed {
 }
 
 export interface Company {
+  alert_late_checkin_minutes: Generated<number>;
+  alert_missed_checkin_minutes: Generated<number>;
+  alert_missed_checkout_minutes: Generated<number>;
   created_at: Generated<Timestamp | null>;
   created_by_id: number;
   grace_period_minutes: Generated<number>;
@@ -476,6 +479,7 @@ export interface ManagerHotel {
 export interface Notification {
   created_at: Generated<Timestamp | null>;
   employee_id: number | null;
+  hotel_id: number | null;
   id: Generated<number>;
   kind: string;
   payload: Json | null;
