@@ -50,6 +50,7 @@ import { peopleRoutes } from './routes/people';
 import { commsRoutes } from './routes/comms';
 import { privacyRoutes } from './routes/privacy';
 import { feedRoutes } from './routes/feed';
+import { teamScheduleRoutes } from './routes/teamSchedule';
 import { startJobs } from './jobs/scheduler';
 
 declare module 'fastify' {
@@ -261,6 +262,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       await api.register(commsRoutes);
       await api.register(privacyRoutes);
       await api.register(feedRoutes);
+      await api.register(teamScheduleRoutes);
       api.get('/health', { config: { rateLimit: false } }, async () => {
         await sql`select 1`.execute(db);
         return { status: 'ok', time: app.clock().toISOString() };

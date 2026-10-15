@@ -279,6 +279,7 @@ const rows: Row[] = [
   { method: 'GET', url: () => '/audit-log', allow: ['SA', 'AD'] },
   { method: 'GET', url: () => '/me/schedule?from=2026-10-12&to=2026-10-18', allow: ['EM'] },
   { method: 'GET', url: () => '/me/attendance?from=2026-10-12&to=2026-10-18', allow: ['EM'] },
+  { method: 'GET', url: () => '/me/team-schedule?from=2026-10-12&to=2026-10-18', allow: ['EM'] },
   { method: 'GET', url: () => '/me/vacation', allow: ['EM'] },
   { method: 'GET', url: () => '/me/time-account', allow: ['EM'] },
   { method: 'GET', url: () => '/me/home', allow: ['EM'] },

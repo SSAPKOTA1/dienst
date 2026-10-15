@@ -9,7 +9,7 @@ import { idParam, isoDate } from '../lib/http';
 import { randomToken, sha256 } from '../lib/security';
 import { localDate } from '../lib/time';
 import { featureEnabled, requireFeature } from '../services/features';
-import { myEmployee } from '../services/collab';
+import { myEmployee, TEAM_VISIBLE_TYPES } from '../services/collab';
 import { loadAvailableRoles } from '../services/accounts';
 import { icsCalendar } from '../services/ics';
 import type { Trx } from '../db';
@@ -18,16 +18,6 @@ import type { Principal } from '../lib/scope';
 const admins = requireRole('superAdmin', 'admin');
 const EM = requireRole('employee');
 const ANY = requireRole('ANY');
-
-/** Colleagues see each other as "away" only for these types; sickness and other health-related absences are never shown. */
-const TEAM_VISIBLE_TYPES = [
-  'annual_leave',
-  'special_leave',
-  'training',
-  'comp_time',
-  'unpaid_leave',
-  'rest_day',
-];
 
 export async function feedRoutes(app: FastifyInstance) {
   const r = app.withTypeProvider<ZodTypeProvider>();
