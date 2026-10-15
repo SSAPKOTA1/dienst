@@ -10,13 +10,14 @@ import type {
   WishListItemDto,
 } from '@dienst/shared';
 import { useState } from 'react';
-import { NavLink, Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { Link, NavLink, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api, useGet, useSend, type ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { fdate, fnum } from '../lib/format';
 import { Dialog, ErrorNote, Field, PageHead, Segmented, useToast } from '../components/ui';
 import { todayIso } from './planning/util';
+import { VacationEmployee } from './VacationEmployee';
 
 const TABS = [
   ['overview', 'Übersicht'],
@@ -68,6 +69,7 @@ export function VacationRoutes() {
       <Route element={<VacationLayout />}>
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<VacationOverview />} />
+        <Route path="employee/:id" element={<VacationEmployee />} />
         <Route path="blackouts" element={<Blackouts />} />
         <Route path="wishes" element={<Wishes />} />
         <Route path="notices" element={<Notices />} />
@@ -158,7 +160,9 @@ function VacationOverview() {
             {(ov.data?.employees ?? []).map((e) => (
               <tr key={e.employeeId} data-testid="vac-row">
                 <td style={{ paddingLeft: 'var(--space-4)' }}>
-                  <b>{e.displayName}</b>
+                  <Link to={`/vacation/employee/${e.employeeId}`}>
+                    <b>{e.displayName}</b>
+                  </Link>
                   <div style={{ fontSize: 11, color: 'var(--color-neutral-700)' }}>{e.departmentName}</div>
                 </td>
                 {view === 'table' ? (

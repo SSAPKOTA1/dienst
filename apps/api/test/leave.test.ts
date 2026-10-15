@@ -336,6 +336,75 @@ describe('vacation planner overview', () => {
   });
 });
 
+describe('vacation detail of one employee', () => {
+  const detail = (id: number, token: string, year = 2027) =>
+    call(ctx, 'GET', `/vacation/employees/${id}?year=${year}`, token);
+
+  it('shows the same figures as the overview row; outside the caller scope it is not found', async () => {
+    const o = await call(ctx, 'GET', `/vacation/overview?year=2027&hotelIds=${fx.hotelA1}`, fx.mgrA1.token);
+    const jon = o.body.employees.find((e: any) => e.displayName === 'Jon T.');
+    const d = await detail(jon.employeeId, fx.mgrA1.token);
+    expect(d.status).toBe(200);
+    expect(d.body.employee).toEqual(jon);
+    expect(d.body.year).toBe(2027);
+    // a manager of another hotel and an employee have no access
+    expect((await detail(jon.employeeId, fx.mgrA2.token)).status).toBe(404);
+    expect((await detail(jon.employeeId, emp.jon!)).status).toBe(403);
+  });
+
+  it('edits an absence in one transaction: the new dates replace the old ones, a failing edit keeps the old', async () => {
+    const created = await call(ctx, 'POST', '/schedule/absence', fx.adminA.token, {
+      employeeId: fx.emp.maria,
+      from: '2027-09-06',
+      to: '2027-09-07',
+      type: 'annual_leave',
+    });
+    expect(created.status).toBe(201);
+    const id = created.body.absenceId;
+    const entries = async () => (await detail(fx.emp.maria!, fx.adminA.token)).body.employee.entries;
+
+    expect((await entries()).some((e: any) => e.from === '2027-09-06' && e.to === '2027-09-07')).toBe(true);
+    const ok = await call(ctx, 'PUT', `/schedule/absence/${id}`, fx.adminA.token, {
+      from: '2027-09-07',
+      to: '2027-09-08',
+      type: 'annual_leave',
+    });
+    expect(ok.status).toBe(200);
+    const after = await entries();
+    expect(after.some((e: any) => e.from === '2027-09-06')).toBe(false);
+    const moved = after.find((e: any) => e.from === '2027-09-07' && e.to === '2027-09-08');
+    expect(moved).toBeDefined();
+
+    // an end before the start is refused and the absence stays as it was
+    const bad = await call(ctx, 'PUT', `/schedule/absence/${moved.id}`, fx.adminA.token, {
+      from: '2027-09-10',
+      to: '2027-09-09',
+      type: 'annual_leave',
+    });
+    expect(bad.status).toBe(400);
+    expect((await entries()).some((e: any) => e.id === moved.id)).toBe(true);
+    // an unknown absence and a wrong role
+    expect(
+      (
+        await call(ctx, 'PUT', '/schedule/absence/999999', fx.adminA.token, {
+          from: '2027-09-10',
+          to: '2027-09-10',
+          type: 'annual_leave',
+        })
+      ).status,
+    ).toBe(404);
+    expect(
+      (
+        await call(ctx, 'PUT', `/schedule/absence/${moved.id}`, emp.maria!, {
+          from: '2027-09-10',
+          to: '2027-09-10',
+          type: 'annual_leave',
+        })
+      ).status,
+    ).toBe(403);
+  });
+});
+
 describe('carryover and notices', () => {
   it('carries unused days into the next year (idempotent), informs employees once and expires only informed carryover', async () => {
     const m = fx.emp.maria!;

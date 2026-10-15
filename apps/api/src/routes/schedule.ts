@@ -297,6 +297,23 @@ export async function scheduleRoutes(app: FastifyInstance) {
   r.delete('/schedule/absence/:id', { preValidation: planners, schema: { params: idParam } }, async (req) =>
     withCtx(req, (ctx) => deleteAbsence(ctx, req.params.id)),
   );
+  // Edits an absence by replacing it: the old one is removed and the new one created in the same transaction, so a
+  // rule that fails for the new dates rolls the whole change back (the old absence stays).
+  r.put(
+    '/schedule/absence/:id',
+    { preValidation: planners, schema: { params: idParam, body: absenceBody.omit({ employeeId: true }) } },
+    async (req) =>
+      withCtx(req, async (ctx) => {
+        const old = await ctx.trx
+          .selectFrom('time_off')
+          .select(['employee_id', 'status'])
+          .where('id', '=', req.params.id)
+          .executeTakeFirst();
+        if (!old || old.status === 'cancelled') throw notFound('Absence');
+        await deleteAbsence(ctx, req.params.id);
+        return createAbsence(ctx, { ...req.body, employeeId: old.employee_id });
+      }),
+  );
 
   // ---------------------------------------------------------------- publish, changes, revert, clear
   r.post('/schedule/publish', { preValidation: planners, schema: { body: range } }, async (req) =>
