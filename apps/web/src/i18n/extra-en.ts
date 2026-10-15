@@ -640,6 +640,7 @@ export const extraEn: Record<string, string> = {
   Funktionen: 'Features',
   überfällig: 'overdue',
   'Gutschrift Abwesenheit': 'Absence credit',
+  Feiertagsbonus: 'Holiday bonus',
   Anfangsstand: 'Opening balance',
   Auszahlung: 'Payout',
   Soll: 'Target',
@@ -971,7 +972,7 @@ export const extraEn: Record<string, string> = {
   'Aktueller Vertrag seit': 'Current contract since',
   'Gültig ab': 'Valid from',
   'Monatsgrenze (Std.)': 'Monthly limit (h)',
-  'Feiertage werden bezahlt': 'Public holidays are paid',
+  'Feiertagsarbeit gibt einen Tag Zeitgutschrift': 'Working on a public holiday adds one day of time credit',
   inaktiv: 'inactive',
   'Hotel wirklich deaktivieren? Es verschwindet aus Planung und Tablet, die Daten bleiben erhalten.':
     'Really deactivate this hotel? It disappears from planning and the tablet; its data is kept.',

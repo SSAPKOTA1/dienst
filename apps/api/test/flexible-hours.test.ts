@@ -74,6 +74,38 @@ describe('time account for every employee with a target', () => {
   });
 });
 
+describe('holiday bonus (contract flag "gets public holiday")', () => {
+  it('adds one day of target hours for every holiday worked, only when the flag is on', async () => {
+    await ctx.db
+      .insertInto('public_holiday')
+      .values({ scope: 'national', date: '2026-09-16', name: 'Testfeiertag' })
+      .execute();
+    const base = {
+      workingModel: 'salary',
+      targetHoursPerWeek: 40,
+      workDaysPerWeek: 5,
+      contractStartDate: '2026-09-01',
+    };
+    const on = await mk({ ...base, firstName: 'Bonus', lastName: 'On', getsPublicHoliday: true });
+    const off = await mk({ ...base, firstName: 'Bonus', lastName: 'Off', getsPublicHoliday: false });
+    const idle = await mk({ ...base, firstName: 'Bonus', lastName: 'Idle', getsPublicHoliday: true });
+    for (const id of [on, off]) {
+      await punch(id, '2026-09-16', 8); // the holiday
+      await punch(id, '2026-09-17', 8); // a normal day
+    }
+    const [a, b, c] = [await ledger(on), await ledger(off), await ledger(idle)];
+    expect(a.body.balanceHours - b.body.balanceHours).toBe(8);
+    expect(a.body.lines.find((l: any) => l.type === 'holiday_bonus')).toMatchObject({
+      month: '2026-09',
+      hours: 8,
+    });
+    expect(b.body.lines.find((l: any) => l.type === 'holiday_bonus')).toBeUndefined();
+    // a holiday not worked gets no bonus (only the normal credit for salary workers)
+    expect(c.body.lines.find((l: any) => l.type === 'holiday_bonus')).toBeUndefined();
+    await ctx.db.deleteFrom('public_holiday').where('date', '=', '2026-09-16').execute();
+  });
+});
+
 describe('overtime kept or paid out', () => {
   it('payout mode takes the monthly surplus out of the balance, account mode keeps it', async () => {
     // 10 h per week = 43.33 h per month. Six 10 h days in September: 60 h worked, 16.67 h over the target.

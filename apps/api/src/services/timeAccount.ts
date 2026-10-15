@@ -6,7 +6,15 @@ import { resolveHolidays } from './holidays';
 export interface LedgerLine {
   /** YYYY-MM, or the entry date for manual lines */
   month: string;
-  type: 'opening_balance' | 'worked' | 'absence_credit' | 'target' | 'correction' | 'payout' | 'payout_auto';
+  type:
+    | 'opening_balance'
+    | 'worked'
+    | 'absence_credit'
+    | 'holiday_bonus'
+    | 'target'
+    | 'correction'
+    | 'payout'
+    | 'payout_auto';
   hours: number;
   note?: string | null;
   entryId?: number;
@@ -142,13 +150,23 @@ export async function buildLedger(db: DbOrTrx, employeeId: number, today: string
       if (countedDays(h, h, c.working_weekdays, new Set()).length) creditDays.push(h);
     }
   }
+  // contract flag "gets public holiday": every holiday worked (approved paid hours) adds one day of target hours on top
+  const bonusDays = c.gets_public_holiday
+    ? [
+        ...new Set(
+          punches
+            .filter((p) => (p.paid_hours ?? 0) > 0 && holidays.has(p.shift_date))
+            .map((p) => p.shift_date),
+        ),
+      ]
+    : [];
   const balance = timeAccountBalance({
     opening: emp.opening_balance_hours,
     monthlyTarget: monthly,
     startIso: start,
     asOfIso: today,
     approvedPaidHours: approved,
-    creditHours: creditDays.length * daily,
+    creditHours: (creditDays.length + bonusDays.length) * daily,
     unpaidDays: unpaidDays.length,
     dailyTarget: daily,
   });
@@ -168,11 +186,13 @@ export async function buildLedger(db: DbOrTrx, employeeId: number, today: string
       .filter((p) => p.shift_date.startsWith(m))
       .reduce((a, p) => a + (p.paid_hours ?? 0), 0);
     const credit = creditDays.filter((d) => d.startsWith(m)).length * daily;
+    const bonus = bonusDays.filter((d) => d.startsWith(m)).length * daily;
     if (worked) lines.push({ month: m, type: 'worked', hours: r2(worked) });
     if (credit) lines.push({ month: m, type: 'absence_credit', hours: r2(credit) });
+    if (bonus) lines.push({ month: m, type: 'holiday_bonus', hours: r2(bonus) });
     lines.push({ month: m, type: 'target', hours: -r2(targets[i]!) });
     // payout mode: the month's surplus over the target is paid out and leaves the balance (a shortfall stays)
-    const surplus = r2(worked + credit - targets[i]!);
+    const surplus = r2(worked + credit + bonus - targets[i]!);
     if (c.overtime_mode === 'payout' && surplus > 0) {
       lines.push({ month: m, type: 'payout_auto', hours: -surplus });
       paidOut += surplus;
