@@ -26,7 +26,7 @@ jobs:
       DATABASE_URL: postgres://dienst:dienst@localhost:5432/dienst_perf
       PGPASSWORD: dienst
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: pnpm }
